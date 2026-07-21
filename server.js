@@ -7,6 +7,8 @@ const cookieParser = require('cookie-parser');
 const authenticateEmployee = require('./src/middleware/auth.middleware');
 const fs = require('fs');
 const rateLimit = require('express-rate-limit');
+//use .env file for environment variables
+require('dotenv').config();
 
 const app = express();
 const path = require('path');
@@ -367,6 +369,8 @@ app.use('/records', (req, res, next) => {
 // Static files (CSS, JS, images, etc.) - AFTER auth routes
 app.use(express.static(path.join(__dirname, 'src/views')));
 
-app.listen(3001,  () => {
-  console.log('Running on http://localhost:3001');
+const PORT = process.env.PORT || 3001;
+
+app.listen(PORT,  () => {
+  console.log(`Running on http://localhost:${PORT}`);
 });

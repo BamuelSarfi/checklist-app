@@ -6,21 +6,5 @@
     "role": "Manager",
     "email": "john.doe@safecatering.com",
     "location": "Main Kitchen"
-  },
-  {
-    "id": 2,
-    "pin": "1344",
-    "name": "Ondrej",
-    "role": "Hygiene Officer",
-    "email": "ondrej@safecatering.com",
-    "location": "Prep Area"
-  },
-  {
-    "id": 3,
-    "pin": "9012",
-    "name": "Mike Johnson",
-    "role": "Food Safety Lead",
-    "email": "mike.johnson@safecatering.com",
-    "location": "Storage"
   }
 ]
