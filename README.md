@@ -56,16 +56,102 @@ By utilizing the UK government issued **Safe Catering** hygiene forms, you can e
     ```
 5.  Start the application:
     ```bash
-    npm start
+    npm run start
     ```
 
 Access the app via `http://localhost:3001` or your configured domain.
 
+# Setting Up Checklist-App for your business
+contact barfisamuel29@gmail.com for to discuss plans & prices.
+
+# Setting Up Checklist-App on a VPS for Local Network Access
+
+Follow this step-by-step guide via Bash to set up your checklist app on a VPS or local server, make it accessible to other devices on the same network, and configure a custom local domain name (e.g., `http://checklist.local`) for easy mobile access.
+
+---
+
+### Step 1: Clone and Set Up the Application
+
+First, SSH into your server, navigate to your desired directory, and clone your project repository:
+
+```bash
+# Clone the repository
+git clone [https://github.com/YOUR-USERNAME/checklist-app.git](https://github.com/YOUR-USERNAME/checklist-app.git)
+cd checklist-app
+
+# Install dependencies (assuming Node.js backend)
+npm install
+
+# Build the production assets if required by your framework
+npm run build
+```
+Step 2: Configure a Process Manager (PM2)
+
+To keep your application running persistently in the background, use PM2:
+
+# Install PM2 globally
+
+```bash
+sudo npm install -g pm2
+```
+
+# Start the application
+
+```bash
+pm2 start server.js --name "checklist-app"
+```
+
+# Configure PM2 to start on system boot
+
+```bash
+pm2 startup
+pm2 save
+```
+
+Step 3: Install and Configure Nginx (Reverse Proxy)
+
+Nginx will route incoming local network requests to your Node application and allow you set up a custom domain name.
+```bash
+# Install Nginx
+sudo apt update
+sudo apt install nginx -y
+
+# Create a new Nginx configuration file for your app
+sudo nano /etc/nginx/sites-available/checklist-app
+```
+Paste the following configuration into the file (replace 3001 with the actual port the app runs on):
+
+```bash
+server {
+    listen 80;
+    server_name checklist.local;
+
+    location / {
+        proxy_pass http://localhost:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+Enable the site and restart Nginx:
+```bash
+# Enable the site configuration
+sudo ln -s /etc/nginx/sites-available/checklist-app /etc/nginx/sites-enabled/
+
+# Test the Nginx configuration for syntax errors
+sudo nginx -t
+
+# Restart Nginx
+sudo systemctl restart nginx
+```
+If your router supports local DNS routing or Host Mapping / Local Domain Name configurations, add a DNS entry mapping to link the custom URL to the ip of the host machine.
+
 ## Roadmap
 
 *   [ ] User authentication and roles (Manager vs. Staff).
-*   [ ] Historical data dashboard.
-*   [ ] Email/Slack notifications for missed checks.
 
 ## Contributing
 
@@ -76,4 +162,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 This project is licensed under the [MIT License](LICENSE).
 
 ---
-*Built for compliance using Safe Catering forms © Crown Copyright.*
