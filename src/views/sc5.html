@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SC5 Checklist</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="help_overlay.css">
+</head>
+
+<body>
+
+<div id="phone_body">
+
+<div id="header">
+    <button id="back_button" onclick="window.location.href='/'">
+        <img src="/asset1.png" alt="Back">
+    </button>
+
+    <div id="title">
+        <img src="/asset2.png" alt="Title">
+        <h1>SC5 - Hygiene Checklist</h1>
+    </div>
+</div>
+
+<div style="display: flex;">
+    <div id="date">Date: <span id="current_date"></span></div>
+    <button id="info" data-help="sc5_form_info" onclick="openHelp(this.dataset.help)">
+        <img src="https://www.svgrepo.com/show/502710/info.svg" alt="Info">
+    </button>
+</div>
+
+
+
+<!-- QUESTIONS -->
+<div id="question_container"></div>
+
+<!-- BOTTOM -->
+<div id="bottom">
+    <div id="employee_section">
+        Employee: <span id="employee_name_display"></span>
+    </div>
+    <div id="library_section">
+        <img src="https://www.svgrepo.com/show/435359/library.svg" alt="Library">
+    </div>
+    <!--Alert if sure-->
+    <button id="save_button" style="background-color:rgba(121, 252, 164, 0.822);" class="save_button" onclick="saveForm()">
+        <img src="https://www.svgrepo.com/show/510957/download.svg" alt="Save">
+    </button>
+</div>
+
+
+
+</div>
+
+<script>
+    const questions = [
+        {
+            id: "q1",
+            text: "Are food rooms and equipment in good condition and well maintained?"
+        },
+        {
+            id: "q2",
+            text: "Are food rooms clean and tidy and do staff clean as they go including difficult areas?"
+        },
+        {
+            id: "q3",
+            text: "Is equipment easy to clean and kept in a clean condition?"
+        },
+        {
+            id: "q4",
+            text: "Are all food and hand contact surfaces e.g. work surfaces, slicers, fridge handles, probe thermometers, in good condition and cleaned/ disinfected regularly?"
+        },
+        {
+            id: "q5",
+            text: "Are suitable BS EN approved cleaning chemicals available and stored correctly and are proper cleaning methods used?"
+        },
+        {
+            id: "q6",
+            text: "Are separate cleaning cloths used in clean areas? If they are re-used are they laundered in a boil wash?"
+        },
+        {
+            id: "q7",
+            text: "Are deliveries appropriately stored immediately?"
+        },
+        {
+            id: "q8",
+            text: "Is ready-to-eat food stored above/separate from raw food in the fridges and freezers?"
+        },
+        {
+            id: "q9",
+            text: "Is food in fridges/freezers covered?"
+        },
+        {
+            id: "q10",
+            text: "Are high risk foods date coded, codes checked daily and stock rotated?"
+        },
+        {
+            id: "q11",
+            text: "Are dried goods stored correctly e.g. in a suitable room, off the floor, in covered containers?"
+        },
+        {
+            id: "q12",
+            text: "Is outer packaging removed from ready-to-eat food before being placed into a clean area?"
+        },
+        {
+            id: "q13",
+            text: "Are freezers working properly?"
+        },
+        {
+            id: "q14",
+            text: "Are fridges and freezers defrosted regularly?"
+        },
+        {
+            id: "q15",
+            text: "Are ready-to-eat foods prepared in separate clean areas?"
+        },
+        {
+            id: "q16",
+            text: "Are separate utensils and equipment used for ready-to-eat foods unless disinfected in a dishwasher? Is the dishwasher in good working order and regularly serviced?"
+        },
+        {
+            id: "q17",
+            text: "Is wrapping and packaging used for ready-to-eat food kept in the clean area?"
+        },
+        {
+            id: "q18",
+            text: "Do separate staff handle ready-to-eat food or are controls being followed to ensure staff change clothing and wash hands before handling ready-to-eat food?"
+        },
+        {
+            id: "q19",
+            text: "Is separate complex equipment provided for ready-to-eat food and is it located in the clean area?"
+        },
+        {
+            id: "q20",
+            text: "Are staff handling food as little as possible? eg Using tongs"
+        },
+        {
+            id: "q21",
+            text: "If colour coded equipment is provided (e.g. utensils, chopping boards), is it correctly used?"
+        },
+        {
+            id: "q22",
+            text: "Are high risk foods prepared in small batches and placed in the fridge immediately after handling/preparation?"
+        },
+        {
+            id: "q23",
+            text: "Is food cooled as quickly as possible away from raw food and other sources of contamination?"
+        },
+        {
+            id: "q24",
+            text: "Are vegetables/fruit/salads trimmed and washed thoroughly before use unless labelled as 'ready-to-eat'?"
+        },
+        {
+            id: "q25",
+            text: "Are ready-to-eat foods kept separate on display and screened from customers?"
+        },
+        {
+            id: "q26",
+            text: "Are adequate clean utensils available for self service?"
+        },
+        {
+            id: "q27",
+            text: "Are frozen foods defrosted safely?"
+        },
+        {
+            id: "q28",
+            text: "Are controls in place to prevent contamination by chemicals/foreign bodies e.g. glass, packaging materials, bolts, rust, cleaning chemicals?"
+        },
+        {
+            id: "q29",
+            text: "Are staff aware of food allergy hazards?"
+        },
+        {
+            id: "q30",
+            text: "Are controls being followed to ensure staff wash hands after handing raw food and before touching surfaces, such as the cash register?"
+        },
+        {
+            id: "q31",
+            text: "Is a separate probe thermometer used for ready-to-eat foods and properly cleaned/disinfected before use?"
+        },
+        {
+            id: "q32",
+            text: "Are staff fit to work, wearing clean, suitable protective clothing and following personal hygiene rules particularly hand washing?"
+        },
+        {
+            id: "q33",
+            text: "Are wash hand basins clean with hot water, soap and hygienic hand drying facilities?"
+        },
+        {
+            id: "q34",
+            text: "Are wash hand basins used for hand washing only and is effective handwashing by staff regularly observed?"
+        },
+        {
+            id: "q35",
+            text: "Are staff toilets and changing facilities clean and tidy?"
+        },
+        {
+            id: "q36",
+            text: "Are premises pest proofed and free from any signs of pests?"
+        },
+        {
+            id: "q37",
+            text: "Where necessary are external doors/ windows fitted with suitable flyscreens?"
+        },
+        {
+            id: "q38",
+            text: "Are insectocutors (if provided) properly maintained?"
+        },
+        {
+            id: "q39",
+            text: "Is food properly protected from risk of contamination by pests?"
+        },
+        {
+            id: "q40",
+            text: "Is waste in food rooms stored correctly?"
+        },
+        {
+            id: "q41",
+            text: "Is food waste stored correctly outside and is the refuse area kept clean?"
+        },
+        {
+            id: "q42",
+            text: "Is unfit food clearly labelled and stored separately from other foods?"
+        },
+        {
+            id: "q43",
+            text: "Are all checks properly taken and recorded?"
+        },
+        {
+            id: "q44",
+            text: "Has appropriate corrective action been taken where necessary?"
+        },
+        {
+            id: "q45",
+            text: "Are record sheets up-to-date, checked and verified?"
+        },
+        {
+            id: "q46",
+            text: "Are equipment time/temperature combinations regularly cross-checked?"
+        },
+        {
+            id: "q47",
+            text: "Any new suppliers and approved list updated?"
+        },
+        {
+            id: "q48",
+            text: "Any new menu items and steps in Safe Catering updated?"
+        },
+        {
+            id: "q49",
+            text: "Any new food handling methods or equipment and steps in Safe Catering updated?"
+        }
+
+    ];
+
+    const container = document.getElementById('question_container');
+
+    // Render questions
+    questions.forEach(q => {
+        const row = document.createElement('div');
+        row.className = 'question_row';
+
+        row.innerHTML = `
+            <div class="button_checklist_container">
+                <img src="/asset3.png" class="check_img" style="display:none;">
+                <div class="checklist_circle"></div>
+            </div>
+
+            <div class="question">${q.text}</div>
+
+            <input type="hidden" name="${q.id}" value="no">
+        `;
+
+        container.appendChild(row);
+    });
+
+    
+    // Submit
+    document.getElementById('save_button').addEventListener('click', async () => {
+        const data = {
+            date: date_input,
+            employee_id: employee_id
+        };
+
+        // collect answers
+        document.querySelectorAll('#question_container input').forEach(input => {
+            data[input.name] = input.value;
+        });
+
+        // console.log(JSON.stringify(data));
+
+        try {
+            const response = await fetch('/sc5', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const text = await response.text();
+            // console.log(text);
+
+            window.location.href = '/';
+        } catch (err) {
+            console.error('Error submitting form:', err);
+        }
+    });
+</script>
+
+
+
+<!-- Help overlay -->
+<div id="help_overlay" aria-hidden="true">
+    <div id="help_inner">
+        <div id="help_header">
+            <div id="help_title">Help</div>
+            <button id="help_close" aria-label="Close">Close</button>
+        </div>
+
+        <!-- Footer-->
+            <footer class="site_footer">
+                <a href="/privacy-policy">Privacy Policy</a>
+                <span>© 2026 Checklist App</span>
+            </footer>
+        <div id="help_body">
+            <img id="help_image" src="" alt="Help image">
+            <div id="help_caption">Tap the image to view details. Tap outside to close.</div>
+        </div>
+    </div>
+</div>
+
+<script src="help_overlay.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>

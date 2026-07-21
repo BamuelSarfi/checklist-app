@@ -1,0 +1,77 @@
+/* Help overlay styles — mobile-first and matching site UI */
+#help_overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease-in-out;
+}
+
+#help_overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#help_inner {
+  width: calc(100% - 32px);
+  max-width: 520px;
+  height: calc(100% - 72px);
+  background: #fff;
+  border: 1pt solid #000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+#help_header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1pt solid #e0e0e0;
+}
+
+#help_title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #111;
+}
+
+#help_close {
+  background: #fff;
+  border: 1pt solid #000;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+#help_body {
+  padding: 12px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+#help_image {
+  max-width: 100%;
+  height: auto;
+  border: 1pt solid #ddd;
+  background: #fafafa;
+}
+
+#help_caption {
+  font-size: 12px;
+  color: #444;
+  text-align: center;
+}
+
+@media (min-width: 600px) {
+  #help_inner { width: 540px; }
+}

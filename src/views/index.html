@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safe Catering Checklist</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="help_overlay.css">
+</head>
+
+<body>
+
+<div id="phone_body">
+
+    <!-- HEADER -->
+    <div id="header">
+        <div id="logo_section">
+            <img src="/asset2.png" alt="Safe Catering">
+            <h1>Safe Catering Virtual Checklist</h1>
+        </div>
+    </div>
+
+    <!-- DATE -->
+    <div style="display: flex;">
+    <div id="date">Date: <span id="current_date"></span></div>
+    <button id="info" data-help="checklist_selection_info,library_explanation_selection" onclick="openHelp(this.dataset.help)">
+        <img src="https://www.svgrepo.com/show/502710/info.svg" alt="Info">
+    </button>
+</div>
+
+    <!-- WELCOME -->
+    <div id="welcome_section">
+        <h2>Welcome, <span id="employee_name_welcome">John Doe</span></h2>
+        <p><span id="completed_count">0</span> of <span id="required_count">0</span> required checklists completed today.</p>
+    </div>
+
+    <!-- CONTENT -->
+    <div id="content_container">
+        <!-- Checklist cards will be inserted here -->
+    </div>
+
+
+
+
+    <!-- BOTTOM -->
+    <div id="bottom">
+        <div id="employee_section">
+            Employee: <span id="employee_name_display">-</span>
+        </div>
+        <div id="library_section">
+            <img src="https://www.svgrepo.com/show/435359/library.svg" alt="Library">
+        </div>
+        <button id="logout_button" style="background: #f7818b; border: 1pt solid #000; cursor: pointer;">
+            <img src="https://www.svgrepo.com/show/470849/logout.svg" alt="Logout">
+        </button>
+    </div>
+
+
+</div>
+
+
+
+<script>
+    // Initialize date
+    const today = new Date().toLocaleDateString('en-GB');
+    document.getElementById('current_date').textContent = today;
+
+    // Get employee data from sessionStorage or API
+    let employeeData = null;
+
+    const initializeEmployee = async () => {
+        // Try to get from sessionStorage first
+        const stored = sessionStorage.getItem('employeeData');
+        if (stored) {
+            employeeData = JSON.parse(stored);
+        } else {
+            // Fallback to API call
+            try {
+                const response = await fetch('/api/employee');
+                const data = await response.json();
+                if (data.success) {
+                    employeeData = data.employee;
+                    sessionStorage.setItem('employeeData', JSON.stringify(employeeData));
+                }
+            } catch (err) {
+                console.error('Error fetching employee data:', err);
+            }
+        }
+
+        // Use employee data or default
+        const employeeName = employeeData?.name || "Employee";
+        document.getElementById('employee_name_display').textContent = employeeName;
+        document.getElementById('employee_name_welcome').textContent = employeeName;
+    };
+
+    initializeEmployee();
+
+    // Checklists available
+    const checklists = [
+        {
+            id: "sc7",
+            title: "SC7 - Fitness to Work assessment",
+            description: "Complete fitness to work assessment for all staff - coming soon",
+            questions: 49,
+            url: "/sc7",
+            required: false,
+            completed: true
+        },
+        {
+            id: "sc6",
+            title: "SC6 - Hygiene Training Records",
+            description: "Complete hygiene training records for all staff - coming soon",
+            questions: 49,
+            url: "/sc6",
+            required: false,
+            completed: true
+        },
+        {
+            id: "sc5",
+            title: "SC5 - Hygiene Checklist",
+            description: "Complete food safety and hygiene inspection",
+            questions: 49,
+            url: "/sc5",
+            required: true,
+            completed: false
+        },
+        {
+            id: "sc4",
+            title: "SC4 - Hold/Display Records",
+            description: "Hot hold, cold display and salad bar temperature records",
+            questions: 32,
+            url: "/sc4",
+            required: false,
+            completed: false
+        },
+        {
+            id: "sc3",
+            title: "SC3 - Cooking/Cooling/Reheating Records",
+            description: "Cooking, cooling and reheating temperature records",
+            questions: 18,
+            url: "/sc3",
+            required: false,
+            completed: false
+        },
+        {
+            id: "sc2",
+            title: "SC2 - Fridge/Cold Room Temperature Records",
+            description: "Daily fridge and cold room temperature checks for up to 6 units",
+            questions: 31,
+            url: "/sc2",
+            required: true,
+            completed: false
+        },
+        {
+            id: "sc1",
+            title: "SC1 - Food Delivery Records",
+            description: "Food delivery conditions and organization check",
+            questions: 16,
+            url: "/sc1",
+            required: false,
+            completed: false
+        }
+    ];
+
+    // Check for completed checklists today
+    const checkCompletedChecklists = async () => {
+        try {
+            const response = await fetch('/api/completed-checklists');
+            const data = await response.json();
+            if (data.success && data.completed) {
+                checklists.forEach(checklist => {
+                    if (data.completed[checklist.id.toLowerCase()]) {
+                        checklist.completed = true;
+                    }
+                });
+            }
+            renderChecklists();
+        } catch (err) {
+            console.error('Error checking completed checklists:', err);
+            renderChecklists();
+        }
+    };
+
+    // Render checklist cards function
+    const renderChecklists = () => {
+        // Calculate required checklists
+        const requiredChecklists = checklists.filter(c => c.required);
+        const completedChecklists = checklists.filter(c => c.required && c.completed).length;
+
+        // Update progress display
+        document.getElementById('required_count').textContent = requiredChecklists.length;
+        document.getElementById('completed_count').textContent = completedChecklists;
+
+        // Clear and render checklist cards
+        const container = document.getElementById('content_container');
+        container.innerHTML = '';
+
+        checklists.forEach(checklist => {
+            const card = document.createElement('div');
+            card.className = 'checklist_card';
+            
+            const requiredBadge = checklist.required ? '<span class="required_badge">Required</span>' : '';
+            const disabledText = checklist.completed ? '<span style="color: #999; font-size: 12px;">Completed today</span>' : '';
+
+            card.innerHTML = `
+                <div class="checklist_info">
+                    <p class="checklist_title">${checklist.title}${requiredBadge}</p>
+                    <p class="checklist_description">${checklist.description}</p>
+                    ${disabledText}
+                </div>
+                <div class="checklist_arrow">→</div>
+            `;
+            
+            if (checklist.completed) {
+                card.classList.add('completed');
+                card.style.opacity = '0.5';
+                card.style.cursor = 'not-allowed';
+                card.style.pointerEvents = 'none';
+            } else {
+                card.addEventListener('click', () => {
+                    window.location.href = checklist.url;
+                });
+            }
+
+            container.appendChild(card);
+        });
+    };
+
+    // Check completed checklists and render
+    checkCompletedChecklists();
+
+    // Library button
+    document.getElementById('library_section').addEventListener('click', () => {
+        window.location.href = '/library';
+    });
+
+    // Logout button
+    document.getElementById('logout_button').addEventListener('click', () => {
+        sessionStorage.clear();
+        window.location.href = '/logout';
+    });
+
+</script>
+
+<script src="script.js"></script>
+<script src="help_overlay.js"></script>
+
+<!-- Help overlay -->
+<div id="help_overlay" aria-hidden="true">
+    <div id="help_inner">
+        <div id="help_header">
+            <div id="help_title">Help</div>
+            <button id="help_close" aria-label="Close">Close</button>
+        </div>
+        <!-- Footer-->
+            <footer class="site_footer">
+                <a href="/privacy-policy">Privacy Policy</a>
+                <span>© 2026 Checklist App</span>
+            </footer>
+        <div id="help_body">
+            <img id="help_image" src="" alt="Help image">
+            <div id="help_caption">Tap the image to view details. Tap outside to close.</div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

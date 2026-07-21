@@ -1,0 +1,39 @@
+{
+  "month": "06",
+  "year": 2026,
+  "entries": [
+    {
+      "employee_id": 1,
+      "employee_name": "John Doe",
+      "day": 6,
+      "date": "2026-06-06",
+      "cooking": [
+        {
+          "date": "2026-06-06",
+          "food": "eggs",
+          "time_start": "23:03",
+          "time_end": "01:03",
+          "temp": 11,
+          "sign": "J"
+        }
+      ],
+      "cooling": [
+        {
+          "date": "2026-06-06",
+          "time": "12:02",
+          "sign": "J"
+        }
+      ],
+      "reheating": [
+        {
+          "date": "2026-06-06",
+          "temp": 1,
+          "sign": "J"
+        }
+      ],
+      "comments": "food",
+      "signature": "J",
+      "timestamp": "2026-06-06T17:36:02.719Z"
+    }
+  ]
+}

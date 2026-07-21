@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SC4 - Hold/Display Records</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="help_overlay.css">
+</head>
+<body>
+    <div id="phone_body">
+        <div id="header">
+            <button id="back_button" onclick="history.back()">
+                <img src="/asset1.png" alt="Back">
+            </button>
+            <div id="title">
+                <img src="/asset2.png" alt="Title">
+                <h1>SC4 - Hold/Display Records</h1>
+            </div>
+        </div>
+
+        <div style="display: flex;">
+            <div id="date">Date: <span id="current_date"></span></div>
+            <button id="info" data-help="sc4_info" onclick="openHelp(this.dataset.help)">
+                <img src="https://www.svgrepo.com/show/502710/info.svg" alt="Info">
+            </button>
+        </div>
+
+    <script src="help_overlay.js"></script>
+
+        <div id="question_container">
+            <div class="sc4_info_box">
+                <strong>Hot hold/display record</strong>
+                <p>Use one card per item. The signed field will be populated with the employee's first name.</p>
+            </div>
+
+            <div class="sc4_controls">
+                <button type="button" class="sc4_action_btn" id="add_row_btn" onclick="addRow()">+ Add Row</button>
+                <button type="button" class="sc4_action_btn" id="remove_row_btn" onclick="removeRow()">- Remove Row</button>
+            </div>
+
+            <div id="sc4_rows_container"></div>
+
+            <div class="sc4_autofill_section">
+                <div class="sc4_autofill_item">
+                    <span class="sc4_autofill_label">Employee Name:</span>
+                    <span id="autofill_name"></span>
+                </div>
+                <div class="sc4_autofill_item">
+                    <span class="sc4_autofill_label">Date:</span>
+                    <span id="autofill_date"></span>
+                </div>
+                <div class="sc4_autofill_item">
+                    <span class="sc4_autofill_label">Signed:</span>
+                    <span id="autofill_signature"></span>
+                </div>
+            </div>
+        </div>
+
+        <div id="bottom">
+            <div id="employee_section">
+                <span id="employee_name_display"></span>
+            </div>
+            <div id="library_section">
+                <img src="https://www.svgrepo.com/show/435359/library.svg" alt="Library" onclick="openLibrary()">
+            </div>
+            <button id="export_button_sc4" class="save_button" onclick="exportPdf()" style="background-color:rgba(121, 252, 164, 0.822);" title="Export PDF">
+                <img src="https://www.svgrepo.com/show/510957/download.svg" alt="Export PDF">
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const today = new Date();
+        const MAX_ROWS = 16;
+        let employee_id = null;
+        let employeeData = null;
+        let rowCount = 1;
+        let employeeFirstName = 'Employee';
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initializeEmployee();
+            setCurrentDate();
+            renderRows();
+            loadTodayData();
+        });
+
+        const initializeEmployee = async () => {
+            const stored = sessionStorage.getItem('employeeData');
+            if (stored) {
+                employeeData = JSON.parse(stored);
+            } else {
+                try {
+                    const response = await fetch('/api/employee');
+                    const data = await response.json();
+                    if (data.success) {
+                        employeeData = data.employee;
+                        sessionStorage.setItem('employeeData', JSON.stringify(employeeData));
+                    }
+                } catch (err) {
+                    console.error('Error fetching employee data:', err);
+                }
+            }
+
+            if (employeeData) {
+                employee_id = employeeData.id;
+                const fullName = employeeData.name || 'Employee';
+                employeeFirstName = fullName.trim().split(/\s+/)[0] || 'Employee';
+                document.getElementById('employee_name_display').textContent = fullName;
+                document.getElementById('autofill_name').textContent = fullName;
+                document.getElementById('autofill_signature').textContent = employeeFirstName;
+                fillSignatureFields();
+            }
+        };
+
+        const setCurrentDate = () => {
+            const day = String(today.getDate()).padStart(2, '0');
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const year = today.getFullYear();
+            const todayValue = `${year}-${month}-${day}`;
+            document.getElementById('current_date').textContent = `${day}/${month}/${year}`;
+            document.getElementById('autofill_date').textContent = `${day}/${month}/${year}`;
+            document.querySelectorAll('[id^="date_"]').forEach(input => {
+                if (!input.value) {
+                    input.value = todayValue;
+                }
+            });
+        };
+
+        const fillSignatureFields = () => {
+            document.querySelectorAll('[id^="signed_"]').forEach(input => {
+                input.value = employeeFirstName;
+            });
+        };
+
+        const updateButtonStates = () => {
+            const addBtn = document.getElementById('add_row_btn');
+            const removeBtn = document.getElementById('remove_row_btn');
+            if (addBtn) addBtn.disabled = rowCount >= MAX_ROWS;
+            if (removeBtn) removeBtn.disabled = rowCount <= 1;
+            if (addBtn) addBtn.classList.toggle('is-disabled', rowCount >= MAX_ROWS);
+            if (removeBtn) removeBtn.classList.toggle('is-disabled', rowCount <= 1);
+        };
+
+        const renderRows = () => {
+            const container = document.getElementById('sc4_rows_container');
+            container.innerHTML = '';
+            for (let i = 0; i < rowCount; i++) {
+                const rowNumber = i + 1;
+                container.innerHTML += `
+                    <div class="sc4_row_card">
+                        <div class="sc4_row_header">Row ${rowNumber}</div>
+                        <div class="sc4_grid">
+                            <div class="sc4_field_group">
+                                <label>Date</label>
+                                <input type="date" class="sc4_input" id="date_${rowNumber}" value="${today.toISOString().split('T')[0]}">
+                            </div>
+                            <div class="sc4_field_group">
+                                <label>Food</label>
+                                <input type="text" class="sc4_input" id="food_${rowNumber}" placeholder="Food item">
+                            </div>
+                            <div class="sc4_field_group">
+                                <label>Time into hot hold</label>
+                                <input type="time" class="sc4_input" id="time_into_hot_hold_${rowNumber}">
+                            </div>
+                            <div class="sc4_field_group">
+                                <label>Core temp (2 hrs)</label>
+                                <input type="number" step="0.1" class="sc4_input" id="core_temp_2hrs_${rowNumber}" placeholder="°C">
+                            </div>
+                            <div class="sc4_field_group">
+                                <label>Core temp (4 hrs)</label>
+                                <input type="number" step="0.1" class="sc4_input" id="core_temp_4hrs_${rowNumber}" placeholder="°C">
+                            </div>
+                            <div class="sc4_field_group">
+                                <label>Core temp (6 hrs)</label>
+                                <input type="number" step="0.1" class="sc4_input" id="core_temp_6hrs_${rowNumber}" placeholder="°C">
+                            </div>
+                            <div class="sc4_field_group sc4_full_width">
+                                <label>Comments</label>
+                                <textarea class="sc4_textarea" id="comment_${rowNumber}" placeholder="Notes or actions"></textarea>
+                            </div>
+                            <div class="sc4_field_group">
+                                <label>Signed</label>
+                                <input type="text" class="sc4_input" id="signed_${rowNumber}" maxlength="30">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            fillSignatureFields();
+            updateButtonStates();
+        };
+
+        const addRow = () => {
+            if (rowCount < MAX_ROWS) {
+                rowCount += 1;
+                renderRows();
+            }
+        };
+
+        const removeRow = () => {
+            if (rowCount > 1) {
+                rowCount -= 1;
+                renderRows();
+            }
+        };
+
+        const collectFormData = () => {
+            const rows = [];
+            for (let i = 0; i < rowCount; i++) {
+                const rowNumber = i + 1;
+                const row = {
+                    date: document.getElementById(`date_${rowNumber}`)?.value || '',
+                    food: document.getElementById(`food_${rowNumber}`)?.value || '',
+                    time_into_hot_hold: document.getElementById(`time_into_hot_hold_${rowNumber}`)?.value || '',
+                    core_temp_2hrs: document.getElementById(`core_temp_2hrs_${rowNumber}`)?.value || '',
+                    core_temp_4hrs: document.getElementById(`core_temp_4hrs_${rowNumber}`)?.value || '',
+                    core_temp_6hrs: document.getElementById(`core_temp_6hrs_${rowNumber}`)?.value || '',
+                    comment: document.getElementById(`comment_${rowNumber}`)?.value || '',
+                    signed: document.getElementById(`signed_${rowNumber}`)?.value || employeeFirstName
+                };
+                if (Object.values(row).some(value => value !== '')) {
+                    rows.push(row);
+                }
+            }
+            return rows;
+        };
+
+        const loadTodayData = async () => {
+            try {
+                const response = await fetch('/api/sc4/today');
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const rows = result.data.rows || [];
+                    if (rows.length > 0) {
+                        rowCount = rows.length;
+                        renderRows();
+                        rows.forEach((row, index) => {
+                            const rowNumber = index + 1;
+                            document.getElementById(`date_${rowNumber}`).value = row.date || '';
+                            document.getElementById(`food_${rowNumber}`).value = row.food || '';
+                            document.getElementById(`time_into_hot_hold_${rowNumber}`).value = row.time_into_hot_hold || '';
+                            document.getElementById(`core_temp_2hrs_${rowNumber}`).value = row.core_temp_2hrs || '';
+                            document.getElementById(`core_temp_4hrs_${rowNumber}`).value = row.core_temp_4hrs || '';
+                            document.getElementById(`core_temp_6hrs_${rowNumber}`).value = row.core_temp_6hrs || '';
+                            document.getElementById(`comment_${rowNumber}`).value = row.comment || '';
+                            document.getElementById(`signed_${rowNumber}`).value = row.signed || employeeFirstName;
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error('Error loading today data:', err);
+            }
+        };
+
+        const saveForm = async () => {
+            const rows = collectFormData();
+            try {
+                const response = await fetch('/api/sc4/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rows, saveMode: 'draft' })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    window.location.href = '/';
+                } else {
+                    alert(result.message || 'Unable to save SC4 form');
+                }
+            } catch (err) {
+                console.error('Error saving SC4 form:', err);
+                alert('Unable to save SC4 form');
+            }
+        };
+
+        const exportPdf = async () => {
+            const rows = collectFormData();
+            try {
+                const response = await fetch('/api/sc4/export', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rows })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    window.open(result.pdfUrl, '_blank');
+                } else {
+                    alert(result.message || 'Unable to export SC4 PDF');
+                }
+            } catch (err) {
+                console.error('Error exporting SC4 PDF:', err);
+                alert('Unable to export SC4 PDF');
+            }
+        };
+
+        const openLibrary = () => {
+            window.location.href = '/library';
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+{
+  "month": 6,
+  "year": 2026,
+  "entries": [
+    {
+      "employee_id": 1,
+      "employee_name": "John Doe",
+      "day": 6,
+      "date": "2026-06-06",
+      "unit_names": {
+        "1": "Unit 1",
+        "2": "Unit 2",
+        "3": "Unit 3",
+        "4": "Unit 4",
+        "5": "Unit 5",
+        "6": "Unit 6"
+      },
+      "unit_count": 2,
+      "temperatures": {
+        "unit1_am": 2,
+        "unit1_pm": 1.2,
+        "unit2_am": 1,
+        "unit2_pm": 0.2
+      },
+      "comments": "display temps\n",
+      "signature": "J",
+      "timestamp": "2026-06-06T16:34:39.956Z"
+    },
+    {
+      "employee_id": 1,
+      "employee_name": "John Doe",
+      "day": 28,
+      "date": "2026-06-28",
+      "unit_names": {
+        "1": "Unit 1",
+        "2": "Unit 2",
+        "3": "Unit 3",
+        "4": "Unit 4",
+        "5": "Unit 5",
+        "6": "Unit 6"
+      },
+      "unit_count": 1,
+      "temperatures": {
+        "unit1_am": 2,
+        "unit1_pm": 2
+      },
+      "comments": "",
+      "signature": "J",
+      "timestamp": "2026-06-28T20:52:34.063Z"
+    }
+  ]
+}

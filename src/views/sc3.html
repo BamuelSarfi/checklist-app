@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SC3 - Cooking/Cooling/Reheating Records</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="help_overlay.css">
+</head>
+<body>
+    <div id="phone_body">
+        <!-- Header -->
+        <div id="header">
+            <button id="back_button" onclick="history.back()">
+                <img src="/asset1.png" alt="Back">
+            </button>
+            <div id="title">
+                <img src="/asset2.png" alt="Title">
+                <h1>SC3 - Cooking/Cooling/Reheating Records</h1>
+            </div>
+        </div>
+
+        <div style="display: flex;">
+            <div id="date">Date: <span id="current_date"></span></div>
+            <button id="info" data-help="sc3_info" onclick="openHelp(this.dataset.help)">
+                <img src="https://www.svgrepo.com/show/502710/info.svg" alt="Info">
+            </button>
+        </div>
+
+    <script src="help_overlay.js"></script>
+
+    <!-- FORM CONTENT -->
+    <div id="question_container">
+        <!-- Month/Year Display -->
+        <div class="sc3_month_year_display" style="display: none;" id="month_year_display"></div>
+
+        <!-- Segmented Buttons for Section Selection -->
+        <div class="sc3_section_buttons">
+            <button class="sc3_section_btn active" data-section="cooking" onclick="switchSection('cooking')">
+                Cooking
+            </button>
+            <button class="sc3_section_btn" data-section="cooling" onclick="switchSection('cooling')">
+                Cooling
+            </button>
+            <button class="sc3_section_btn" data-section="reheating" onclick="switchSection('reheating')">
+                Reheating
+            </button>
+        </div>
+
+            <!-- NOTE SECTION -->
+            <div class="sc3_note_section">
+                <strong>NOTE:</strong>
+                <ul>
+                    <li>* Core temperature above 75°C</li>
+                    <li>** It is not necessary to record the time started cooking, if the core temperature is checked</li>
+                </ul>
+            </div>
+
+        <form id="sc3_form">
+            <!-- COOKING SECTION -->
+            <div id="cooking_section" class="sc3_section_content active">
+                <div class="sc3_section_header">
+                    <h3>Cooking Records</h3>
+                    <div class="sc3_section_controls">
+                        <button type="button" class="sc3_row_btn" onclick="addCookingRow()">+ Add Row</button>
+                        <button type="button" class="sc3_row_btn" onclick="removeCookingRow()">- Remove Row</button>
+                    </div>
+                </div>
+                <div id="cooking_rows_container"></div>
+            </div>
+
+            <!-- COOLING SECTION -->
+            <div id="cooling_section" class="sc3_section_content">
+                <div class="sc3_section_header">
+                    <h3>Cooling Records</h3>
+                    <div class="sc3_section_controls">
+                        <button type="button" class="sc3_row_btn" onclick="addCoolingRow()">+ Add Row</button>
+                        <button type="button" class="sc3_row_btn" onclick="removeCoolingRow()">- Remove Row</button>
+                    </div>
+                </div>
+                <div id="cooling_rows_container"></div>
+            </div>
+
+            <!-- REHEATING SECTION -->
+            <div id="reheating_section" class="sc3_section_content">
+                <div class="sc3_section_header">
+                    <h3>Reheating Records</h3>
+                    <div class="sc3_section_controls">
+                        <button type="button" class="sc3_row_btn" onclick="addReheatingRow()">+ Add Row</button>
+                        <button type="button" class="sc3_row_btn" onclick="removeReheatingRow()">- Remove Row</button>
+                    </div>
+                </div>
+                <div id="reheating_rows_container"></div>
+            </div>
+
+            <!-- COMMENTS SECTION -->
+            <div class="sc3_comments_section">
+                <div class="sc3_field_group">
+                    <label class="sc3_label">Comments/Actions for Today:</label>
+                    <textarea id="sc3_comments" class="sc3_textarea" placeholder="Record any issues, corrective actions, or general notes..."></textarea>
+                </div>
+            </div>
+
+            <!-- AUTOFILL SECTION -->
+            <div class="sc3_autofill_section">
+                <div class="sc3_autofill_item">
+                    <span class="sc3_autofill_label">Employee Name:</span>
+                    <span id="autofill_name"></span>
+                </div>
+                <div class="sc3_autofill_item">
+                    <span class="sc3_autofill_label">Date:</span>
+                    <span id="autofill_date"></span>
+                </div>
+                <div class="sc3_autofill_item">
+                    <span class="sc3_autofill_label">Signature/Initial:</span>
+                    <span id="autofill_signature"></span>
+                </div>
+            </div>
+
+
+        </form>
+    </div>
+
+    <!-- BOTTOM -->
+    <div id="bottom">
+        <div id="employee_section">
+            Employee: <span id="employee_name_display"></span>
+        </div>
+        <div id="library_section">
+            <img src="https://www.svgrepo.com/show/435359/library.svg" alt="Library" onclick="openLibrary()">
+        </div>
+        <button id="save_button_sc3" style="background-color:rgba(121, 252, 164, 0.822);" class="save_button" onclick="saveForm()">
+            <img src="https://www.svgrepo.com/show/510957/download.svg" alt="Save">
+        </button>
+    </div>
+
+    <script>
+        // Global Variables
+        const today = new Date();
+        let employee_id = null;
+        let employeeData = null;
+        let cookingRows = 1;
+        let coolingRows = 1;
+        let reheatingRows = 1;
+        let formData = {
+            cooking: [],
+            cooling: [],
+            reheating: [],
+            comments: ''
+        };
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            initializeEmployee();
+            setCurrentDate();
+            renderCookingRows();
+            renderCoolingRows();
+            renderReheatingRows();
+            loadTodayData();
+        });
+
+        // Initialize Employee Data
+        const initializeEmployee = async () => {
+            const stored = sessionStorage.getItem('employeeData');
+            if (stored) {
+                employeeData = JSON.parse(stored);
+            } else {
+                try {
+                    const response = await fetch('/api/employee');
+                    const data = await response.json();
+                    if (data.success) {
+                        employeeData = data.employee;
+                        sessionStorage.setItem('employeeData', JSON.stringify(employeeData));
+                    }
+                } catch (err) {
+                    console.error('Error fetching employee data:', err);
+                }
+            }
+
+            if (employeeData) {
+                employee_id = employeeData.id;
+                document.getElementById('employee_name_display').textContent = employeeData.name || "Employee";
+                document.getElementById('autofill_name').textContent = employeeData.name || "Employee";
+                document.getElementById('autofill_signature').textContent = (employeeData.name || "Employee").charAt(0).toUpperCase();
+                fillSignatureFields();
+            }
+        };
+
+        // Fill all signature fields with employee's initial
+        const fillSignatureFields = () => {
+            if (!employeeData) return;
+            const signature = (employeeData.name || "Employee").charAt(0).toUpperCase();
+            
+            // Fill all cooking signature fields
+            document.querySelectorAll('[id^="cooking_sign_"]').forEach(field => {
+                field.value = signature;
+            });
+            
+            // Fill all cooling signature fields
+            document.querySelectorAll('[id^="cooling_sign_"]').forEach(field => {
+                field.value = signature;
+            });
+            
+            // Fill all reheating signature fields
+            document.querySelectorAll('[id^="reheating_sign_"]').forEach(field => {
+                field.value = signature;
+            });
+        };
+
+        // Set current date display
+        const setCurrentDate = () => {
+            const day = String(today.getDate()).padStart(2, '0');
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const year = today.getFullYear();
+            document.getElementById('current_date').textContent = `${day}/${month}/${year}`;
+            document.getElementById('autofill_date').textContent = `${day}/${month}/${year}`;
+            document.getElementById('month_year_display').textContent = today.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+        };
+
+        // Switch Section
+        const switchSection = (section) => {
+            document.querySelectorAll('.sc3_section_btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.sc3_section_content').forEach(div => div.classList.remove('active'));
+            
+            document.querySelector(`[data-section="${section}"]`).classList.add('active');
+            document.getElementById(`${section}_section`).classList.add('active');
+        };
+
+        // COOKING ROWS
+        const renderCookingRows = () => {
+            const container = document.getElementById('cooking_rows_container');
+            container.innerHTML = '';
+            for (let i = 0; i < cookingRows; i++) {
+                container.innerHTML += `
+                    <div class="sc3_row_container">
+                        <div class="sc3_row_field">
+                            <label>Date:</label>
+                            <input type="date" class="sc3_input" id="cooking_date_${i}" value="${today.toISOString().split('T')[0]}">
+                        </div>
+                        <div class="sc3_row_field">
+                            <label>Food:</label>
+                            <input type="text" class="sc3_input" id="cooking_food_${i}" placeholder="Food item">
+                        </div>
+                        <div class="sc3_row_field">
+                            <label>Time Started Cooking:</label>
+                            <input type="time" class="sc3_input" id="cooking_time_start_${i}">
+                        </div>
+                        <div class="sc3_row_field">
+                            <label>Time Finished Cooking:</label>
+                            <input type="time" class="sc3_input" id="cooking_time_end_${i}">
+                        </div>
+                        <div class="sc3_row_field">
+                            <label>Core Temp. (°C)**:</label>
+                            <input type="number" class="sc3_input" id="cooking_temp_${i}" placeholder="75°C" step="0.1" min="0">
+                        </div>
+                        <div class="sc3_row_field">
+                            <label>Signature (initials):</label>
+                            <input type="text" class="sc3_input" id="cooking_sign_${i}" maxlength="3">
+                        </div>
+                    </div>
+                `;
+            }
+            fillSignatureFields();
+        };
+
+        const addCookingRow = () => {
+            cookingRows++;
+            renderCookingRows();
+        };
+
+        const removeCookingRow = () => {
+            if (cookingRows > 1) {
+                cookingRows--;
+                renderCookingRows();
+            }
+        };
+
+        // COOLING ROWS
+        const renderCoolingRows = () => {
+            const container = document.getElementById('cooling_rows_container');
+            container.innerHTML = '';
+            for (let i = 0; i < coolingRows; i++) {
+                container.innerHTML += `
+                    <div class="sc3_row_container">
+                        <div class="sc3_row_field">
+                            <label>Date:</label>
+                            <input type="date" class="sc3_input" id="cooling_date_${i}" value="${today.toISOString().split('T')[0]}">
+                        </div>
+                        <div class="sc3_row_field">
+                            <label>Time Into Fridge/Blast Freezer:</label>
+                            <input type="time" class="sc3_input" id="cooling_time_${i}">
+                        </div>
+                        <div class="sc3_row_field">
+                            <label>Signature (initials):</label>
+                            <input type="text" class="sc3_input" id="cooling_sign_${i}" maxlength="3">
+                        </div>
+                    </div>
+                `;
+            }
+            fillSignatureFields();
+        };
+
+        const addCoolingRow = () => {
+            coolingRows++;
+            renderCoolingRows();
+        };
+
+        const removeCoolingRow = () => {
+            if (coolingRows > 1) {
+                coolingRows--;
+                renderCoolingRows();
+            }
+        };
+
+        // REHEATING ROWS
+        const renderReheatingRows = () => {
+            const container = document.getElementById('reheating_rows_container');
+            container.innerHTML = '';
+            for (let i = 0; i < reheatingRows; i++) {
+                container.innerHTML += `
+                    <div class="sc3_row_container">
+                        <div class="sc3_row_field">
+                            <label>Date:</label>
+                            <input type="date" class="sc3_input" id="reheating_date_${i}" value="${today.toISOString().split('T')[0]}">
+                        </div>
+                        <div class="sc3_row_field">
+                            <label>Core Temp. (°C)*:</label>
+                            <input type="number" class="sc3_input" id="reheating_temp_${i}" placeholder="Above 75°C" step="0.1" min="0">
+                        </div>
+                        <div class="sc3_row_field">
+                            <label>Signature (initials):</label>
+                            <input type="text" class="sc3_input" id="reheating_sign_${i}" maxlength="3">
+                        </div>
+                    </div>
+                `;
+            }
+            fillSignatureFields();
+        };
+
+        const addReheatingRow = () => {
+            reheatingRows++;
+            renderReheatingRows();
+        };
+
+        const removeReheatingRow = () => {
+            if (reheatingRows > 1) {
+                reheatingRows--;
+                renderReheatingRows();
+            }
+        };
+
+        // Collect form data
+        const collectFormData = () => {
+            formData.cooking = [];
+            formData.cooling = [];
+            formData.reheating = [];
+
+            for (let i = 0; i < cookingRows; i++) {
+                const dateVal = document.getElementById(`cooking_date_${i}`)?.value;
+                if (dateVal) {
+                    formData.cooking.push({
+                        date: dateVal,
+                        food: document.getElementById(`cooking_food_${i}`)?.value || '',
+                        time_start: document.getElementById(`cooking_time_start_${i}`)?.value || '',
+                        time_end: document.getElementById(`cooking_time_end_${i}`)?.value || '',
+                        temp: parseFloat(document.getElementById(`cooking_temp_${i}`)?.value) || null,
+                        sign: document.getElementById(`cooking_sign_${i}`)?.value || ''
+                    });
+                }
+            }
+
+            for (let i = 0; i < coolingRows; i++) {
+                const dateVal = document.getElementById(`cooling_date_${i}`)?.value;
+                if (dateVal) {
+                    formData.cooling.push({
+                        date: dateVal,
+                        time: document.getElementById(`cooling_time_${i}`)?.value || '',
+                        sign: document.getElementById(`cooling_sign_${i}`)?.value || ''
+                    });
+                }
+            }
+
+            for (let i = 0; i < reheatingRows; i++) {
+                const dateVal = document.getElementById(`reheating_date_${i}`)?.value;
+                if (dateVal) {
+                    formData.reheating.push({
+                        date: dateVal,
+                        temp: parseFloat(document.getElementById(`reheating_temp_${i}`)?.value) || null,
+                        sign: document.getElementById(`reheating_sign_${i}`)?.value || ''
+                    });
+                }
+            }
+
+            formData.comments = document.getElementById('sc3_comments')?.value || '';
+        };
+
+        // Save form
+        const saveForm = async () => {
+            collectFormData();
+            
+            try {
+                const response = await fetch('/api/sc3/export', {
+                                        method: 'POST',
+                                        credentials: 'include',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify(formData)
+                                    });
+
+                if (response.ok) {
+                    window.location.href = '/';
+                } else {
+                    alert('Error saving form');
+                }
+            } catch (err) {
+                console.error('Error saving form:', err);
+                alert('Error saving form: ' + err.message);
+            }
+        };
+
+        // Load today's data
+        const loadTodayData = async () => {
+            try {
+                const response = await fetch('/api/sc3/today');
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    // Load cooking data
+                    if (data.data.cooking && data.data.cooking.length > 0) {
+                        cookingRows = data.data.cooking.length;
+                        renderCookingRows();
+                        data.data.cooking.forEach((row, i) => {
+                            document.getElementById(`cooking_date_${i}`)?.setAttribute('value', row.date || '');
+                            document.getElementById(`cooking_food_${i}`)?.setAttribute('value', row.food || '');
+                            document.getElementById(`cooking_time_start_${i}`)?.setAttribute('value', row.time_start || '');
+                            document.getElementById(`cooking_time_end_${i}`)?.setAttribute('value', row.time_end || '');
+                            document.getElementById(`cooking_temp_${i}`)?.setAttribute('value', row.temp || '');
+                            document.getElementById(`cooking_sign_${i}`)?.setAttribute('value', row.sign || '');
+                        });
+                    }
+
+                    // Load cooling data
+                    if (data.data.cooling && data.data.cooling.length > 0) {
+                        coolingRows = data.data.cooling.length;
+                        renderCoolingRows();
+                        data.data.cooling.forEach((row, i) => {
+                            document.getElementById(`cooling_date_${i}`)?.setAttribute('value', row.date || '');
+                            document.getElementById(`cooling_time_${i}`)?.setAttribute('value', row.time || '');
+                            document.getElementById(`cooling_sign_${i}`)?.setAttribute('value', row.sign || '');
+                        });
+                    }
+
+                    // Load reheating data
+                    if (data.data.reheating && data.data.reheating.length > 0) {
+                        reheatingRows = data.data.reheating.length;
+                        renderReheatingRows();
+                        data.data.reheating.forEach((row, i) => {
+                            document.getElementById(`reheating_date_${i}`)?.setAttribute('value', row.date || '');
+                            document.getElementById(`reheating_temp_${i}`)?.setAttribute('value', row.temp || '');
+                            document.getElementById(`reheating_sign_${i}`)?.setAttribute('value', row.sign || '');
+                        });
+                    }
+
+                    // Load comments
+                    if (data.data.comments) {
+                        document.getElementById('sc3_comments')?.setAttribute('value', data.data.comments);
+                    }
+                }
+            } catch (err) {
+                console.error('Error loading today data:', err);
+            }
+        };
+
+        const openLibrary = () => {
+            window.location.href = '/library';
+        };
+    </script>
+    </div>
+</body>
+</html>

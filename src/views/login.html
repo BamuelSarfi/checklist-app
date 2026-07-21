@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safe Catering - Login</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* ===== LOGIN PAGE SPECIFIC STYLES ===== */
+        #login_container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 8pt;
+        }
+
+        #login_form {
+            width: 100%;
+            background-color: #fff;
+            border: 1pt solid #000;
+            padding: 20pt;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12pt;
+        }
+
+        #login_form h2 {
+            font-size: 14pt;
+            margin: 0 0 12pt 0;
+            text-align: center;
+        }
+
+        .form_group {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8pt;
+        }
+
+        .form_label {
+            font-size: 10pt;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        #pin_input {
+            font-size: 24pt;
+            font-weight: bold;
+            width: 120px;
+            height: 50px;
+            text-align: center;
+            border: 1pt solid #000;
+            background-color: #f5f5f5;
+            letter-spacing: 8pt;
+            padding: 8pt;
+            font-family: monospace;
+        }
+
+        #pin_input::placeholder {
+            color: #ccc;
+        }
+
+        #pin_input:focus {
+            outline: none;
+            background-color: #fff;
+            border: 2pt solid #000;
+        }
+
+        #login_button {
+            width: 100%;
+            padding: 12pt;
+            font-size: 12pt;
+            font-weight: bold;
+            background-color: #fff;
+            border: 1pt solid #000;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 8pt;
+        }
+
+        #login_button:hover {
+            background-color: #f0f0f0;
+        }
+
+        #login_button:active {
+            background-color: #e0e0e0;
+        }
+
+        #login_button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .error_message {
+            color: #ff6b6b;
+            font-size: 9pt;
+            text-align: center;
+            margin-top: 8pt;
+            display: none;
+        }
+
+        .error_message.show {
+            display: block;
+        }
+
+        #library_button {
+            width: 100%;
+            padding: 12pt;
+            font-size: 10pt;
+            background-color: #fff;
+            border: 1pt solid #000;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #library_button:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="phone_body">
+
+    <!-- LOGIN CONTAINER -->
+    <div id="login_container">
+        <form id="login_form" onsubmit="handleLogin(event)">
+            <div style="display: flex; align-items: center; gap: 8pt; align-items: center;">
+                <img src="/asset2.png" alt="Safe Catering" style="height: 30px;">
+                <h2 style="margin: 0;">Enter PIN</h2>
+            </div>
+            
+
+            <div class="form_group">
+                <label class="form_label">Enter your 4-digit PIN</label>
+                <input 
+                    type="password" 
+                    id="pin_input" 
+                    maxlength="4" 
+                    inputmode="numeric"
+                    placeholder="••••"
+                    autocomplete="off"
+                >
+                <div class="error_message" id="error_message">Invalid PIN. Please try again.</div>
+            </div>
+
+            <button type="submit" id="login_button">Login</button>
+            <button type="button" id="library_button">View Library</button>
+        </form>
+        <!-- Footer-->
+            <footer class="site_footer" style="background-color: rgba(0,0,0,0.1);">
+                <a href="/privacy-policy">Privacy Policy</a>
+                <span>© 2026 Checklist App</span>
+            </footer>
+    </div>
+
+</div>
+
+<script>
+    const pinInput = document.getElementById('pin_input');
+    const errorMessage = document.getElementById('error_message');
+
+    // Handle keyboard input
+    pinInput.addEventListener('keypress', (e) => {
+        if (!/[0-9]/.test(e.key)) {
+            e.preventDefault();
+        }
+    });
+
+    // Handle login
+    function handleLogin(event) {
+        event.preventDefault();
+        
+        const pin = pinInput.value;
+
+        if (pin.length !== 4) {
+            errorMessage.classList.add('show');
+            return;
+        }
+
+        // Send PIN to server for verification
+        fetch('/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ pin: pin })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Store employee info in sessionStorage for use in other pages
+                sessionStorage.setItem('employeeData', JSON.stringify(data.employee));
+                // Redirect to home page on successful login
+                window.location.href = '/';
+            } else {
+                errorMessage.classList.add('show');
+                pinInput.value = '';
+            }
+        })
+        .catch(err => {
+            console.error('Login error:', err);
+            errorMessage.classList.add('show');
+            pinInput.value = '';
+        });
+    }
+
+    // Library button
+    document.getElementById('library_button').addEventListener('click', () => {
+        window.location.href = '/library';
+    });
+
+    // Auto-focus on page load
+    window.addEventListener('load', () => {
+        pinInput.focus();
+    });
+</script>
+
+</body>
+</html>

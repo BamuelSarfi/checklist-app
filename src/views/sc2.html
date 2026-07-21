@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SC2 - Fridge/Cold Room Temperature Records</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="help_overlay.css">
+</head>
+<body>
+<div id="phone_body">
+    <div id="header">
+        <button id="back_button" onclick="window.location.href='/'">
+            <img src="/asset1.png" alt="Back">
+        </button>
+
+        <div id="title">
+            <img src="/asset2.png" alt="Title">
+            <h1>SC2 - Fridge/Cold Room Temperature Records</h1>
+        </div>
+    </div>
+
+          
+
+    <div style="display:flex;">
+        <div id="date">Date: <span id="current_date"></span></div>
+        <button id="info" data-help="sc2_info" onclick="openHelp(this.dataset.help)">
+            <img src="https://www.svgrepo.com/show/502710/info.svg" alt="Info">
+        </button>
+    </div>
+
+    <script src="help_overlay.js"></script>
+
+    <div id="question_container">
+        <div class="sc2_month_year_display" id="month_year_display"></div>
+
+        <div class="sc2_progress_container">
+            <div class="sc2_progress_label">Month Progress:</div>
+            <div id="progress_text" class="sc2_progress_text">0 / 0 days completed</div>
+        </div>
+
+        <div id="sc2_month_grid" class="sc2_month_grid"></div>
+
+        <div class="sc2_legend" style="margin-bottom: 8px; gap:8px; display:flex; flex-direction:row; margin-top:8px; font-size:12px;">
+            <div style="display:flex; align-items:center;">
+                <span class="sc2_box missed" style="height: 20px; width: 20px;"></span>
+                <label style="margin-left:4px;">Missed</label>
+            </div>
+            <div style="display:flex; align-items:center;">
+                <span class="sc2_box filled-self" style="height: 20px; width: 20px;"></span>
+                <label style="margin-left:4px;">Filled by current employee</label>
+            </div>
+            <div style="display:flex; align-items:center;">
+                <span class="sc2_box filled-other" style="height: 20px; width: 20px;"></span>
+                <label style="margin-left:4px;">Filled by another employee</label>
+            </div>
+        </div>
+
+        <form id="sc2_form">
+            <div class="sc2_units_manager">
+                <div class="sc2_units_header">
+                    <h3>Fridge/Cooling Units</h3>
+                    <div class="sc2_unit_controls">
+                        <button type="button" id="add_unit_btn" class="sc2_unit_btn">+ Add Unit</button>
+                        <button type="button" id="remove_unit_btn" class="sc2_unit_btn">- Remove Unit</button>
+                    </div>
+                </div>
+                <div class="sc2_units_display" id="units_display"></div>
+            </div>
+
+            <button
+            id="reopen_button_sc2"
+            class="save_button"
+            style="display:none; margin:8px 0; height: 60px; width: 100%; background-color:rgba(121, 252, 164, 0.822);"
+            title="Reopen for editing"
+            type="button"
+        >
+            <span style="font-size:10px; font-weight:700;">Reopen</span>
+        </button>
+
+            <div class="sc2_note">
+                <strong>NOTE:</strong> Temperature of food must not exceed 8°C. It is recommended that fridge temperatures are checked at least once per day.
+            </div>
+
+            <div class="sc2_today_record">
+                <div class="sc2_today_date" id="today_record_date"></div>
+
+                <div class="sc2_temperature_row" id="temperature_inputs"></div>
+
+                <div class="sc2_comments_section">
+                    <div class="sc2_field_group">
+                        <label class="sc2_field_label" for="comments_today">Comments/Action for Today:</label>
+                        <textarea
+                            class="sc2_textarea"
+                            id="comments_today"
+                            name="comments_today"
+                            placeholder="Record any issues found, corrective actions taken, or general notes..."
+                        ></textarea>
+                    </div>
+
+                    <div class="sc2_autofill_section">
+                        <div class="sc2_autofill_field">
+                            <span class="sc2_autofill_label">Employee Name:</span>
+                            <span class="sc2_autofill_value" id="autofill_name"></span>
+                        </div>
+                        <div class="sc2_autofill_field">
+                            <span class="sc2_autofill_label">Date:</span>
+                            <span class="sc2_autofill_value" id="autofill_date"></span>
+                        </div>
+                        <div class="sc2_autofill_field">
+                            <span class="sc2_autofill_label">Signature/Initial:</span>
+                            <span class="sc2_autofill_value" id="autofill_signature"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+  
+    </div>
+
+    <div id="bottom">
+        <div id="employee_section">
+            <span id="employee_name_display"></span>
+        </div>
+        <div id="library_section">
+            <img src="https://www.svgrepo.com/show/435359/library.svg" alt="Library">
+        </div>
+
+        <button id="save_button_sc2" class="save_button" type="button">
+            <img src="https://www.svgrepo.com/show/502821/save.svg" alt="Save">
+        </button>
+
+        <button
+            id="export_button_sc2"
+            class="save_button"
+            style="display:none; background-color:rgba(121, 252, 164, 0.822); "
+            title="Export PDF"
+            type="button"
+        >
+            <img src="https://www.svgrepo.com/show/510957/download.svg" alt="Export PDF">
+        </button>
+    </div>
+</div>
+
+<script>
+const today = new Date();
+document.getElementById('current_date').textContent = today.toLocaleDateString('en-GB');
+
+let employee_id = null;
+let employeeData = null;
+let unitCount = 1;
+const maxUnits = 6;
+let unitNames = {};
+let temperatureData = {};
+let currentEntryUpdatedAt = null;
+let currentEntryStatus = 'draft';
+
+function getCurrentEmployeeName() {
+    return employeeData?.name || 'Employee';
+}
+
+function initializeUnitNames() {
+    for (let i = 1; i <= maxUnits; i++) {
+        unitNames[i] = `Unit ${i}`;
+    }
+}
+
+async function initializeEmployee() {
+    const stored = sessionStorage.getItem('employeeData');
+    if (stored) {
+        employeeData = JSON.parse(stored);
+    } else {
+        try {
+            const response = await fetch('/api/employee', { credentials: 'include' });
+            const data = await response.json();
+            if (data.success) {
+                employeeData = data.employee;
+                sessionStorage.setItem('employeeData', JSON.stringify(employeeData));
+            }
+        } catch (err) {
+            console.error('Error fetching employee data:', err);
+        }
+    }
+
+    employee_id = employeeData?.id || null;
+    const employeeName = getCurrentEmployeeName();
+
+    document.getElementById('employee_name_display').textContent = employeeName;
+    document.getElementById('autofill_name').textContent = employeeName;
+    document.getElementById('autofill_date').textContent = today.toLocaleDateString('en-GB');
+    document.getElementById('autofill_signature').textContent = employeeName;
+}
+
+function formatMonthYear() {
+    const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    document.getElementById('month_year_display').textContent =
+        `${monthNames[today.getMonth()]} ${today.getFullYear()}`;
+}
+
+function setTodayRecordDate() {
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayName = dayNames[today.getDay()];
+    const dateStr = today.toLocaleDateString('en-GB');
+    document.getElementById('today_record_date').textContent = `${dayName}, ${dateStr}`;
+}
+
+function saveCurrentTemperatureData() {
+    for (let u = 1; u <= unitCount; u++) {
+        const amInput = document.getElementById(`temp_unit${u}_am`);
+        const pmInput = document.getElementById(`temp_unit${u}_pm`);
+
+        if (amInput) {
+            temperatureData[`unit${u}_am`] = amInput.value !== '' ? parseFloat(amInput.value) : null;
+        }
+        if (pmInput) {
+            temperatureData[`unit${u}_pm`] = pmInput.value !== '' ? parseFloat(pmInput.value) : null;
+        }
+    }
+}
+
+function renderUnits() {
+    const display = document.getElementById('units_display');
+    display.innerHTML = '';
+
+    for (let i = 1; i <= unitCount; i++) {
+        const name = unitNames[i] || `Unit ${i}`;
+        const tag = document.createElement('div');
+        tag.className = 'sc2_unit_tag';
+        tag.innerHTML = `
+            <span>
+                <img src="https://www.svgrepo.com/show/446012/snowflake.svg" alt="Unit Icon" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
+                ${name}
+            </span>
+        `;
+        display.appendChild(tag);
+    }
+
+    syncUnitButtonState();
+}
+
+function syncUnitButtonState() {
+    const locked = currentEntryStatus === 'submitted' || currentEntryStatus === 'exported';
+    document.getElementById('add_unit_btn').disabled = locked || unitCount >= maxUnits;
+    document.getElementById('remove_unit_btn').disabled = locked || unitCount <= 1;
+}
+
+function renderTemperatureInputs() {
+    const container = document.getElementById('temperature_inputs');
+    container.innerHTML = '';
+
+    for (let u = 1; u <= unitCount; u++) {
+        const unitName = unitNames[u] || `Unit ${u}`;
+
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'sc2_temp_unit_group';
+
+        const label = document.createElement('div');
+        label.className = 'sc2_temp_unit_label';
+        label.textContent = unitName;
+        groupDiv.appendChild(label);
+
+        const inputsRow = document.createElement('div');
+        inputsRow.className = 'sc2_temp_inputs_row';
+
+        const makeInput = (fieldKey, labelText) => {
+            const wrap = document.createElement('div');
+            wrap.className = 'sc2_temp_input_group';
+
+            const fieldLabel = document.createElement('label');
+            fieldLabel.className = 'sc2_temp_input_label';
+            fieldLabel.textContent = labelText;
+
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.className = 'sc2_temp_input';
+            input.id = fieldKey;
+            input.name = fieldKey;
+            input.step = '0.1';
+            input.min = '-30';
+            input.max = '30';
+
+            // Support both key shapes:
+            // temp_unit1_am (input id) and unit1_am (saved JSON)
+            const dataKey = fieldKey.replace(/^temp_/, '');
+            const value =
+                temperatureData[fieldKey] ??
+                temperatureData[dataKey] ??
+                '';
+
+            if (value !== '' && value !== null && value !== undefined) {
+                input.value = value;
+            }
+
+            wrap.appendChild(fieldLabel);
+            wrap.appendChild(input);
+            return wrap;
+        };
+
+        inputsRow.appendChild(makeInput(`temp_unit${u}_am`, 'AM (°C)'));
+        inputsRow.appendChild(makeInput(`temp_unit${u}_pm`, 'PM (°C)'));
+
+        groupDiv.appendChild(inputsRow);
+        container.appendChild(groupDiv);
+    }
+
+    applyFormDisabledState(
+        currentEntryStatus === 'draft' ||
+        currentEntryStatus === 'submitted' ||
+        currentEntryStatus === 'exported'
+    );
+}
+
+function collectSc2Data() {
+    saveCurrentTemperatureData();
+    return {
+        employee_id,
+        employee_name: getCurrentEmployeeName(),
+        date: today.toISOString().split('T')[0],
+        month: today.getMonth() + 1,
+        year: today.getFullYear(),
+        day: today.getDate(),
+        unit_count: unitCount,
+        unit_names: unitNames,
+        temperatures: { ...temperatureData },
+        comments: document.getElementById('comments_today').value || '',
+        signed: getCurrentEmployeeName(),
+        updated_at: currentEntryUpdatedAt,
+        status: currentEntryStatus
+    };
+}
+
+function removeReadOnlyNotice() {
+    const existing = document.querySelector('.sc2_read_only_notice');
+    if (existing) existing.remove();
+}
+
+function showReadOnlyNotice(message) {
+    removeReadOnlyNotice();
+    const note = document.createElement('div');
+    note.className = 'sc2_note sc2_read_only_notice';
+    note.textContent = message;
+    const container = document.getElementById('question_container');
+    container.insertBefore(note, container.firstChild);
+}
+
+function applyFormDisabledState(isDisabled) {
+    const locked = !!isDisabled;
+    document.getElementById('comments_today').disabled = locked;
+    document.querySelectorAll('.sc2_temp_input').forEach(input => {
+        input.disabled = locked;
+    });
+
+    document.getElementById('add_unit_btn').disabled = locked || unitCount >= maxUnits;
+    document.getElementById('remove_unit_btn').disabled = locked || unitCount <= 1;
+    document.getElementById('save_button_sc2').disabled = locked;
+    document.getElementById('save_button_sc2').style.display = locked ? 'none' : '';
+    document.getElementById('reopen_button_sc2').style.display = locked ? '' : 'none';
+}
+
+function updateExportVisibility() {
+    const exportBtn = document.getElementById('export_button_sc2');
+    if (!exportBtn) return;
+
+    const show = currentEntryStatus === 'draft' && !!currentEntryUpdatedAt;
+    exportBtn.style.display = show ? '' : 'none';
+}
+
+async function loadProgressGrid() {
+    try {
+        const response = await fetch(
+            `/api/sc2/progress?month=${today.getMonth() + 1}&year=${today.getFullYear()}&employee_id=${employee_id}`,
+            { credentials: 'include' }
+        );
+        const data = await response.json();
+
+        const grid = document.getElementById('sc2_month_grid');
+        grid.innerHTML = '';
+
+        const boxes = Array.isArray(data.boxes) ? data.boxes : [];
+        const daysInMonth = data.daysInMonth || boxes.length || 0;
+        let completed = 0;
+
+        boxes.forEach(box => {
+            const el = document.createElement('div');
+            const state = box.state || 'missed';
+            el.className = `sc2_box ${state}`;
+            el.textContent = box.day;
+            el.title = box.employee_name || '';
+            if (state !== 'missed') completed++;
+            grid.appendChild(el);
+        });
+
+        document.getElementById('progress_text').textContent =
+            `${completed} / ${daysInMonth} days completed`;
+    } catch (err) {
+        console.error('Error loading progress grid:', err);
+    }
+}
+
+async function updateProgress() {
+    await loadProgressGrid();
+}
+
+async function loadTodayData() {
+    try {
+        const response = await fetch('/api/sc2/today', { credentials: 'include' });
+        const result = await response.json();
+        const record = result.record || null;
+
+        if (!result.success || !record) {
+            currentEntryStatus = 'live';
+            currentEntryUpdatedAt = null;
+            applyFormDisabledState(false);
+            updateExportVisibility();
+            return;
+        }
+
+        unitCount = record.unit_count || 1;
+
+        if (record.unit_names && typeof record.unit_names === 'object') {
+            unitNames = { ...unitNames, ...record.unit_names };
+        }
+
+        if (record.temperatures && typeof record.temperatures === 'object') {
+            temperatureData = { ...record.temperatures };
+        }
+
+        renderUnits();
+        renderTemperatureInputs();
+
+        document.getElementById('comments_today').value = record.comments || '';
+        currentEntryUpdatedAt = record.updated_at || null;
+        currentEntryStatus = record.status || 'live';
+
+        const isLocked =
+            currentEntryStatus === 'draft' ||
+            currentEntryStatus === 'submitted' ||
+            currentEntryStatus === 'exported';
+
+        applyFormDisabledState(isLocked);
+
+        if (isLocked) {
+            showReadOnlyNotice('This record has been saved. Use Reopen to edit it.');
+        } else {
+            removeReadOnlyNotice();
+        }
+
+        updateExportVisibility();
+        await updateProgress();
+    } catch (err) {
+        console.error('Error loading today data:', err);
+    }
+}
+
+async function saveDraft() {
+    if (!employee_id) {
+        alert('Employee not identified. Please log in again.');
+        return;
+    }
+
+    const payload = collectSc2Data();
+
+    try {
+        const response = await fetch('/api/sc2/draft', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const text = await response.text();
+        let result;
+        try {
+            result = JSON.parse(text);
+        } catch {
+            throw new Error(text || `Server returned non-JSON response (${response.status})`);
+        }
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || `Save failed (${response.status})`);
+        }
+
+        currentEntryUpdatedAt = result.record?.updated_at || new Date().toISOString();
+        currentEntryStatus = 'draft';
+
+        applyFormDisabledState(true);
+        removeReadOnlyNotice();
+        updateExportVisibility();
+        await updateProgress();
+    } catch (err) {
+        console.error('Error saving draft:', err);
+        alert('Error saving draft: ' + err.message);
+    }
+}
+
+async function exportPdf() {
+    if (!employee_id) {
+        alert('Employee not identified. Please log in again.');
+        return;
+    }
+
+    const payload = collectSc2Data();
+
+    try {
+        const response = await fetch('/api/sc2/export', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const text = await response.text();
+        let result;
+        try {
+            result = JSON.parse(text);
+        } catch {
+            throw new Error(text || `Server returned non-JSON response (${response.status})`);
+        }
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || `Export failed (${response.status})`);
+        }
+
+        currentEntryUpdatedAt = result.record?.updated_at || new Date().toISOString();
+        currentEntryStatus = 'submitted';
+
+        applyFormDisabledState(true);
+        updateExportVisibility();
+        showReadOnlyNotice('This record has been submitted and is now read-only. Use Reopen to edit it.');
+
+        await updateProgress();
+
+        const pdfUrl = 'records/' + (result.pdfUrl || result.pdfPath);
+        if (pdfUrl) {
+            const win = window.open(pdfUrl, '_blank', 'noopener,noreferrer');
+            if (!win) window.location.href = pdfUrl;
+        }
+    } catch (err) {
+        console.error('Error exporting SC2 PDF:', err);
+        alert('Error exporting PDF: ' + err.message);
+    }
+}
+
+async function reopenSc2() {
+    try {
+        const response = await fetch('/api/sc2/reopen', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ date: today.toISOString().split('T')[0] })
+        });
+
+        const text = await response.text();
+        let result;
+        try {
+            result = JSON.parse(text);
+        } catch {
+            throw new Error(text || `Server returned non-JSON response (${response.status})`);
+        }
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || `Reopen failed (${response.status})`);
+        }
+
+        currentEntryStatus = 'reopened';
+        currentEntryUpdatedAt = result.record?.updated_at || null;
+
+        applyFormDisabledState(false);
+        removeReadOnlyNotice();
+        updateExportVisibility();
+        await updateProgress();
+    } catch (err) {
+        console.error('Error reopening SC2:', err);
+        alert('Error reopening form: ' + err.message);
+    }
+}
+
+function bindEvents() {
+    document.getElementById('add_unit_btn').addEventListener('click', (e) => {
+        e.preventDefault();
+        if (currentEntryStatus === 'submitted' || currentEntryStatus === 'exported') return;
+        if (unitCount >= maxUnits) return;
+        saveCurrentTemperatureData();
+        unitCount++;
+        if (!unitNames[unitCount]) unitNames[unitCount] = `Unit ${unitCount}`;
+        renderUnits();
+        renderTemperatureInputs();
+    });
+
+    document.getElementById('remove_unit_btn').addEventListener('click', (e) => {
+        e.preventDefault();
+        if (currentEntryStatus === 'submitted' || currentEntryStatus === 'exported') return;
+        if (unitCount <= 1) return;
+        saveCurrentTemperatureData();
+        delete unitNames[unitCount];
+        delete temperatureData[`unit${unitCount}_am`];
+        delete temperatureData[`unit${unitCount}_pm`];
+        unitCount--;
+        renderUnits();
+        renderTemperatureInputs();
+    });
+
+    document.getElementById('save_button_sc2').addEventListener('click', (e) => {
+        e.preventDefault();
+        saveDraft();
+    });
+
+    document.getElementById('export_button_sc2').addEventListener('click', (e) => {
+        e.preventDefault();
+        exportPdf();
+    });
+
+    document.getElementById('reopen_button_sc2').addEventListener('click', (e) => {
+        e.preventDefault();
+        reopenSc2();
+    });
+}
+
+async function init() {
+    initializeUnitNames();
+    formatMonthYear();
+    setTodayRecordDate();
+    renderUnits();
+    renderTemperatureInputs();
+    bindEvents();
+    await initializeEmployee();
+    await loadTodayData();
+    await updateProgress();
+}
+
+    // Library button
+    document.getElementById('library_section').addEventListener('click', () => {
+        window.location.href = '/library';
+    });
+
+
+init();
+</script>
+</body>
+</html>

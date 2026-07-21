@@ -1,0 +1,1255 @@
+/* ===== GLOBAL BASE STYLES ===== */
+* {
+    box-sizing: border-box;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+}
+
+body {
+    background-color: #fff;
+    font-family: Myriad Pro, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* ===== TYPOGRAPHY ===== */
+h1 {
+    font-size: 10pt;
+    margin: 0;
+}
+
+h2 {
+    font-size: 12pt;
+    margin: 0;
+}
+
+h3, h4, h5, h6 {
+    margin: 0;
+}
+
+/* ===== MOBILE PHONE CONTAINER ===== */
+/* Base phone layout - use #phone_body on main container */
+#phone_body {
+    width: 100%;
+    height: 100dvh;
+    background-color: #dbdbdb;
+    border: 1pt solid #000;
+    margin: 0 auto;
+    padding: 8pt;
+    padding-bottom: calc(8pt + 40px + 8pt);
+    display: flex;
+    flex-direction: column;
+    max-width: 460px;
+}
+
+/* ===== HEADER STYLES ===== */
+#header {
+    width: 100%;
+    height: 60px;
+    display: flex;
+    margin-bottom: 8pt;
+}
+
+/* Back button (for pages with navigation) */
+#back_button {
+    width: 20%;
+    background-color: #fff;
+    margin-right: 10px;
+    border: 1pt solid #000;
+    padding: 2pt;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#back_button:hover {
+    background-color: #f0f0f0;
+}
+
+#back_button img {
+    width: 90%;
+    height: 90%;
+}
+
+/* Title section (flexible for different headers) */
+#title {
+    width: 80%;
+    background-color: #fff;
+    border: 1pt solid #000;
+    padding: 8pt;
+    display: flex;
+    align-items: center;
+}
+
+#title img {
+    height: 80%;
+}
+
+#title h1 {
+    margin-left: 10px;
+}
+
+/* Logo section (for home page header) */
+#logo_section {
+    width: 100%;
+    background-color: #fff;
+    border: 1pt solid #000;
+    padding: 8pt;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#logo_section img {
+    height: 80%;
+    margin-right: 10px;
+}
+
+/* ===== DATE SECTION ===== */
+#date {
+    font-size: 10pt;
+    margin: 6px 0 8pt 0;
+    background-color: #fff;
+    border: 1pt solid #000;
+    padding: 6pt 8pt;
+    flex: 1;
+}
+#info {
+    font-size: 10pt;
+    margin: 6px 0 8pt 0;
+    background-color: #fff;
+    border: 1pt solid #000;
+    padding: 6pt 8pt;
+    width: 40px;
+    margin-left: 8pt;
+}
+
+/* ===== CONTENT CONTAINERS ===== */
+/* Question/Item container with scroll */
+#question_container,
+#content_container {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    margin-bottom: 8pt;
+    flex-direction: column;
+}
+
+/* Custom scrollbar styling */
+#question_container::-webkit-scrollbar,
+#content_container::-webkit-scrollbar {
+    width: 6px;
+}
+
+#question_container::-webkit-scrollbar-track,
+#content_container::-webkit-scrollbar-track {
+    background: #e0e0e0;
+}
+
+#question_container::-webkit-scrollbar-thumb,
+#content_container::-webkit-scrollbar-thumb {
+    background: #999;
+    border-radius: 3px;
+}
+
+/* ===== WELCOME SECTION ===== */
+#welcome_section {
+    background-color: #fff;
+    border: 1pt solid #000;
+    padding: 12pt;
+    margin-bottom: 8pt;
+    text-align: center;
+}
+
+#welcome_section h2 {
+    margin: 0 0 6pt 0;
+}
+
+#welcome_section p {
+    font-size: 10pt;
+    margin: 0;
+    color: #555;
+}
+
+/* ===== BOTTOM NAVIGATION BAR ===== */
+#bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8pt;
+    padding-bottom: max(8pt, env(safe-area-inset-bottom));
+    gap: 6pt;
+    background-color: #dbdbdb;
+    border-top: 1pt solid #000;
+    z-index: 100;
+}
+
+#employee_section,
+#library_section,
+#save_button,
+.save_button,
+#logout_button {
+    height: 100%;
+    background-color: #fff;
+    border: 1pt solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+
+#employee_section:hover,
+#library_section:hover,
+#save_button:hover,
+.save_button:hover,
+#logout_button:hover {
+    background-color: #f0f0f0;
+}
+
+/* Employee section - largest width */
+#employee_section {
+    flex: 1;
+    font-size: 10pt;
+    width: 45%;
+}
+
+/* Library section - medium width */
+#library_section {
+    width: 25%;
+}
+
+/* Save/Logout buttons - smallest width */
+#save_button,
+.save_button,
+#logout_button {
+    width: 25%;
+}
+
+#employee_section img,
+#library_section img,
+#save_button img,
+.save_button img,
+#logout_button img {
+    max-width: 40px;
+    max-height: 40px;
+}
+
+/* ===== SC4 PAGE STYLES ===== */
+.sc4_info_box {
+    background: #fff;
+    border: 1pt solid #000;
+    padding: 8pt;
+    margin-bottom: 8pt;
+    font-size: 9pt;
+    color: #333;
+}
+
+.sc4_info_box p {
+    margin: 4pt 0 0 0;
+}
+
+.sc4_controls {
+    display: flex;
+    gap: 6pt;
+    margin-bottom: 8pt;
+}
+
+.sc4_action_btn {
+    flex: 1;
+    padding: 8pt;
+    background: #fff;
+    border: 1pt solid #000;
+    font-size: 9pt;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: Myriad Pro, sans-serif;
+    color: #333;
+}
+
+.sc4_action_btn:hover {
+    background: #f0f0f0;
+}
+
+.sc4_action_btn.is-disabled,
+.sc4_action_btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.sc4_row_card {
+    background: #fff;
+    border: 1pt solid #000;
+    padding: 8pt;
+    margin-bottom: 8pt;
+}
+
+.sc4_row_header {
+    font-size: 10pt;
+    font-weight: 600;
+    margin-bottom: 8pt;
+    color: #333;
+}
+
+.sc4_grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6pt;
+}
+
+.sc4_field_group {
+    display: flex;
+    flex-direction: column;
+    gap: 4pt;
+}
+
+.sc4_field_group label {
+    font-size: 8.5pt;
+    font-weight: 600;
+    color: #333;
+}
+
+.sc4_input,
+.sc4_textarea {
+    width: 100%;
+    padding: 6pt;
+    border: 1pt solid #000;
+    background: #fff;
+    font-family: Myriad Pro, sans-serif;
+    font-size: 9pt;
+    color: #333;
+}
+
+.sc4_textarea {
+    min-height: 60pt;
+    resize: vertical;
+}
+
+.sc4_full_width {
+    grid-column: 1 / -1;
+}
+
+.sc4_autofill_section {
+    background: #fff;
+    border: 1pt solid #000;
+    padding: 8pt;
+    margin-top: 4pt;
+}
+
+.sc4_autofill_item {
+    display: flex;
+    justify-content: space-between;
+    padding: 4pt 0;
+    font-size: 9pt;
+}
+
+.sc4_autofill_label {
+    font-weight: 600;
+    color: #333;
+}
+
+/* ===== SC5 PAGE STYLES ===== */
+/* Question row layout */
+.question_row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4pt;
+}
+
+/* Checklist circle button container */
+.button_checklist_container {
+    width: 20%;
+    background-color: #fff;
+    border: 1pt solid #000;
+    position: relative;
+    cursor: pointer;
+}
+
+/* Circular checkbox element */
+.checklist_circle {
+    width: 45px;
+    height: 45px;
+    background-color: #fff;
+    border: 1pt solid #000;
+    border-radius: 50%;
+    margin: 8pt auto;
+}
+
+/* Check mark image overlay */
+.button_checklist_container img {
+    position: absolute;
+    height: 75px;
+    top: -23px;
+    left: 5px;
+}
+
+/* Question text box */
+.question {
+    width: 69%;
+    background-color: #fff;
+    border: 1pt solid #000;
+    padding: 8pt;
+    border-bottom-right-radius: 12px;
+    border-top-right-radius: 12px;
+    font-size: 10pt;
+    flex: 0.95;
+}
+
+/* ===== INDEX/HOME PAGE STYLES ===== */
+/* Checklist card - clickable items on home */
+.checklist_card {
+    background-color: #fff;
+    border: 1pt solid #000;
+    padding: 12pt;
+    margin-bottom: 8pt;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border-radius: 0 12px 12px 0;
+}
+
+.checklist_card:hover {
+    background-color: #f0f0f0;
+}
+
+.checklist_card:active {
+    background-color: #e0e0e0;
+}
+
+/* Card content wrapper */
+.checklist_info {
+    flex: 1;
+}
+
+/* Card title */
+.checklist_title {
+    font-size: 12pt;
+    font-weight: bold;
+    margin: 0 0 4pt 0;
+}
+
+/* Card description */
+.checklist_description {
+    font-size: 9pt;
+    color: #555;
+    margin: 0;
+}
+
+/* Arrow indicator on card */
+.checklist_arrow {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16pt;
+    margin-left: 8pt;
+}
+
+/* Required badge on checklist card */
+.required_badge {
+    display: inline-block;
+    background-color: #ff6b6b;
+    color: #fff;
+    font-size: 8pt;
+    padding: 2pt 6pt;
+    border-radius: 4px;
+    margin-left: 8pt;
+    font-weight: bold;
+}
+
+/* Completed checklist card */
+.checklist_card.completed {
+    background-color: #e8f5e9;
+    opacity: 0.7;
+}
+
+.checklist_card.completed .required_badge {
+    background-color: #4caf50;
+}
+
+/* ===== COMMON ELEMENTS ===== */
+/* Standard button and container style */
+.button,
+.container,
+input[type="button"],
+input[type="submit"],
+button {
+    background-color: #fff;
+    border: 1pt solid #000;
+    padding: 8pt;
+}
+
+/* Image sizing for consistency */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* ===== FLEXBOX UTILITIES ===== */
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ===== SPACING ===== */
+.margin-small {
+    margin: 4pt;
+}
+
+.margin-medium {
+    margin: 6px;
+}
+
+.padding-small {
+    padding: 2pt;
+}
+
+.padding-medium {
+    padding: 8pt;
+}
+
+/* ===== BORDERS & STYLING ===== */
+.bordered {
+    border: 1pt solid #000;
+}
+
+.rounded-right {
+    border-bottom-right-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.rounded-circle {
+    border-radius: 50%;
+}
+
+/* ===== BACKGROUND COLORS ===== */
+.bg-white {
+    background-color: #fff;
+}
+
+.bg-light-gray {
+    background-color: #dbdbdb;
+}
+
+.bg-dark {
+    background-color: #000;
+}
+
+/* ===== SC1 MOBILE-FRIENDLY CARD STYLES ===== */
+.sc1_record_card {
+    background-color: #fff;
+    border: 1pt solid #000;
+    margin-bottom: 8pt;
+    padding: 8pt;
+    border-bottom-right-radius: 8pt;
+    border-top-right-radius: 8pt;
+}
+
+.sc1_record_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6pt;
+    padding-bottom: 4pt;
+    border-bottom: 1pt solid #ddd;
+}
+
+.sc1_record_number {
+    font-size: 12pt;
+    font-weight: bold;
+    color: #333;
+}
+
+.sc1_record_date {
+    font-size: 10pt;
+    color: #666;
+}
+
+.sc1_remove_button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8pt;
+    border-radius: 4pt;
+    transition: background-color 0.2s;
+    background-color: #ffe6e6;
+    align-items: center;
+}
+
+.sc1_remove_button:hover {
+    background-color: #ffbaba;
+}
+
+.sc1_field_group {
+    margin-bottom: 6pt;
+}
+
+.sc1_field_label {
+    display: block;
+    font-size: 9pt;
+    font-weight: bold;
+    margin-bottom: 2pt;
+    color: #555;
+}
+
+.sc1_text_input,
+.sc1_temp_input {
+    width: 100%;
+    height: 53px;
+    border: 1pt solid #000;
+    padding: 4pt 6pt;
+    font-family: Myriad Pro, sans-serif;
+    font-size: 9pt;
+    background-color: #fff;
+    border-radius: 4pt;
+}
+
+.sc1_text_input:focus,
+.sc1_temp_input:focus {
+    outline: 2px solid #0066cc;
+    background-color: #fffacd;
+}
+
+.sc1_checkbox_container {
+    display: flex;
+    align-items: center;
+    gap: 6pt;
+}
+
+.sc1_checkbox_input {
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+}
+
+.sc1_checkbox_label {
+    font-size: 9pt;
+    cursor: pointer;
+}
+
+.sc1_readonly_field {
+    background-color: #f0f0f0;
+    cursor: not-allowed;
+}
+
+.sc1_sign_field {
+    margin-top: 6pt;
+    padding-top: 4pt;
+    border-top: 1pt solid #ddd;
+}
+
+/* ===== ADD RECORD BUTTON ===== */
+#add_record_button {
+    width: 100%;
+    background-color: #8ccc9f;
+    border: 1pt solid #5a9e6e;
+    padding: 12pt;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-family: Myriad Pro, sans-serif;
+    font-size: 10pt;
+    border-radius: 8pt;
+}
+
+#add_record_button:hover {
+    background-color: #c3daca;
+}
+
+#add_record_button:disabled {
+    background-color: #e0e0e0;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* ===== SC2 PAGE STYLES ===== */
+/* Month/Year display */
+.sc2_month_year_display {
+    font-size: 12pt;
+    font-weight: bold;
+    margin-bottom: 8pt;
+    text-align: center;
+    color: #333;
+    background-color: #fff;
+    border: 1pt solid #000;
+    padding: 8pt;
+}
+
+/* Progress container */
+.sc2_progress_container {
+    margin-bottom: 8pt;
+    padding: 8pt;
+    background: #fff;
+    border: 1pt solid #000;
+}
+
+.sc2_progress_label {
+    font-weight: 600;
+    font-size: 10pt;
+    margin-bottom: 6pt;
+    color: #333;
+}
+
+.sc2_progress_bar {
+    display: flex;
+    height: 24pt;
+    overflow: hidden;
+    background: #ddd;
+    border: 1pt solid #000;
+    position: relative;
+}
+
+.sc2_progress_completed {
+    background: #4CAF50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 9pt;
+    transition: width 0.3s ease;
+}
+
+.sc2_progress_total_overlay {
+    position: absolute;
+    height: 100%;
+    background: rgba(255, 215, 0, 0.4);
+    border-right: 2pt solid #FFD700;
+    top: 0;
+    left: 0;
+    transition: left 0.3s ease;
+    pointer-events: none;
+}
+
+.sc2_progress_missed {
+    background: #f44336;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 9pt;
+    transition: width 0.3s ease;
+}
+
+.sc2_progress_text {
+    font-size: 9pt;
+    margin-top: 4pt;
+    text-align: center;
+    color: #666;
+}
+
+.sc2_progress_legend {
+    display: flex;
+    gap: 12pt;
+    justify-content: center;
+    font-size: 8pt;
+    margin-top: 6pt;
+    flex-wrap: wrap;
+}
+
+.sc2_legend_item {
+    display: flex;
+    align-items: center;
+    gap: 4pt;
+    color: #666;
+}
+
+.sc2_legend_box {
+    width: 12pt;
+    height: 12pt;
+    border: 1pt solid #000;
+}
+
+/* Units manager */
+.sc2_units_manager {
+    margin-bottom: 8pt;
+    padding: 8pt;
+    background: #fff;
+    border: 1pt solid #000;
+}
+
+.sc2_units_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6pt;
+}
+
+.sc2_units_header h3 {
+    margin: 0;
+    font-size: 10pt;
+    font-weight: 600;
+}
+
+.sc2_unit_controls {
+    display: flex;
+    gap: 6pt;
+}
+
+.sc2_unit_btn {
+    background: #fff;
+    color: #000;
+    border: 1pt solid #000;
+    padding: 4pt 8pt;
+    cursor: pointer;
+    font-size: 9pt;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.sc2_unit_btn:hover {
+    background: #f0f0f0;
+}
+
+.sc2_unit_btn:disabled {
+    background: #e0e0e0;
+    cursor: not-allowed;
+}
+
+.sc2_units_display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6pt;
+}
+
+.sc2_unit_tag {
+    background: white;
+    padding: 4pt 8pt;
+    border: 1pt solid #000;
+    font-size: 9pt;
+    font-weight: 500;
+}
+
+/* Today's record section */
+.sc2_today_record {
+    padding: 8pt;
+    border: 1pt solid #000;
+    background: white;
+    margin-bottom: 8pt;
+}
+
+.sc2_today_date {
+    font-size: 11pt;
+    font-weight: 600;
+    margin-bottom: 8pt;
+    color: #333;
+}
+
+/* Temperature inputs */
+.sc2_temperature_row {
+    display: flex;
+    flex-direction: column;
+    gap: 6pt;
+    margin-bottom: 8pt;
+}
+
+.sc2_temp_unit_group {
+    padding: 8pt;
+    background: #f2f2f2;
+    border: 1pt solid #ddd;
+}
+
+.sc2_temp_unit_label {
+    font-weight: 600;
+    font-size: 9pt;
+    margin-bottom: 4pt;
+    display: block;
+}
+
+.sc2_temp_inputs_row {
+    display: flex;
+    gap: 8pt;
+    align-items: flex-end;
+}
+
+.sc2_temp_input_group {
+    flex: 1;
+}
+
+.sc2_temp_input_label {
+    font-size: 8pt;
+    font-weight: 500;
+    color: #666;
+    margin-bottom: 2pt;
+    display: block;
+}
+
+.sc2_temp_input {
+    width: 100%;
+    padding: 4pt 6pt;
+    border: 1pt solid #000;
+    font-size: 9pt;
+    text-align: center;
+    background-color: #fff;
+}
+
+.sc2_temp_input:focus {
+    outline: 2pt solid #0066cc;
+    background-color: #fffacd;
+}
+
+/* Comments section */
+.sc2_comments_section {
+    margin-top: 8pt;
+    background: #fff;
+}
+
+.sc2_field_group {
+    margin-bottom: 8pt;
+}
+
+.sc2_field_label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 4pt;
+    font-size: 9pt;
+}
+
+.sc2_textarea {
+    width: 100%;
+    min-height: 60pt;
+    padding: 6pt;
+    border: 1pt solid #000;
+    font-family: Myriad Pro, sans-serif;
+    resize: vertical;
+    font-size: 9pt;
+    background-color: #fff;
+}
+
+.sc2_textarea:focus {
+    outline: 2pt solid #0066cc;
+    background-color: #fffacd;
+}
+
+/* Autofill section */
+.sc2_autofill_section {
+    margin-top: 8pt;
+    padding: 8pt;
+    background: #fff;
+    border: 1pt solid #000;
+    font-size: 9pt;
+}
+
+.sc2_autofill_field {
+    display: flex;
+    justify-content: space-between;
+    padding: 2pt 0;
+}
+
+.sc2_autofill_label {
+    font-weight: 600;
+    color: #333;
+}
+
+.sc2_autofill_value {
+    color: #555;
+}
+
+/* Note section */
+.sc2_note {
+    background: hsl(46, 100%, 91%);
+    padding: 8pt;
+    /*Yellow background for notes, with a subtle left hand border */
+    border-left: 4pt solid #ffeb3b;
+    margin-bottom: 8pt;
+    font-size: 9pt;
+}
+
+.sc2_note strong {
+    display: block;
+    margin-bottom: 2pt;
+}
+
+/* ===== SC3 STYLES ===== */
+
+/* Month/Year display */
+.sc3_month_year_display {
+    font-size: 12pt;
+    font-weight: 600;
+    margin-bottom: 8pt;
+    padding: 8pt;
+    background: #fff;
+    border: 1pt solid #000;
+    color: #333;
+    text-align: center;
+}
+
+/* Segmented buttons */
+.sc3_section_buttons {
+    display: flex;
+    gap: 4pt;
+    margin-bottom: 8pt;
+    padding: 8pt;
+    background: #fff;
+    border: 1pt solid #000;
+}
+
+.sc3_section_btn {
+    flex: 1;
+    padding: 8pt;
+    background: #f5f5f5;
+    border: 1pt solid #ccc;
+    font-size: 10pt;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: Myriad Pro, sans-serif;
+    color: #333;
+}
+
+.sc3_section_btn:hover {
+    background: #e8e8e8;
+}
+
+.sc3_section_btn.active {
+    background: #4CAF50;
+    color: white;
+    border-color: #4CAF50;
+}
+
+/* Section content */
+.sc3_section_content {
+    display: none;
+}
+
+.sc3_section_content.active {
+    display: block;
+}
+
+.sc3_section_header {
+    margin-bottom: 8pt;
+    padding: 8pt;
+    background: #fff;
+    border: 1pt solid #000;
+}
+
+.sc3_section_header h3 {
+    margin: 0 0 8pt 0;
+    font-size: 12pt;
+    color: #333;
+}
+
+.sc3_section_controls {
+    display: flex;
+    gap: 4pt;
+}
+
+.sc3_row_btn {
+    flex: 1;
+    padding: 6pt;
+    background: #fff;
+    border: 1pt solid #000;
+    font-size: 9pt;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: Myriad Pro, sans-serif;
+    color: #333;
+    transition: all 0.3s ease;
+}
+
+.sc3_row_btn:hover {
+    background: #f0f0f0;
+}
+
+.sc3_row_btn:active {
+    background: #e0e0e0;
+}
+
+/* Row container */
+.sc3_row_container {
+    margin-bottom: 8pt;
+    padding: 8pt;
+    background: #fff;
+    border: 1pt solid #000;
+}
+
+.sc3_row_field {
+    margin-bottom: 8pt;
+}
+
+.sc3_row_field:last-child {
+    margin-bottom: 0;
+}
+
+.sc3_row_field label {
+    display: block;
+    font-size: 9pt;
+    font-weight: 600;
+    margin-bottom: 4pt;
+    color: #333;
+}
+
+.sc3_input {
+    width: 100%;
+    padding: 6pt;
+    font-size: 10pt;
+    border: 1pt solid #000;
+    background: #fff;
+    font-family: Myriad Pro, sans-serif;
+    color: #333;
+}
+
+.sc3_input:focus {
+    outline: none;
+    box-shadow: inset 0 0 3pt rgba(76, 175, 80, 0.3);
+}
+
+/* Comments section */
+.sc3_comments_section {
+    margin-bottom: 8pt;
+    padding: 8pt;
+    background: #fff;
+    border: 1pt solid #000;
+}
+
+.sc3_field_group {
+    margin-bottom: 8pt;
+}
+
+.sc3_field_group:last-child {
+    margin-bottom: 0;
+}
+
+.sc3_label {
+    display: block;
+    font-size: 10pt;
+    font-weight: 600;
+    margin-bottom: 6pt;
+    color: #333;
+}
+
+.sc3_textarea {
+    width: 100%;
+    padding: 8pt;
+    font-size: 10pt;
+    border: 1pt solid #000;
+    background: #fff;
+    font-family: Myriad Pro, sans-serif;
+    color: #333;
+    min-height: 80pt;
+    resize: vertical;
+}
+
+.sc3_textarea:focus {
+    outline: none;
+    box-shadow: inset 0 0 3pt rgba(76, 175, 80, 0.3);
+}
+
+/* Autofill section */
+.sc3_autofill_section {
+    margin-bottom: 8pt;
+    padding: 8pt;
+    background: #fff;
+    border: 1pt solid #000;
+}
+
+.sc3_autofill_item {
+    display: flex;
+    justify-content: space-between;
+    padding: 4pt 0;
+    font-size: 10pt;
+}
+
+.sc3_autofill_label {
+    font-weight: 600;
+    color: #333;
+}
+
+/* Note section */
+.sc3_note_section {
+    margin-bottom: 8pt;
+    padding: 8pt;
+    background: hsl(46, 100%, 91%);
+    border-left: 4pt solid #ffeb3b;
+    font-size: 9pt;
+    color: #333;
+}
+
+.sc3_note_section strong {
+    display: block;
+    margin-bottom: 6pt;
+    font-weight: 600;
+}
+
+.sc3_note_section ul {
+    margin: 0;
+    padding-left: 16pt;
+    list-style-type: disc;
+}
+
+.sc3_note_section li {
+    margin-bottom: 4pt;
+}
+
+.sc2_month_grid{
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    gap:4px;
+    margin:8px 0 12px;
+}
+
+.sc2_box{
+    aspect-ratio:1 / 1;
+    border:1px solid #000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:10px;
+    box-sizing:border-box;
+    background:#fff;
+}
+
+.sc2_box.missed{
+    background:#f2f2f2;
+    color:#777;
+}
+
+.sc2_box.filled-self{
+    background:#c8f7d0;
+}
+
+.sc2_box.filled-other{
+    background:#fff1a8;
+}
+
+.site_footer{
+    position: sticky;
+    bottom: 0;
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 12px;
+    background: #fff;
+    border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    z-index: 10;
+}
