@@ -18,10 +18,10 @@ function getDayOrdinal(day) {
 
 async function fillSc2(data) {
   try {
-    const pdfPath = path.join(__dirname, '../../templates/SC2_template.pdf');
+    const pdfPath = path.join(__dirname, '../../templates/SC2_template_7.pdf');
     
      if (!fs.existsSync(pdfPath)) {
-      console.log('Note: SC2_template.pdf not found. Skipping PDF generation.');
+      console.log('Note: SC2_template_7.pdf not found. Skipping PDF generation.');
       return null;
     }
 
@@ -80,10 +80,10 @@ async function fillSc2(data) {
       if (yearField) yearField.setText(yearValue);
     } catch (e) {}
 
-    // Fill unit names into header columns (up to 6 units)
-    // Supports data.unit_names object keys like "1".."6" (or numeric keys)
+    // Fill unit names into header columns (up to 7 units)
+    // Supports data.unit_names object keys like "1".."7" (or numeric keys)
     const unitNames = data.unit_names || {};
-    for (let i = 1; i <= 6; i++) {
+    for (let i = 1; i <= 7; i++) {
       const unitValue = unitNames[i] ?? unitNames[String(i)] ?? '';
       if (!unitValue) continue;
 

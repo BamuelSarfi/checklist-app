@@ -1,26 +1,18 @@
 [
   {
     "id": 1,
-    "pin": "1234",
-    "name": "John Doe",
+    "pin": "1114",
+    "name": "Charles Barfi",
     "role": "Manager",
-    "email": "john.doe@safecatering.com",
+    "email": "cobarfi@gmail.com",
     "location": "Main Kitchen"
   },
   {
     "id": 2,
     "pin": "1344",
-    "name": "Ondrej",
+    "name": "A. Balaz",
     "role": "Hygiene Officer",
-    "email": "ondrej@safecatering.com",
+    "email": "abalaz@safecatering.com",
     "location": "Prep Area"
-  },
-  {
-    "id": 3,
-    "pin": "9012",
-    "name": "Mike Johnson",
-    "role": "Food Safety Lead",
-    "email": "mike.johnson@safecatering.com",
-    "location": "Storage"
   }
 ]

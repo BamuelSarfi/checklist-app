@@ -18,7 +18,7 @@ app.use(cookieParser());
 
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 10,
+    max: 900,
     standardHeaders: true,
     legacyHeaders: false
 });
@@ -367,6 +367,6 @@ app.use('/records', (req, res, next) => {
 // Static files (CSS, JS, images, etc.) - AFTER auth routes
 app.use(express.static(path.join(__dirname, 'src/views')));
 
-app.listen(3001,  () => {
-  console.log('Running on http://localhost:3001');
+app.listen(3002,  () => {
+  console.log('Running on http://localhost:3002');
 });

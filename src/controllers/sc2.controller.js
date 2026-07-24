@@ -53,7 +53,7 @@ function buildSc2PdfFields(record) {
     const dayLabel = ordinalDay(Number(record.day || new Date().getDate()));
     const temperatures = record.temperatures || {};
 
-    for (let unit = 1; unit <= 6; unit++) {
+    for (let unit = 1; unit <= 7; unit++) {
         const suffix = unit === 1 ? '' : `_${unit}`;
         const amKey = `unit${unit}_am`;
         const pmKey = `unit${unit}_pm`;
@@ -87,9 +87,9 @@ function buildSc2MonthlyPdfFields(monthData, dateInMonth) {
         const record = monthData.days?.[String(d)] || null;
         const temperatures = record?.temperatures || {};
 
-        // AM/PM fields for up to 6 units:
-        // AM1st, PM1st, AM1st_2, PM1st_2 ... AM1st_6, PM1st_6
-        for (let unit = 1; unit <= 6; unit++) {
+        // AM/PM fields for up to 7 units:
+        // AM1st, PM1st, AM1st_2, PM1st_2 ... AM1st_7, PM1st_7
+        for (let unit = 1; unit <= 7; unit++) {
             const suffix = unit === 1 ? '' : `_${unit}`;
             fields[`AM${dayLabel}${suffix}`] = temperatures[`unit${unit}_am`] ?? '';
             fields[`PM${dayLabel}${suffix}`] = temperatures[`unit${unit}_pm`] ?? '';

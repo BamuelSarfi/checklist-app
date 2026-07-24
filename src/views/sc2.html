@@ -150,7 +150,7 @@ document.getElementById('current_date').textContent = today.toLocaleDateString('
 let employee_id = null;
 let employeeData = null;
 let unitCount = 1;
-const maxUnits = 6;
+const maxUnits = 7;
 let unitNames = {};
 let temperatureData = {};
 let currentEntryUpdatedAt = null;
@@ -616,6 +616,8 @@ function bindEvents() {
     document.getElementById('save_button_sc2').addEventListener('click', (e) => {
         e.preventDefault();
         saveDraft();
+        //reload window
+        //window.location.reload();
     });
 
     document.getElementById('export_button_sc2').addEventListener('click', (e) => {
