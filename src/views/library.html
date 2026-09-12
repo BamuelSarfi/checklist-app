@@ -287,6 +287,9 @@
         <button type="button" id="logout_button" class="kiosk-bottom-nav-btn" style="border-color: var(--color-error); color: var(--color-error)" title="Log out" aria-label="Log out">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8"></path><path d="M16 8l4 4-4 4"></path><path d="M20 12h-9"></path></svg>
         </button>
+        <a href="/login" id="staff_login_link" class="kiosk-bottom-nav-btn" style="display: none" title="Staff login" aria-label="Staff login">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><path d="M10 17l5-5-5-5"></path><path d="M15 12H3"></path></svg>
+        </a>
     </div>
 </div>
 
@@ -320,8 +323,18 @@
             }
         }
 
-        const name = employeeData?.name || 'Employee';
+        const name = employeeData?.name || 'Public view';
         document.getElementById('employee_name_display').textContent = name;
+
+        // No session at all - logging out means nothing here, and the Employee search mode
+        // has nothing to search (the public record list never carries a name). Point at
+        // staff login instead of leaving a dead-end Logout button.
+        if (!employeeData) {
+            document.getElementById('logout_button').style.display = 'none';
+            document.getElementById('staff_login_link').style.display = '';
+            const employeeSearchBtn = document.querySelector('.search-mode-btn[data-target="employee"]');
+            if (employeeSearchBtn) employeeSearchBtn.style.display = 'none';
+        }
     };
 
     // ---- Brand lookup ----
@@ -421,13 +434,28 @@
         ))));
     };
 
+    // A pseudo-filename for public records - "<TYPE>-<ISO date>-<id>.pdf" - carries no
+    // employee name (unlike a real file_name) but still matches recordMeta()'s existing
+    // SC-code/date regexes below unchanged, so the rest of this file's rendering/search/
+    // sort logic doesn't need a parallel code path for the two record shapes. Extension is
+    // always assumed .pdf here since the public listing deliberately doesn't expose r2_key
+    // (the one place the real extension is known) - cosmetic only, the actual
+    // /public/records/:id route determines the real content-type server-side regardless.
+    const PUBLIC_RECORD_ID_RE = /-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.[a-z0-9]+$/i;
+
+    function toPublicPseudoFileName(record) {
+        return `${record.record_type}-${record.record_date}-${record.id}.pdf`;
+    }
+
     const fetchRecords = async () => {
         renderRecordsSkeleton();
         try {
-            const response = await fetch('/api/records');
+            const response = await fetch(employeeData ? '/api/records' : '/api/public/records');
             const data = await response.json();
             if (data.success) {
-                allRecords = data.records || [];
+                allRecords = employeeData
+                    ? (data.records || [])
+                    : (data.records || []).map(toPublicPseudoFileName);
                 renderRecords(allRecords);
             }
         } catch (err) {
@@ -523,7 +551,15 @@
     };
 
     const downloadRecord = (fileName) => {
-        window.open(`/records/${fileName}`, '_blank');
+        if (employeeData) {
+            window.open(`/records/${fileName}`, '_blank');
+            return;
+        }
+
+        const match = PUBLIC_RECORD_ID_RE.exec(fileName);
+        if (match) {
+            window.open(`/public/records/${match[1]}`, '_blank');
+        }
     };
 
     const deleteRecord = async (fileName) => {

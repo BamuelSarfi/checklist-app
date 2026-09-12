@@ -101,6 +101,20 @@ async function getDownloadUrl(key, { downloadName, expiresIn = DEFAULT_SIGNED_UR
     return getSignedUrl(getR2Client(), command, { expiresIn });
 }
 
+// Unlike getDownloadUrl, this never hands the client a URL pointing at the real R2 key - the
+// key embeds the employee name (buildFileKey above), so redirecting a public/unauthenticated
+// caller to a presigned URL for it would leak that name via the browser's address bar/network
+// tab even with a redacted Content-Disposition header. Used by the public library route,
+// which streams the bytes through this server instead and sets its own redacted filename.
+async function getObjectStream(key) {
+    const response = await getR2Client().send(new GetObjectCommand({
+        Bucket: getBucketName(),
+        Key: key,
+    }));
+
+    return { body: response.Body, contentLength: response.ContentLength };
+}
+
 module.exports = {
     hasR2Config,
     buildFileKey,
@@ -109,4 +123,5 @@ module.exports = {
     uploadPdf,
     deleteObject,
     getDownloadUrl,
+    getObjectStream,
 };

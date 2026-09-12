@@ -39,6 +39,7 @@ const authenticateEmployee = require('./src/middleware/auth.middleware');
 const rateLimit = require('express-rate-limit');
 const { authenticateEmployeePin } = require('./src/services/employeeDirectory');
 const generatedRecords = require('./src/services/generatedRecords');
+const storage = require('./src/config/storage');
 const checklistDrafts = require('./src/services/checklistDrafts');
 //use .env file for environment variables
 require('dotenv').config();
@@ -578,8 +579,13 @@ if (process.env.ENABLE_TESTER_PROMOTION === 'true') {
   app.use('/naa-tester-claim', naaTesterClaimRoutes);
 }
 
-// Library page (protected)
-app.get('/library', authenticateEmployee, (req, res) => {
+// Library page - deliberately public (no authenticateEmployee): EHO inspectors/customers
+// need to view compliance records without staff PIN credentials. The page itself detects
+// login state client-side (fetch('/api/employee'), already tolerant of failing when logged
+// out) and switches between the full staff view (/api/records + /records/:fileName, still
+// authenticateEmployee-gated below, unchanged) and the redacted public view
+// (/api/public/records + /public/records/:id, added below) accordingly.
+app.get('/library', (req, res) => {
   res.sendFile(path.join(__dirname, 'src/views/library.html'));
 });
 
@@ -603,6 +609,61 @@ app.get('/records/:fileName', authenticateEmployee, async (req, res) => {
     return res.redirect(download.url);
   } catch (err) {
     console.error('Error resolving record download:', err);
+    return res.status(500).send('Server error');
+  }
+});
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Public/unauthenticated equivalent of GET /api/records - see the /library comment above for
+// why this exists. Returns only id/record_type/record_date, never file_name or
+// employee_name, so a scraper hitting this directly (not just the page's own UI) still can't
+// learn who was on shift for any given record.
+app.get('/api/public/records', async (req, res) => {
+  try {
+    const records = await generatedRecords.listPublicRecordSummaries();
+    res.json({ success: true, records });
+  } catch (err) {
+    console.error('Error fetching public records:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Public/unauthenticated equivalent of GET /records/:fileName. Streams the object through
+// this server instead of redirecting to a presigned R2 URL (getDownloadByFileName's
+// approach) - the R2 key embeds the employee name (storage.js's buildFileKey), so a redirect
+// would leak that name via the browser's address bar/network tab even with a redacted
+// Content-Disposition header set on the final response.
+app.get('/public/records/:id', async (req, res) => {
+  try {
+    if (!UUID_RE.test(req.params.id)) {
+      return res.status(404).send('Not found');
+    }
+
+    const record = await generatedRecords.getPublicRecordById(req.params.id);
+    if (!record) {
+      return res.status(404).send('Not found');
+    }
+
+    const extension = String(record.r2_key || '').split('.').pop().toLowerCase();
+    const contentType = extension === 'pdf' ? 'application/pdf' : 'application/octet-stream';
+    const disposition = req.query.download ? 'attachment' : 'inline';
+    const redactedName = `${record.record_type}-${record.record_date}.${extension || 'pdf'}`;
+
+    const { body, contentLength } = await storage.getObjectStream(record.r2_key);
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `${disposition}; filename="${redactedName.replace(/"/g, '')}"`);
+    if (contentLength) {
+      res.setHeader('Content-Length', String(contentLength));
+    }
+
+    body.pipe(res);
+    body.on('error', (err) => {
+      console.error('Error streaming public record:', err);
+      res.destroy();
+    });
+  } catch (err) {
+    console.error('Error resolving public record download:', err);
     return res.status(500).send('Server error');
   }
 });
