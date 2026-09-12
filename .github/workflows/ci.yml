@@ -28,3 +28,21 @@ jobs:
 
       - name: Build Docker image
         run: docker build -t checklist-app:ci .
+
+  # Only runs on prod - main gets the smoke test above and nothing else. Builds straight from
+  # this repo's own Dockerfile on the VPS itself (no Container Registry involved), then runs
+  # migrations since neither app applies them automatically on container start.
+  deploy:
+    needs: build-and-check
+    if: github.ref == 'refs/heads/prod'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd ~/checklist-app/checklist-app && git fetch origin prod && git reset --hard origin/prod
+            cd ~/checklist-app/deploy && docker compose up -d --build kiosk-unclesmarket
+            docker compose run --rm kiosk-unclesmarket npm run migrate
