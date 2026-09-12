@@ -1,2 +1,15 @@
 /.env
 /node_modules
+
+# Legacy on-disk datastore - server.js now hard-requires Postgres + R2 at boot and no longer
+# reads/writes here (see .dockerignore's comment on the same directory); PDFs/JSON side-cars
+# left over from before that migration can contain real employee names, so this shouldn't be
+# in git history at all rather than committed-then-deleted.
+/records
+
+# node_modules and build output nested under design-system/ - the top-level ignore above only
+# matches /node_modules at repo root, not this one, and design-system's own .gitignore doesn't
+# cover either. dist/ is reproducible from src/ via `npm run build` (the planned multi-stage
+# Dockerfile does exactly this), so it doesn't need to be committed either.
+design-system/node_modules
+design-system/dist

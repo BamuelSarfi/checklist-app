@@ -1,0 +1,59 @@
+@import "../../tokens/tokens.css";
+
+.ds-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--overlay-scrim);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ds-modal-box {
+    background: var(--color-white);
+    border: 1px solid var(--color-black);
+    border-top: 4px solid var(--color-black);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    width: 90%;
+    max-width: 340px;
+    text-align: center;
+}
+
+.ds-modal-box.type-success {
+    border-top-color: var(--color-success-modal-border);
+}
+
+.ds-modal-box.type-error {
+    border-top-color: var(--color-error-modal-border);
+}
+
+.ds-modal-box.type-info {
+    border-top-color: var(--color-info-modal-border);
+}
+
+.ds-modal-message {
+    font-size: 1rem;
+    line-height: 1.4;
+    margin-bottom: 16px;
+    white-space: pre-line;
+}
+
+.ds-modal-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.ds-modal-actions button {
+    padding: 8px 28px;
+    border: 1px solid var(--color-black);
+    background: var(--color-white);
+    cursor: pointer;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+}
+
+.ds-modal-actions button:hover {
+    background: var(--color-bg-hover);
+}

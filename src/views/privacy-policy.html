@@ -1,113 +1,299 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Privacy Policy</title>
-    <link rel="stylesheet" href="/style.css" />
-</head>
-<body>
-    <div id="phone_body" style="height:100%;">
-        <div id="header">
-            <button id="back_button" onclick="window.location.href='/'">
-                <img src="/asset1.png" alt="Back">
-            </button>
 
-            <div id="title">
-                <!-- <img src="/asset2.png" alt="Title"> -->
-                <h1>Privacy Policy</h1>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Privacy Policy</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/design-system/index.global.css">
+    <style>
+        .privacy-section-num {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            flex: 0 0 32px;
+            border-radius: var(--radius-sm);
+            background: var(--color-bg-subtle);
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--color-text-heading);
+        }
+
+        .privacy-section-title {
+            flex: 1;
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1.25;
+            color: var(--color-text-heading);
+        }
+
+        .privacy-bullet-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .privacy-bullet-dot {
+            margin-top: 7px;
+            width: 6px;
+            height: 6px;
+            flex: 0 0 6px;
+            border-radius: 50%;
+            background: var(--color-text-muted);
+        }
+
+        .privacy-bullet-text {
+            flex: 1;
+            font-size: 14px;
+            line-height: 1.45;
+            color: var(--color-text-secondary);
+        }
+
+        .privacy-body-text {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--color-text-secondary);
+        }
+    </style>
+</head>
+
+<body class="kiosk-body">
+    <div class="kiosk-frame">
+
+        <div class="kiosk-header">
+            <div style="display: flex; align-items: center; gap: 12px">
+                <a href="/" title="Back" aria-label="Back" class="kiosk-icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M19 12H5"></path>
+                        <path d="M12 19l-7-7 7-7"></path>
+                    </svg>
+                </a>
+                <div class="kiosk-logo-slot" id="brand-logo-slot">SC</div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                    <span id="brand-site-name"
+                        style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Safe
+                        Catering</span>
+                    <span
+                        style="font-size: 15px; font-weight: 700; line-height: 1.2; color: var(--color-text-heading)">Privacy
+                        Policy</span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px">
+                <span id="updated-label" style="flex: 1; font-size: 14px; color: var(--color-text-secondary)"></span>
+                <label class="kiosk-lang-select" title="Change language">
+                    <span aria-hidden="true" style="font-size: 15px">&#127760;</span>
+                    <select id="language-select" aria-label="Change language"></select>
+                </label>
             </div>
         </div>
 
-        <main class="main_container">
-            <div class="card">
-                <h1>Privacy Policy</h1>
-                <p>How personal and workplace information is collected, used, stored, and protected.</p>
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 16px">
+
+            <div class="kiosk-card">
+                <span
+                    style="font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Privacy
+                    Policy</span>
+                <p class="privacy-body-text" style="font-size: 15px; color: var(--color-text-heading)">How personal and
+                    workplace information is collected, used, stored, and protected.</p>
             </div>
 
-            <div class="card">
-                <h2>1. Information Collected</h2>
-                <p>This application may collect:</p>
-                <ul>
-                    <li>Employee name or identifier</li>
-                    <li>Form entries and record submissions</li>
-                    <li>Submission timestamps and audit information</li>
-                    <li>Generated PDF records and related metadata</li>
-                </ul>
+            <div class="kiosk-card">
+                <div style="display: flex; align-items: center; gap: 12px">
+                    <span class="privacy-section-num">1</span>
+                    <span class="privacy-section-title">Information Collected</span>
+                </div>
+                <p class="privacy-body-text">This application may collect:</p>
+                <div style="display: flex; flex-direction: column; gap: 8px">
+                    <div class="privacy-bullet-row"><span class="privacy-bullet-dot" aria-hidden="true"></span><span
+                            class="privacy-bullet-text">Employee name or identifier</span></div>
+                    <div class="privacy-bullet-row"><span class="privacy-bullet-dot" aria-hidden="true"></span><span
+                            class="privacy-bullet-text">Form entries and record submissions</span></div>
+                    <div class="privacy-bullet-row"><span class="privacy-bullet-dot" aria-hidden="true"></span><span
+                            class="privacy-bullet-text">Submission timestamps and audit information</span></div>
+                    <div class="privacy-bullet-row"><span class="privacy-bullet-dot" aria-hidden="true"></span><span
+                            class="privacy-bullet-text">Generated PDF records and related metadata</span></div>
+                </div>
             </div>
 
-            <div class="card">
-                <h2>2. How Information Is Used</h2>
-                <ul>
-                    <li>Support daily operational record keeping</li>
-                    <li>Generate printable and downloadable records</li>
-                    <li>Track completion and submission status</li>
-                    <li>Support internal review and compliance needs</li>
-                </ul>
+            <div class="kiosk-card">
+                <div style="display: flex; align-items: center; gap: 12px">
+                    <span class="privacy-section-num">2</span>
+                    <span class="privacy-section-title">How Information Is Used</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px">
+                    <div class="privacy-bullet-row"><span class="privacy-bullet-dot" aria-hidden="true"></span><span
+                            class="privacy-bullet-text">Support daily operational record keeping</span></div>
+                    <div class="privacy-bullet-row"><span class="privacy-bullet-dot" aria-hidden="true"></span><span
+                            class="privacy-bullet-text">Generate printable and downloadable records</span></div>
+                    <div class="privacy-bullet-row"><span class="privacy-bullet-dot" aria-hidden="true"></span><span
+                            class="privacy-bullet-text">Track completion and submission status</span></div>
+                    <div class="privacy-bullet-row"><span class="privacy-bullet-dot" aria-hidden="true"></span><span
+                            class="privacy-bullet-text">Support internal review and compliance needs</span></div>
+                </div>
             </div>
 
-            <div class="card">
-                <h2>3. Storage and Security</h2>
-                <p>
-                    Records are stored on the application server and protected through access controls.
-                    Sensitive files, including employee data, should not be publicly accessible.
+            <div class="kiosk-card">
+                <div style="display: flex; align-items: center; gap: 12px">
+                    <span class="privacy-section-num">3</span>
+                    <span class="privacy-section-title">Storage and Security</span>
+                </div>
+                <p class="privacy-body-text">Records are stored on the application server and protected through access
+                    controls. Sensitive files, including employee data, should not be publicly accessible.</p>
+            </div>
+
+            <div class="kiosk-card">
+                <div style="display: flex; align-items: center; gap: 12px">
+                    <span class="privacy-section-num">4</span>
+                    <span class="privacy-section-title">Sharing</span>
+                </div>
+                <p class="privacy-body-text">Information is not sold or shared externally except where required for
+                    internal business use, legal compliance, or authorised system operation.</p>
+            </div>
+
+            <div class="kiosk-card">
+                <div style="display: flex; align-items: center; gap: 12px">
+                    <span class="privacy-section-num">5</span>
+                    <span class="privacy-section-title">Retention</span>
+                </div>
+                <p class="privacy-body-text">Records are retained for operational and compliance purposes. Retention
+                    periods may vary based on business requirements and applicable policy.</p>
+            </div>
+
+            <div class="kiosk-card">
+                <div style="display: flex; align-items: center; gap: 12px">
+                    <span class="privacy-section-num">6</span>
+                    <span class="privacy-section-title">Your Responsibilities</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px">
+                    <div class="privacy-bullet-row"><span class="privacy-bullet-dot" aria-hidden="true"></span><span
+                            class="privacy-bullet-text">Keep login details secure</span></div>
+                    <div class="privacy-bullet-row"><span class="privacy-bullet-dot" aria-hidden="true"></span><span
+                            class="privacy-bullet-text">Only access records you are authorised to view</span></div>
+                    <div class="privacy-bullet-row"><span class="privacy-bullet-dot" aria-hidden="true"></span><span
+                            class="privacy-bullet-text">Report any suspected security issue immediately</span></div>
+                </div>
+            </div>
+
+            <div class="kiosk-card">
+                <div style="display: flex; align-items: center; gap: 12px">
+                    <span class="privacy-section-num">7</span>
+                    <span class="privacy-section-title">Contact</span>
+                </div>
+                <p class="privacy-body-text">For privacy questions or concerns, contact the system administrator or your
+                    manager.</p>
+            </div>
+
+            <div class="kiosk-card">
+                <div style="display: flex; align-items: center; gap: 12px">
+                    <span class="privacy-section-num">8</span>
+                    <span class="privacy-section-title">Credits</span>
+                </div>
+                <p class="privacy-body-text">
+                    <span>This application was developed by</span> <a href="https://www.yourcompany.com" target="_blank"
+                        rel="noopener noreferrer">@bamuelsarfi</a><span>. We used assets from</span> <a
+                        href="https://www.svgrepo.com/" target="_blank" rel="noopener noreferrer">SVG Repo</a><span> for
+                        icons and graphics. We also used safe catering forms for the form templates, which contains
+                        public sector information licensed under the</span> <a
+                        href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+                        target="_blank" rel="noopener noreferrer">Open Government License v3.0</a><span>.</span>
                 </p>
             </div>
 
-            <div class="card">
-                <h2>4. Sharing</h2>
-                <p>
-                    Information is not sold or shared externally except where required for internal
-                    business use, legal compliance, or authorised system operation.
-                </p>
+            <div class="kiosk-card">
+                <div style="display: flex; align-items: center; gap: 12px">
+                    <span class="privacy-section-num">9</span>
+                    <span class="privacy-section-title">Warranty</span>
+                </div>
+                <p class="privacy-body-text">This application is provided "as is" without warranty of any kind. The
+                    developers and maintainers are not responsible for any data loss, security breaches, or other issues
+                    arising from the use of this application. Users are encouraged to back up their data and follow best
+                    practices for security.</p>
             </div>
 
-            <div class="card">
-                <h2>5. Retention</h2>
-                <p>
-                    Records are retained for operational and compliance purposes. Retention periods may
-                    vary based on business requirements and applicable policy.
-                </p>
+            <div class="kiosk-card">
+                <div style="display: flex; align-items: center; gap: 12px">
+                    <span class="privacy-section-num">10</span>
+                    <span class="privacy-section-title">Updates</span>
+                </div>
+                <p class="privacy-body-text">This privacy policy may be updated periodically. Users are encouraged to
+                    review this page for any changes. Continued use of the application after updates constitutes
+                    acceptance of the revised policy.</p>
             </div>
 
-            <div class="card">
-                <h2>6. Your Responsibilities</h2>
-                <ul>
-                    <li>Keep login details secure</li>
-                    <li>Only access records you are authorised to view</li>
-                    <li>Report any suspected security issue immediately</li>
-                </ul>
+            <div class="kiosk-card" id="cookies">
+                <div style="display: flex; align-items: center; gap: 12px">
+                    <span class="privacy-section-num">11</span>
+                    <span class="privacy-section-title">Cookies</span>
+                </div>
+                <p class="privacy-body-text">This application uses cookies to store user preferences and session
+                    information. By logging in, you agree to the use of cookies.</p>
             </div>
+        </div>
 
-            <div class="card">
-                <h2>7. Contact</h2>
-                <p>For privacy questions or concerns, contact the system administrator or your manager.</p>
-            </div>
-
-            <div class="card">
-                <h2>8. Credits</h2>
-                <p>
-                    This application was developed by <a href="https://www.yourcompany.com" target="_blank" rel="noopener noreferrer">@bamuelsarfi</a>.
-                    We used assets from <a href="https://www.svgrepo.com/" target="_blank" rel="noopener noreferrer">SVG Repo</a> for icons and graphics.
-                    We also used safe catering forms for the form templates, which contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" target="_blank" rel="noopener noreferrer">Open Government License v3.0</a>.    
-                </p>
-            </div>
-
-            <div class="card">
-                <h2>9. Warranty</h2>
-                <p>
-                    This application is provided "as is" without warranty of any kind. The developers and maintainers are not responsible for any data loss, security breaches, or other issues arising from the use of this application. Users are encouraged to back up their data and follow best practices for security.
-                </p>
-            </div>
-
-            <div class="card">
-                <h2>10. Updates</h2>
-                <p>
-                    This privacy policy may be updated periodically. Users are encouraged to review this page for any changes. Continued use of the application after updates constitutes acceptance of the revised policy.
-                </p>
-            </div>
-        </main>
-
+        <div class="kiosk-bottom-bar">
+            <span style="flex: 1; font-size: 12px; color: var(--color-text-muted)">&copy; 2026 Safecateruk</span>
+            <div id="back-button-mount"></div>
+        </div>
     </div>
+
+    <script src="translations.js"></script>
+    <script src="/design-system/index.global.js"></script>
+    <script>
+        const t = window.appI18n ? window.appI18n.t : (key) => key;
+
+        document.getElementById('updated-label').textContent = t('Last updated: {date}', { date: new Date().toLocaleDateString('en-GB') });
+
+        // ---- Brand lookup ----
+        (async () => {
+            try {
+                const response = await fetch('/api/brand');
+                if (!response.ok) return;
+                const data = await response.json();
+                const kitchenName = data?.kitchen?.name || data?.brand_name || data?.business?.display_name || 'Safe Catering';
+                const logoSrc = data?.kitchen?.logo_src || data?.logo_src || data?.business?.logo_src || '';
+                document.getElementById('brand-site-name').textContent = kitchenName;
+                if (logoSrc) {
+                    const slot = document.getElementById('brand-logo-slot');
+                    slot.textContent = '';
+                    const img = document.createElement('img');
+                    img.src = logoSrc;
+                    img.alt = kitchenName;
+                    slot.appendChild(img);
+                }
+            } catch (_error) {
+                // Privacy policy is reachable pre-login too - branding is optional.
+            }
+        })();
+
+        // ---- Language switcher ----
+        const langSelect = document.getElementById('language-select');
+        if (window.appI18n) {
+            window.appI18n.getLanguageOptions().forEach(({ value, label }) => {
+                const opt = document.createElement('option');
+                opt.value = value;
+                opt.textContent = label;
+                langSelect.appendChild(opt);
+            });
+            langSelect.value = window.appI18n.getAppLanguage();
+            langSelect.addEventListener('change', () => {
+                window.appI18n.setAppLanguage(langSelect.value);
+                window.location.reload();
+            });
+        }
+
+        // ---- Back to login/dashboard button (real DS component) ----
+        const { React, ReactDOM, Button } = window.KitchenDS;
+        ReactDOM.createRoot(document.getElementById('back-button-mount')).render(React.createElement(Button, {
+            variant: 'secondary',
+            onClick: () => { window.location.href = '/'; },
+            style: { minHeight: 48, padding: '0 16px', fontSize: 14, fontWeight: 600, borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border-soft)', background: 'var(--color-white)', color: 'var(--color-text-heading)', boxShadow: 'none' },
+        }, t('Back to login')));
+    </script>
 </body>
+
 </html>

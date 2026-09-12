@@ -1,0 +1,34 @@
+@import "../../tokens/tokens.css";
+
+.ds-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin: 8px 0 12px;
+}
+
+.ds-calendar-day {
+    aspect-ratio: 1 / 1;
+    border: 1px solid var(--color-black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    box-sizing: border-box;
+    background: var(--color-white);
+    cursor: pointer;
+    font-family: var(--font-family-base);
+}
+
+.ds-calendar-day.missed {
+    background: var(--color-bg-panel-muted);
+    color: var(--color-text-missed);
+}
+
+.ds-calendar-day.filled-self {
+    background: var(--color-success-cell-bg);
+}
+
+.ds-calendar-day.filled-other {
+    background: var(--color-warning-cell-bg);
+}

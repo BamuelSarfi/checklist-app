@@ -1,0 +1,16 @@
+{
+  "name": "Safe Catering Checklist Kiosk",
+  "short_name": "Safe Catering",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/asset2.png",
+      "sizes": "210x105",
+      "type": "image/png"
+    }
+  ]
+}

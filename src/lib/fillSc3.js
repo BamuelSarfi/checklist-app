@@ -93,17 +93,31 @@ module.exports = async function fillSc3Entry(data = {}) {
     setIfExists(`time_finished_cooking_${i}`, row.time_finished_cooking);
     setIfExists(`core_temp_${i}`, row.core_temp);
 
-    const signValue = row.cooking_sign || row.cooling_sign || row.reheating_sign || data.sign || data.employee_name || '';
-    setIfExists(`cooking_sign_${i}`, signValue);
+    // Each row belongs to exactly one section (see buildSc3Payload in sc3.controller.js) -
+    // a fallback sign must not be written into the OTHER two sections' sign fields just
+    // because a row happens to have any content, or the PDF ends up falsely attesting a
+    // cooling/reheating check that was never actually recorded for that row.
+    const fallbackSign = data.sign || data.employee_name || '';
+    const hasCookingContent = hasValue(row.date) || hasValue(row.food) || hasValue(row.time_started_cooking) || hasValue(row.time_finished_cooking) || hasValue(row.core_temp);
+    const hasCoolingContent = hasValue(row.cooling_date) || hasValue(row.time_into_fridge);
+    const hasReheatingContent = hasValue(row.reheating_date) || hasValue(row.reheating_core_temp);
+
+    if (hasCookingContent) {
+      setIfExists(`cooking_sign_${i}`, row.cooking_sign || fallbackSign);
+    }
 
     // setIfExists(`cooling_date_${i}`, row.cooling_date);
     setIfExists(`cooling_date_${i}`, row.cooling_date, { maxSize: 8, minSize: 5, threshold: 10 });
     setIfExists(`time_into_fridge_${i}`, row.time_into_fridge);
-    setIfExists(`cooling_sign_${i}`, signValue);
+    if (hasCoolingContent) {
+      setIfExists(`cooling_sign_${i}`, row.cooling_sign || fallbackSign);
+    }
 
     setIfExists(`reheating_date_${i}`, row.reheating_date, { maxSize: 8, minSize: 5, threshold: 10 });
     setIfExists(`reheating_core_temp_${i}`, row.reheating_core_temp);
-    setIfExists(`reheating_sign_${i}`, signValue);
+    if (hasReheatingContent) {
+      setIfExists(`reheating_sign_${i}`, row.reheating_sign || fallbackSign);
+    }
 
     setIfExists(`comment_${i}`, row.comment, { maxSize: 8, minSize: 5, threshold: 10 });
   }
@@ -116,11 +130,12 @@ module.exports = async function fillSc3Entry(data = {}) {
 
   const safeEmp = String(data.employee_name || 'Employee').replace(/[^a-zA-Z0-9]/g, '_');
   const date = String(new Date().toLocaleDateString('en-GB')).replace(/\//g, '-'); //dd-mm-yyyy format
-  const fileName = `SC3-${date}-${safeEmp}.pdf`;
-  const outPath = path.join(__dirname, '../../records', fileName);
+  // Trailing timestamp keeps this unique per submission - see fillSc1.js for why (no UNIQUE
+  // constraint on file_name, so same-day same-name collisions produce a duplicate row and a
+  // delete only removes the newest, orphaning the other's R2 object).
+  const fileName = `SC3-${date}-${safeEmp}-${Date.now()}.pdf`;
 
   const output = await pdfDoc.save();
-  fs.writeFileSync(outPath, output);
 
-  return fileName;
+  return { fileName, pdfBuffer: output };
 };

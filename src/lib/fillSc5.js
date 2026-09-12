@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { PDFDocument } = require('pdf-lib');
+const { saveGeneratedRecord } = require('../services/generatedRecords');
 
 async function fillSc5(data) {
   const pdfPath = path.join(__dirname, '../../templates/SC5_template.pdf');
@@ -186,16 +187,31 @@ async function fillSc5(data) {
 
   const output = await pdfDoc.save();
 
-  // Create filename with date, employee name, and position
+  // Create filename with date, employee name, and position. A trailing timestamp keeps this
+  // unique per submission (defense-in-depth alongside the DB's once-daily unique index -
+  // without it, two submissions on the same day by the same named employee/position would
+  // collide on file_name, and file_name is the sole lookup key for download/delete-by-name).
   const sanitizedDate = (data.date || '').replace(/[/\\]/g, '-');
   const sanitizedName = (data.name || 'Employee').replace(/[^a-zA-Z0-9]/g, '_');
   const sanitizedPosition = (data.position || 'Manager').replace(/[^a-zA-Z0-9]/g, '_');
-  const fileName = `SC5-${sanitizedDate}-${sanitizedName}-${sanitizedPosition}.pdf`;
-  const outPath = path.join(__dirname, '../../records', fileName);
+  const fileName = `SC5-${sanitizedDate}-${sanitizedName}-${sanitizedPosition}-${Date.now()}.pdf`;
 
-  fs.writeFileSync(outPath, output);
+  const { syncStatus, syncMessage, id: recordId } = await saveGeneratedRecord({
+    fileName,
+    recordType: 'SC5',
+    // Always the server's own date in ISO form, not data.date (a client-supplied
+    // DD/MM/YYYY display string used only for the filename above) - generated_records.
+    // record_date is compared against ISO "today" elsewhere (listRecordTypesForDate, used by
+    // /api/completed-checklists and the daily-completion check), and a DD/MM/YYYY value there
+    // would never match, silently breaking "already completed today" detection.
+    recordDate: new Date().toISOString().slice(0, 10),
+    employeeId: data.employee_id || null,
+    employeeName: data.name || 'Employee',
+    payload: data,
+    pdfBuffer: output,
+  });
 
-  return fileName;
+  return { fileName, syncStatus, syncMessage, recordId };
 }
 
 

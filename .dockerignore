@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log
+.env
+.env.*
+!.env.production.example
+.git
+.gitignore
+# Legacy local datastore - server.js now hard-requires Postgres + R2 at boot (see
+# REQUIRED_ENV_VARS) and no longer reads/writes here, but old PDFs/JSON side-cars from
+# before that migration are still sitting on disk. Real runtime data lives in Postgres/R2,
+# not the image.
+records

@@ -1,105 +1,31 @@
-const fs = require('fs');
-const path = require('path');
 const fillSc3Entry = require('../lib/fillSc3');
+const { getEmployeeById } = require('../services/employeeDirectory');
+const { saveGeneratedRecord } = require('../services/generatedRecords');
+const checklistDrafts = require('../services/checklistDrafts');
+const temperatureAlerts = require('../services/temperatureAlerts');
 
+// Core temperature must be AT LEAST this when cooking or reheating - unlike SC2's fridge
+// alert (anomaly = too high), an SC3 anomaly is a reading BELOW this threshold.
+const CORE_TEMP_ALERT_THRESHOLD_C = 75;
 
-exports.submitForm = async (req, res) => {
+async function resolveEmployee(req) {
+    if (req.employee) {
+        return req.employee;
+    }
+
+    const employeeId = req.signedCookies?.employeeId;
+    if (!employeeId) {
+        return null;
+    }
+
+    return getEmployeeById(employeeId);
+}
+
+exports.getTodayData = async (req, res) => {
   try {
-    const { cooking, cooling, reheating, comments } = req.body;
-    const { employeeId, employeeName } = req.cookies;
-    const employee_id = parseInt(employeeId);
+    const employee = await resolveEmployee(req);
 
-    if (!employee_id || !employeeName) {
-      return res.json({
-        success: false,
-        message: 'Employee not authenticated'
-      });
-    }
-
-    // Get today's date
-    const today = new Date();
-    const day = today.getDate();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const year = today.getFullYear();
-    const date = `${year}-${month}-${String(day).padStart(2, '0')}`;
-
-    // Use shared file for all users
-    const jsonFileName = `SC3-${year}-${month}.json`;
-    const jsonPath = path.join(__dirname, '../../records', jsonFileName);
-
-    let monthData = { month, year, entries: [] };
-    
-    // Load existing month data if it exists
-    if (fs.existsSync(jsonPath)) {
-      try {
-        monthData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-      } catch (err) {
-        console.warn('Could not read existing JSON file, starting fresh:', err);
-      }
-    }
-
-    // Find or create entry for this employee and day
-    let entryIndex = monthData.entries.findIndex(e => 
-      e.employee_id === employee_id && e.day === day
-    );
-
-    const newEntry = {
-      employee_id,
-      employee_name: employeeName,
-      day,
-      date,
-      cooking: cooking || [],
-      cooling: cooling || [],
-      reheating: reheating || [],
-      comments: comments || '',
-      signature: employeeName.charAt(0).toUpperCase(),
-      timestamp: new Date().toISOString()
-    };
-
-    if (entryIndex >= 0) {
-      monthData.entries[entryIndex] = newEntry;
-    } else {
-      monthData.entries.push(newEntry);
-    }
-
-    // Save to JSON file
-    fs.writeFileSync(jsonPath, JSON.stringify(monthData, null, 2));
-
-    // Check if total rows = 17, if so generate PDF
-    const totalRows = (cooking?.length || 0) + (cooling?.length || 0) + (reheating?.length || 0);
-    if (totalRows === 17) {
-      try {
-        const pdfPath = await fillSc3(newEntry, month, year);
-        return res.json({
-          success: true,
-          message: 'SC3 form submitted and PDF generated successfully',
-          pdfPath: pdfPath
-        });
-      } catch (err) {
-        console.error('Error generating PDF:', err);
-        // Don't fail the submission if PDF generation fails
-      }
-    }
-
-    res.json({
-      success: true,
-      message: 'SC3 form submitted successfully'
-    });
-  } catch (err) {
-    console.error('Error submitting form:', err);
-    res.json({
-      success: false,
-      message: 'Error submitting form: ' + err.message
-    });
-  }
-};
-
-exports.getTodayData = (req, res) => {
-  try {
-    const { employeeId } = req.cookies;
-    const employee_id = parseInt(employeeId);
-
-    if (!employee_id) {
+    if (!employee) {
       return res.json({
         success: false,
         message: 'Employee not authenticated'
@@ -110,28 +36,18 @@ exports.getTodayData = (req, res) => {
     const day = today.getDate();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const year = today.getFullYear();
-
-    const jsonPath = path.join(__dirname, '../../records', `SC3-${year}-${month}.json`);
 
     let data = null;
 
-    if (fs.existsSync(jsonPath)) {
-      try {
-        const monthData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-        const entry = monthData.entries.find(e => 
-          e.employee_id === employee_id && e.day === day
-        );
-        if (entry) {
-          data = {
-            cooking: entry.cooking || [],
-            cooling: entry.cooling || [],
-            reheating: entry.reheating || [],
-            comments: entry.comments || ''
-          };
-        }
-      } catch (err) {
-        console.warn('Could not read JSON file:', err);
-      }
+    const draft = await checklistDrafts.getDraft('SC3', Number(year), Number(month), day, employee.id);
+    if (draft) {
+      const entry = draft.payload || {};
+      data = {
+        cooking: entry.cooking || [],
+        cooling: entry.cooling || [],
+        reheating: entry.reheating || [],
+        comments: entry.comments || ''
+      };
     }
 
     res.json({
@@ -147,43 +63,78 @@ exports.getTodayData = (req, res) => {
   }
 };
 
+// Cooking/reheating are independent lists in the UI (a kitchen might log 3 cooking events and
+// 1 reheating event on a given day, unrelated to each other), but the PDF template has ONE
+// shared pool of 17 numbered rows (row_1..row_17, each with cooking_*/cooling_*/reheating_*
+// fields - see fillSc3.js's normalizeRows). Each entry gets its own row, allocated
+// sequentially (cooking first, then cooling, then reheating) - never zipped together by
+// index, which would merge unrelated events (e.g. cooking row 2 and cooling row 2, logged for
+// different foods at different times) into one nonsensical PDF line.
 function buildSc3Payload(body = {}, employee = {}) {
     const cooking = Array.isArray(body.cooking) ? body.cooking : [];
     const cooling = Array.isArray(body.cooling) ? body.cooling : [];
     const reheating = Array.isArray(body.reheating) ? body.reheating : [];
-
-    const rowCount = Math.max(cooking.length, cooling.length, reheating.length, 0);
+    const signature = employee.initial || employee.name || '';
 
     const rows = [];
-    for (let i = 0; i < rowCount; i++) {
-        const c = cooking[i] || {};
-        const co = cooling[i] || {};
-        const r = reheating[i] || {};
 
+    cooking.forEach((c) => {
         rows.push({
-            date: c.date || co.date || r.date || '',
+            date: c.date || '',
             food: c.food || '',
             time_started_cooking: c.time_start || '',
             time_finished_cooking: c.time_end || '',
             core_temp: c.temp ?? '',
-            cooking_sign: c.sign || employee.initial || employee.name || '',
+            cooking_sign: c.sign || signature,
+        });
+    });
 
+    cooling.forEach((co) => {
+        rows.push({
             cooling_date: co.date || '',
             time_into_fridge: co.time || '',
-            cooling_sign: co.sign || employee.initial || employee.name || '',
+            cooling_sign: co.sign || signature,
+        });
+    });
 
+    reheating.forEach((r) => {
+        rows.push({
             reheating_date: r.date || '',
             reheating_core_temp: r.temp ?? '',
-            reheating_sign: r.sign || employee.initial || employee.name || '',
-
-            comment: i === 0 ? (body.comments || '') : ''
+            reheating_sign: r.sign || signature,
         });
+    });
+
+    // The single "Comments for Today" field isn't tied to any one section - attach it to
+    // whichever row ends up first overall.
+    if (rows.length > 0 && body.comments) {
+        rows[0].comment = body.comments;
     }
 
     return {
         employee_name: employee.name || employee.full_name || 'Employee',
-        rows
+        rows,
     };
+}
+
+function findLowCoreTempReadings(cooking, reheating) {
+    const readings = [];
+
+    (cooking || []).forEach((row) => {
+        const tempC = parseFloat(row.temp);
+        if (!isNaN(tempC) && tempC < CORE_TEMP_ALERT_THRESHOLD_C) {
+            readings.push({ unit_name: row.food || 'Cooking', slot: 'Cooking', temp_c: tempC });
+        }
+    });
+
+    (reheating || []).forEach((row) => {
+        const tempC = parseFloat(row.temp);
+        if (!isNaN(tempC) && tempC < CORE_TEMP_ALERT_THRESHOLD_C) {
+            readings.push({ unit_name: 'Reheating', slot: 'Reheating', temp_c: tempC });
+        }
+    });
+
+    return readings;
 }
 
 exports.submitAndExport = async (req, res) => {
@@ -193,13 +144,67 @@ exports.submitAndExport = async (req, res) => {
             return res.status(401).json({ success: false, message: 'Unauthorized' });
         }
 
-        const payload = buildSc3Payload(req.body || {}, employee);
-        const fileName = await fillSc3Entry(payload);
+        const body = req.body || {};
+        const now = new Date();
+        const recordDate = now.toISOString().slice(0, 10);
+
+        // Persist a per-employee daily draft so /api/sc3/today can actually restore it on
+        // reload - previously nothing ever wrote to the store that route read from.
+        const existingDraft = await checklistDrafts.getDraft('SC3', now.getFullYear(), now.getMonth() + 1, now.getDate(), employee.id);
+        const draftPayload = {
+            cooking: body.cooking || [],
+            cooling: body.cooling || [],
+            reheating: body.reheating || [],
+            comments: body.comments || '',
+            temp_alert_sent_at: existingDraft?.payload?.temp_alert_sent_at || null,
+        };
+
+        // Fast local pre-check only, mirroring sc2.controller.js's pattern - the portal
+        // enforces the authoritative dedup with a DB unique constraint.
+        const lowTempReadings = findLowCoreTempReadings(draftPayload.cooking, draftPayload.reheating);
+        if (lowTempReadings.length > 0 && !draftPayload.temp_alert_sent_at) {
+            await temperatureAlerts.notifyCookingTemperatureAlert({
+                recordDate,
+                employeeName: employee.name,
+                readings: lowTempReadings,
+            });
+            draftPayload.temp_alert_sent_at = new Date().toISOString();
+        }
+
+        await checklistDrafts.upsertDraft({
+            recordType: 'SC3',
+            year: now.getFullYear(),
+            month: now.getMonth() + 1,
+            day: now.getDate(),
+            employeeId: employee.id,
+            employeeName: employee.name,
+            payload: draftPayload,
+        });
+
+        const payload = buildSc3Payload(body, employee);
+        const { fileName, pdfBuffer } = await fillSc3Entry(payload);
+
+        let syncStatus = 'disabled';
+        let syncMessage = null;
+        if (fileName && pdfBuffer) {
+          ({ syncStatus, syncMessage } = await saveGeneratedRecord({
+            fileName,
+            recordType: 'SC3',
+            recordDate,
+            employeeId: employee.id,
+            employeeName: employee.name,
+            payload,
+            pdfBuffer,
+          }));
+        }
 
         return res.json({
             success: true,
             fileName,
-            pdfUrl: `/records/${fileName}`
+            pdfUrl: fileName ? `/records/${encodeURIComponent(fileName)}` : null,
+            // Non-blocking: the record above already saved successfully. This just tells the
+            // manager the record hasn't synced to SafeCater yet (e.g. inactive subscription).
+            sync_warning: syncStatus === 'subscription_inactive' ? syncMessage : null,
         });
     } catch (err) {
         return res.status(500).json({ success: false, message: err.message });

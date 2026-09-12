@@ -1,0 +1,31 @@
+@import "../../tokens/tokens.css";
+
+.ds-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ds-status-badge--synced {
+    background: var(--color-status-synced-bg);
+    color: var(--color-status-synced-text);
+}
+
+.ds-status-badge--pending {
+    background: var(--color-status-pending-bg);
+    color: var(--color-status-pending-text);
+}
+
+.ds-status-badge--syncing {
+    background: var(--color-status-syncing-bg);
+    color: var(--color-status-syncing-text);
+}
+
+.ds-status-badge--error {
+    background: var(--color-status-error-bg);
+    color: var(--color-status-error-text);
+}

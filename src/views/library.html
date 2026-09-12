@@ -2,245 +2,303 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Library - Safe Catering Checklist</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="help_overlay.css">
+    <link rel="stylesheet" href="/design-system/index.global.css">
     <style>
-        #library_container {
+        body {
+            background: var(--color-bg-phone);
+            min-height: 100dvh;
+            margin: 0 auto;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
+            font-family: var(--font-family-base);
         }
 
-        #search_section {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            background: #fff;
-            border: 1pt solid #000;
-            padding: 8pt;
-            margin-bottom: 8pt;
-        }
-
-        .search_label {
-            font-size: 9pt;
-            font-weight: 600;
-            color: #333;
-        }
-
-        #search_section input {
+        .kiosk-frame {
             width: 100%;
-            padding: 8pt 10pt;
-            border: 1pt solid #000;
-            font-size: 10pt;
-            font-family: Myriad Pro, sans-serif;
-        }
-
-        .search_buttons {
-            display: flex;
-            gap: 8px;
-        }
-
-        .search_buttons button {
-            flex: 1;
-            padding: 8pt 10pt;
-            border: 1pt solid #000;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 9pt;
-            font-family: Myriad Pro, sans-serif;
-        }
-
-        #search_btn {
-            background-color: #79fca4;
-            color: #000;
-        }
-
-        #clear_btn {
-            background-color: #fff;
-            color: #000;
-        }
-
-        #records_list {
+            max-width: 460px;
+            min-height: 100dvh;
+            background: var(--color-bg-subtle);
+            color: var(--color-text-secondary);
             display: flex;
             flex-direction: column;
-            gap: 8pt;
-            overflow-y: auto;
-            padding-right: 2px;
         }
 
-        .checklist_card_l {
-            background-color: #fff;
-            border: 1pt solid #000;
-            padding: 8pt;
+        .kiosk-header {
+            position: sticky;
+            top: 0;
+            z-index: 5;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            margin-bottom: 0;
-            border-bottom-right-radius: 12px;
-            border-top-right-radius: 12px;
+            gap: 12px;
+            padding: 14px 16px 12px;
+            background: var(--color-white);
+            border-bottom: 1px solid var(--color-border-soft);
         }
 
-        .record_info {
+        .kiosk-logo-slot {
+            width: 40px;
+            height: 40px;
+            flex: 0 0 40px;
+            border-radius: 8px;
+            background: var(--color-bg-subtle);
+            border: 1px solid var(--color-border-soft);
             display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .record_name {
-            font-weight: 600;
-            color: #333;
-            word-break: break-word;
-            font-size: 9pt;
-        }
-
-        .record_date {
-            font-size: 8.5pt;
-            color: #666;
-        }
-
-        .record_actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .record_actions button {
-            flex: 1;
-            min-height: 36px;
-            border: 1pt solid #000;
-            cursor: pointer;
-            font-size: 9pt;
-            font-weight: 600;
-            font-family: Myriad Pro, sans-serif;
-        }
-
-        .btn_view {
-            background-color: #ffffff;
-            color: #000;
-        }
-
-        .btn_delete {
-            background-color: #ffabab;
-            color: #000;
-            border-bottom-right-radius: 12px;
-        }
-
-        .no_records {
-            text-align: center;
-            color: #666;
-            padding: 20px 12px;
-            font-size: 9.5pt;
-            background: #fff;
-            border: 1pt solid #000;
-        }
-
-        .record_meta {
-            display: inline-flex;
             align-items: center;
-            align-self: flex-start;
-            padding: 4px 8px;
-            border: 1pt solid #000;
-            background: #f7f7f7;
-            font-size: 8pt;
-            color: #333;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        .segment {
-            flex: 1;
-            padding: 6px 8px;
-            border: 1pt solid #000;
-            background: #fff;
+            justify-content: center;
+            font-size: 11px;
             font-weight: 700;
-            cursor: pointer;
-            font-size: 9pt;
+            color: var(--color-text-disabled);
+            overflow: hidden;
         }
 
-        .segment.active {
-            background-color: #79fca4;
-            color: #000;
+        .kiosk-logo-slot img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .kiosk-lang-select {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 44px;
+            padding: 0 10px;
+            border: 1px solid var(--color-border-soft);
+            border-radius: var(--radius-sm);
+            background: var(--color-white);
+            cursor: pointer;
+        }
+
+        .kiosk-lang-select select {
+            border: 0;
+            background: none;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-heading);
+            cursor: pointer;
+        }
+
+        .kiosk-icon-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            min-height: 44px;
+            padding: 0;
+            border: 1px solid var(--color-border-soft);
+            border-radius: var(--radius-sm);
+            background: var(--color-white);
+            font-family: inherit;
+            color: var(--color-info);
+            cursor: pointer;
+            flex: 0 0 44px;
+        }
+
+        .kiosk-info-glyph {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border: 1.5px solid currentColor;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: 700;
+            font-style: italic;
+        }
+
+        .kiosk-bottom-bar {
+            position: sticky;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px 14px;
+            background: var(--color-white);
+            border-top: 1px solid var(--color-border-soft);
+        }
+
+        .kiosk-bottom-nav-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 52px;
+            min-height: 48px;
+            padding: 0;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--color-border-soft);
+            background: var(--color-white);
+            color: var(--color-text-heading);
+            cursor: pointer;
+        }
+
+        a {
+            color: var(--color-info);
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: var(--color-text-heading);
+            text-decoration: underline;
+        }
+
+        .search-mode-btn {
+            min-height: 44px;
+            padding: 0 8px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            border-radius: var(--radius-sm);
+            box-shadow: none;
+            border: 1px solid var(--color-border-soft);
+            background: var(--color-white);
+            color: var(--color-text-muted);
+            cursor: pointer;
+        }
+
+        .search-mode-btn.is-active {
+            border: 1px solid var(--color-success);
+            background: var(--color-bg-subtle);
+            color: var(--color-text-heading);
+        }
+
+        .lib-query-input {
+            width: 100%;
+            box-sizing: border-box;
+            min-height: 48px;
+            padding: 0 12px;
+            border: 1px solid var(--color-border-input-inactive);
+            border-radius: var(--radius-sm);
+            background: var(--color-white);
+            font-family: inherit;
+            font-size: 15px;
+            color: var(--color-text-heading);
+        }
+
+        .lib-action-btn {
+            min-height: 48px;
+            width: 100%;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
+            border-radius: var(--radius-sm);
+            box-shadow: none;
+            cursor: pointer;
+        }
+
+        .lib-action-btn.is-primary {
+            border: 1px solid var(--color-success);
+            background: var(--color-white);
+            color: var(--color-text-heading);
+        }
+
+        .lib-action-btn.is-secondary {
+            border: 1px solid var(--color-border-soft);
+            background: var(--color-white);
+            color: var(--color-text-heading);
+        }
+
+        .lib-action-btn.is-danger {
+            border: 1px solid var(--color-error);
+            background: var(--color-white);
+            color: var(--color-error);
+        }
+
+        .skeleton_line {
+            background: var(--color-bg-skeleton);
+            border-radius: 4px;
         }
     </style>
 </head>
 
 <body>
+<div class="kiosk-frame">
 
-<div id="phone_body" style="padding-bottom: 0;">
-
-    <div>
-        <!-- HEADER -->
-        <div id="header">
-            <button id="back_button" onclick="window.location.href='/'">
-                <img src="/asset1.png" alt="Back">
-            </button>
-
-            <div id="title">
-                <img src="/asset2.png" alt="Title">
-                <h1>Library</h1>
+    <div class="kiosk-header">
+        <div style="display: flex; align-items: center; gap: 12px">
+            <a href="/" title="Back to dashboard" aria-label="Back to dashboard" class="kiosk-icon-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path></svg>
+            </a>
+            <div class="kiosk-logo-slot" id="brand-logo-slot">SC</div>
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                <span id="brand-site-name" style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Safe Catering</span>
+                <span style="font-size: 16px; font-weight: 700; line-height: 1.2; color: var(--color-text-heading)">Library</span>
             </div>
+            <span id="header" style="display: contents"></span>
         </div>
-
-        <!-- DATE -->
-        <div style="display: flex;">
-            <div id="date">Date: <span id="current_date"></span></div>
-            
-            <button id="info" style="margin-left:8px;" data-help="library_explanation_functions" onclick="openHelp(this.dataset.help)">
-                <img src="https://www.svgrepo.com/show/502710/info.svg" alt="Info">
+        <div style="display: flex; align-items: center; gap: 8px">
+            <span style="flex: 1; font-size: 14px; color: var(--color-text-secondary)">Date: <span id="current_date"></span></span>
+            <label class="kiosk-lang-select" title="Change language">
+                <span aria-hidden="true" style="font-size: 15px">&#127760;</span>
+                <select id="language-select" aria-label="Change language"></select>
+            </label>
+            <button type="button" id="info" class="kiosk-icon-btn" data-help="library_explanation_functions" onclick="openHelp(this.dataset.help)" title="Library functions" aria-label="Library functions">
+                <span class="kiosk-info-glyph">i</span>
             </button>
-        </div>
-
-        <!-- SEARCH SECTION -->
-        <div id="search_section">
-            <div class="search_label">Search</div>
-
-            <div id="segment_buttons" style="display:flex; gap:6px;">
-                <button class="segment active" data-target="date" id="seg_date">Date</button>
-                <button class="segment" data-target="checklist" id="seg_checklist">Checklist</button>
-                <button class="segment" data-target="employee" id="seg_employee">Employee</button>
-            </div>
-
-            <div id="search_inputs" style="margin-top:8px; display:flex; flex-direction:column; gap:8px;">
-                <input type="date" id="search_date" placeholder="Search by date">
-
-                <select id="search_checklist" style="display:none; padding:8pt 10pt; border:1pt solid #000; font-size:10pt;">
-                    <option value="">All checklists</option>
-                    <option value="SC1">SC1</option>
-                    <option value="SC2">SC2</option>
-                    <option value="SC3">SC3</option>
-                    <option value="SC4">SC4</option>
-                    <option value="SC5">SC5</option>
-                    <option value="SC6">SC6</option>
-                    <option value="SC7">SC7</option>
-                </select>
-
-                <input type="text" id="search_employee" placeholder="Employee name" style="display:none; padding:8pt 10pt; border:1pt solid #000; font-size:10pt;">
-            </div>
-
-            <div class="search_buttons">
-                <button id="search_btn">Search</button>
-                <button id="clear_btn">Clear</button>
-            </div>
         </div>
     </div>
 
-    <!-- RECORDS LIST -->
-    <div id="library_container" style="flex: 1; overflow-y: auto;">
-        <div id="records_list">
-            <!-- Records will be inserted here -->
+    <div style="display: flex; flex-direction: column; gap: 12px; margin: 16px; padding: 14px 16px 16px; background: var(--color-white); border: 1px solid var(--color-border-soft); border-radius: var(--radius-sm)">
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Search saved records</span>
+        <div role="group" aria-label="Search records by" id="search-mode-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px">
+            <button type="button" class="search-mode-btn is-active" data-target="date">Date</button>
+            <button type="button" class="search-mode-btn" data-target="checklist">Checklist</button>
+            <button type="button" class="search-mode-btn" data-target="employee">Employee</button>
+        </div>
+        <input type="date" id="search_date" class="lib-query-input" placeholder="dd/mm/yyyy">
+        <select id="search_checklist" class="lib-query-input" style="display: none">
+            <option value="">All checklists</option>
+            <option value="SC1">SC1</option>
+            <option value="SC2">SC2</option>
+            <option value="SC3">SC3</option>
+            <option value="SC4">SC4</option>
+            <option value="SC5">SC5</option>
+            <option value="SC6">SC6</option>
+            <option value="SC7">SC7</option>
+        </select>
+        <input type="text" id="search_employee" class="lib-query-input" placeholder="Employee name" style="display: none">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
+            <button type="button" id="search_btn" class="lib-action-btn is-primary">Search</button>
+            <button type="button" id="clear_btn" class="lib-action-btn is-secondary">Clear</button>
         </div>
     </div>
 
+    <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 0 16px 8px">
+        <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Saved records</span>
+        <span id="result-label" style="font-size: 13px; color: var(--color-text-muted)">0 files</span>
+    </div>
 
+    <div id="library_container" style="flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 0 16px 24px; overflow-y: auto"></div>
+
+    <div class="kiosk-bottom-bar">
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+            <span style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Signed in</span>
+            <span id="employee_name_display" style="font-size: 14px; font-weight: 600; color: var(--color-text-heading); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">-</span>
+        </div>
+        <a href="/" class="kiosk-bottom-nav-btn" title="Dashboard" aria-label="Dashboard">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"></path><path d="M6 11v9h12v-9"></path></svg>
+        </a>
+        <button type="button" id="logout_button" class="kiosk-bottom-nav-btn" style="border-color: var(--color-error); color: var(--color-error)" title="Log out" aria-label="Log out">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8"></path><path d="M16 8l4 4-4 4"></path><path d="M20 12h-9"></path></svg>
+        </button>
+    </div>
 </div>
 
 <script src="help_overlay.js"></script>
+<script src="translations.js"></script>
+<script src="js/offline-store.js"></script>
+<script src="js/sync-engine.js"></script>
+<script src="/design-system/index.global.js"></script>
+<script src="js/status-badge.js"></script>
+<script src="script.js"></script>
 
 <script>
-    // Initialize date
-    const today = new Date().toLocaleDateString('en-GB');
-    document.getElementById('current_date').textContent = today;
-
     // Get employee data
     let employeeData = null;
 
@@ -251,9 +309,7 @@
         } else {
             try {
                 const response = await fetch('/api/employee');
-                if (!response.ok) {
-                    return;
-                }
+                if (!response.ok) return;
                 const data = await response.json();
                 if (data.success) {
                     employeeData = data.employee;
@@ -263,12 +319,110 @@
                 // Ignore unauthenticated or unavailable employee fetches on the library page.
             }
         }
+
+        const name = employeeData?.name || 'Employee';
+        document.getElementById('employee_name_display').textContent = name;
     };
+
+    // ---- Brand lookup ----
+    (async () => {
+        try {
+            const response = await fetch('/api/brand');
+            if (!response.ok) return;
+            const data = await response.json();
+            const kitchenName = data?.kitchen?.name || data?.brand_name || data?.business?.display_name || 'Safe Catering';
+            const logoSrc = data?.kitchen?.logo_src || data?.logo_src || data?.business?.logo_src || '';
+
+            document.getElementById('brand-site-name').textContent = kitchenName;
+            document.title = `${kitchenName} Library`;
+
+            if (logoSrc) {
+                const slot = document.getElementById('brand-logo-slot');
+                slot.textContent = '';
+                const img = document.createElement('img');
+                img.src = logoSrc;
+                img.alt = kitchenName;
+                slot.appendChild(img);
+            }
+        } catch (_error) {
+            // Fall back to the default brand if the lookup fails.
+        }
+    })();
+
+    // ---- Language switcher ----
+    // Reloads on change (see index.html for why) instead of re-translating the live DOM.
+    const langSelect = document.getElementById('language-select');
+    if (window.appI18n) {
+        window.appI18n.getLanguageOptions().forEach(({ value, label }) => {
+            const opt = document.createElement('option');
+            opt.value = value;
+            opt.textContent = label;
+            langSelect.appendChild(opt);
+        });
+        langSelect.value = window.appI18n.getAppLanguage();
+        langSelect.addEventListener('change', () => {
+            window.appI18n.setAppLanguage(langSelect.value);
+            window.location.reload();
+        });
+    }
+
+    const t = window.appI18n ? window.appI18n.t : (key) => key;
 
     let allRecords = [];
 
-    // Fetch all records
+    const GENERIC_FILE_ICON_SVG = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%">
+            <path d="M6 2h8l5 5v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/>
+            <path d="M14 2v5h5"/>
+            <line x1="8" y1="13" x2="15" y2="13"/>
+            <line x1="8" y1="16.5" x2="15" y2="16.5"/>
+        </svg>
+    `;
+
+    const isSafeCateringRecord = (fileName) => /^SC\d/i.test(fileName);
+
+    const RECORD_KIND_LABELS = {
+        SC1: 'Food delivery records',
+        SC2: 'Fridge/Cold room records',
+        SC3: 'Cooking/Cooling records',
+        SC4: 'Hold/Display records',
+        SC5: 'Hygiene checklist',
+        SC6: 'Training records',
+        SC7: 'Fitness to work assessment',
+    };
+
+    function recordMeta(fileName) {
+        const scMatch = fileName.match(/^SC(\d)/i);
+        const code = scMatch ? `SC${scMatch[1]}` : null;
+        const kind = t(code ? (RECORD_KIND_LABELS[code] || 'SafeCatering record') : 'Uploaded document');
+        // Lookaround boundaries stop this from sliding into an adjacent digit run (e.g. a
+        // trailing millisecond timestamp in custom_document-*-<epoch-ms>.ext filenames),
+        // which previously produced garbage dates like "1788" for the year.
+        const dateMatch = fileName.match(/(?<!\d)(\d{2})-(\d{2})-(\d{4})(?!\d)/) || fileName.match(/(?<!\d)(\d{4})-(\d{2})-(\d{2})(?!\d)/);
+        let dateLabel = t('Unknown date');
+        if (dateMatch) {
+            dateLabel = dateMatch[1].length === 4 ? `${dateMatch[3]}/${dateMatch[2]}/${dateMatch[1]}` : `${dateMatch[1]}/${dateMatch[2]}/${dateMatch[3]}`;
+        }
+        const extMatch = fileName.match(/\.([a-z0-9]+)$/i);
+        const ext = extMatch ? extMatch[1].toUpperCase() : 'FILE';
+        return { code, kind, dateLabel, ext };
+    }
+
+    const { React, ReactDOM, Card, Button } = window.KitchenDS;
+    const recordsRoot = ReactDOM.createRoot(document.getElementById('library_container'));
+
+    const renderRecordsSkeleton = (count = 4) => {
+        recordsRoot.render(React.createElement(React.Fragment, null, Array.from({ length: count }).map((_, i) => (
+            React.createElement(Card, { key: i, variant: 'record', 'aria-hidden': 'true', style: { display: 'block', padding: '14px 16px', border: '1px solid var(--color-border-soft)', borderRadius: 'var(--radius-sm)', background: 'var(--color-white)', boxShadow: 'none' } },
+                React.createElement('div', { className: 'skeleton_line', style: { width: '40%', height: 12, marginBottom: 6 } }),
+                React.createElement('div', { className: 'skeleton_line', style: { width: '70%', height: 10, marginBottom: 6 } }),
+                React.createElement('div', { className: 'skeleton_line', style: { width: '30%', height: 9 } }),
+            )
+        ))));
+    };
+
     const fetchRecords = async () => {
+        renderRecordsSkeleton();
         try {
             const response = await fetch('/api/records');
             const data = await response.json();
@@ -278,108 +432,88 @@
             }
         } catch (err) {
             console.error('Error fetching records:', err);
-            document.getElementById('records_list').innerHTML = '<div class="no_records">Error loading records</div>';
+            recordsRoot.render(React.createElement('div', { style: { textAlign: 'center', color: 'var(--color-text-muted)', padding: '20px 12px', background: 'var(--color-white)', border: '1px solid var(--color-border-soft)', borderRadius: 'var(--radius-sm)' } }, t('Error loading records')));
         }
     };
 
-    // Render records
+    function outline(color) {
+        return { minHeight: 44, fontSize: 14, fontWeight: 600, borderRadius: 'var(--radius-sm)', border: `1px solid ${color}`, background: 'var(--color-white)', color: color === 'var(--color-error)' ? 'var(--color-error)' : 'var(--color-text-heading)', boxShadow: 'none' };
+    }
+
     const renderRecords = (records) => {
-        const container = document.getElementById('records_list');
-        
         if (records.length === 0) {
-            container.innerHTML = '<div class="no_records">No records found</div>';
+            recordsRoot.render(React.createElement('div', { style: { textAlign: 'center', color: 'var(--color-text-muted)', padding: '20px 12px', background: 'var(--color-white)', border: '1px solid var(--color-border-soft)', borderRadius: 'var(--radius-sm)' } }, t('No records found')));
+            document.getElementById('result-label').textContent = t('{count} files', { count: 0 });
             return;
         }
 
-        container.innerHTML = '';
+        document.getElementById('result-label').textContent = t('{count} files', { count: records.length });
 
-        records.forEach(record => {
-            const div = document.createElement('div');
-            div.className = 'checklist_card_l';
+        recordsRoot.render(React.createElement(React.Fragment, null, records.map((record) => {
+            const meta = recordMeta(record);
+            return React.createElement(Card, { key: record, variant: 'record', style: { display: 'block', padding: '14px 16px', border: '1px solid var(--color-border-soft)', borderRadius: 'var(--radius-sm)', background: 'var(--color-white)', boxShadow: 'none' } },
+                React.createElement('div', { style: { display: 'flex', alignItems: 'flex-start', gap: 12 } },
+                    React.createElement('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 } },
+                        React.createElement('span', { style: { fontSize: 14, fontWeight: 700, lineHeight: 1.35, color: 'var(--color-text-heading)', overflowWrap: 'anywhere' } }, record),
+                        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--color-text-muted)' } },
+                            React.createElement('span', null, meta.dateLabel),
+                            React.createElement('span', { 'aria-hidden': 'true' }, '·'),
+                            React.createElement('span', null, meta.kind),
+                        ),
+                    ),
+                    React.createElement('span', { style: { display: 'inline-flex', alignItems: 'center', height: 22, padding: '0 8px', border: '1px solid var(--color-border-soft)', borderRadius: 'var(--radius-xs)', background: 'var(--color-bg-subtle)', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--color-text-muted)' } }, meta.ext),
+                ),
+                React.createElement('div', { style: { display: 'grid', gridTemplateColumns: employeeData ? '1fr 1fr' : '1fr', gap: 10, marginTop: 12 } },
+                    React.createElement(Button, { variant: 'secondary', fullWidth: true, style: outline('var(--color-border-soft)'), onClick: () => downloadRecord(record) }, t('View')),
+                    employeeData ? React.createElement(Button, { variant: 'secondary', fullWidth: true, style: outline('var(--color-error)'), onClick: () => deleteRecord(record) }, t('Delete')) : null,
+                ),
+            );
+        })));
 
-            // Extract date from filename (format: SC5-DD-MM-YYYY-Name-Position.pdf)
-            const dateMatch = record.match(/SC\d-(\d{2})-(\d{2})-(\d{4})/);
-            let dateStr = 'Unknown date';
-            if (dateMatch) {
-                dateStr = `${dateMatch[1]}/${dateMatch[2]}/${dateMatch[3]}`;
-            }
-
-            if(!employeeData) {
-                div.innerHTML = `
-                    <div class="record_info">
-                        <div class="record_meta">Saved Record</div>
-                        <div class="record_name">${record}</div>
-                        <div class="record_date">Date: ${dateStr}</div>
-                    </div>
-                    <div class="record_actions">
-                        <button class="btn_view" onclick="downloadRecord('${record}')">View</button>
-                    </div>
-                `;
-                container.appendChild(div);
-                return;
-            }
-
-            div.innerHTML = `
-                <div class="record_info">
-                    <div class="record_meta">Saved Record</div>
-                    <div class="record_name">${record}</div>
-                    <div class="record_date">Date: ${dateStr}</div>
-                </div>
-                <div class="record_actions">
-                    <button class="btn_view" onclick="downloadRecord('${record}')">View</button>
-                    <button class="btn_delete" onclick="deleteRecord('${record}')">Delete</button>
-                </div>
-            `;
-
-            container.appendChild(div);
-        });
+        if (window.applyTranslations) {
+            window.applyTranslations(document.getElementById('library_container'));
+        }
     };
 
-    // Filter records by date
-    const normalize = (s) => String(s || '').toLowerCase().replace(/[\s_\-]+/g, '');
+    const normalize = (s) => String(s || '').toLowerCase().replace(/[\s_-]+/g, '');
 
     const setActiveSegment = (target) => {
-        document.querySelectorAll('.segment').forEach(b => b.classList.remove('active'));
-        const btn = document.querySelector(`.segment[data-target="${target}"]`);
-        if (btn) btn.classList.add('active');
-
-        // show/hide inputs
-        document.getElementById('search_date').style.display = (target === 'date') ? '' : 'none';
-        document.getElementById('search_checklist').style.display = (target === 'checklist') ? '' : 'none';
-        document.getElementById('search_employee').style.display = (target === 'employee') ? '' : 'none';
+        document.querySelectorAll('.search-mode-btn').forEach((b) => b.classList.toggle('is-active', b.dataset.target === target));
+        document.getElementById('search_date').style.display = target === 'date' ? '' : 'none';
+        document.getElementById('search_checklist').style.display = target === 'checklist' ? '' : 'none';
+        document.getElementById('search_employee').style.display = target === 'employee' ? '' : 'none';
     };
 
     const filterRecords = () => {
-        const active = document.querySelector('.segment.active')?.dataset.target || 'date';
+        const active = document.querySelector('.search-mode-btn.is-active')?.dataset.target || 'date';
 
         if (active === 'date') {
             const dateInput = document.getElementById('search_date').value;
             if (!dateInput) { renderRecords(allRecords); return; }
             const [year, month, day] = dateInput.split('-');
-            const searchDate = `${day}-${month}-${year}`;
-            const filtered = allRecords.filter(record => record.includes(searchDate));
-            renderRecords(filtered);
+            // Filenames use both orderings depending on form (SC1/SC3/SC5 use DD-MM-YYYY,
+            // SC4 uses YYYY-MM-DD - see recordMeta() above, which already has to handle both
+            // when displaying a date) - searching only one order missed every SC4 record.
+            const searchDateDMY = `${day}-${month}-${year}`;
+            const searchDateYMD = `${year}-${month}-${day}`;
+            renderRecords(allRecords.filter((record) => record.includes(searchDateDMY) || record.includes(searchDateYMD)));
             return;
         }
 
         if (active === 'checklist') {
             const checklist = document.getElementById('search_checklist').value;
             if (!checklist) { renderRecords(allRecords); return; }
-            const filtered = allRecords.filter(record => record.toUpperCase().includes(checklist.toUpperCase()));
-            renderRecords(filtered);
+            renderRecords(allRecords.filter((record) => record.toUpperCase().includes(checklist.toUpperCase())));
             return;
         }
 
         if (active === 'employee') {
             const name = normalize(document.getElementById('search_employee').value);
             if (!name) { renderRecords(allRecords); return; }
-            const filtered = allRecords.filter(record => normalize(record).includes(name));
-            renderRecords(filtered);
-            return;
+            renderRecords(allRecords.filter((record) => normalize(record).includes(name)));
         }
     };
 
-    // Clear search
     const clearSearch = () => {
         document.getElementById('search_date').value = '';
         document.getElementById('search_checklist').value = '';
@@ -388,50 +522,57 @@
         renderRecords(allRecords);
     };
 
-    // Download/View record
     const downloadRecord = (fileName) => {
         window.open(`/records/${fileName}`, '_blank');
     };
 
-    // Delete record
     const deleteRecord = async (fileName) => {
-        if (!confirm(`Are you sure you want to delete ${fileName}?`)) {
+        if (!confirm(t('Are you sure you want to delete {fileName}?', { fileName }))) {
             return;
         }
 
         try {
-            const response = await fetch(`/api/records/${encodeURIComponent(fileName)}`, {
-                method: 'DELETE'
-            });
-
+            const response = await fetch(`/api/records/${encodeURIComponent(fileName)}`, { method: 'DELETE' });
             const data = await response.json();
 
             if (data.success) {
-                // Remove from list
-                allRecords = allRecords.filter(r => r !== fileName);
-                renderRecords(allRecords);
-                alert('Record deleted successfully');
+                await fetchRecords();
+                // fetchRecords() re-renders allRecords unfiltered - reapply whatever search
+                // was active so a delete mid-filter doesn't silently drop it and show every
+                // record while the search UI still looks filtered.
+                filterRecords();
+                await window.showAppModal(t('Record deleted successfully'), { type: 'success' });
             } else {
-                alert('Error deleting record: ' + data.message);
+                await window.showAppModal(t('Error deleting record: {message}', { message: data.message }), { type: 'error' });
             }
         } catch (err) {
             console.error('Error deleting record:', err);
-            alert('Error deleting record');
+            await window.showAppModal(t('Error deleting record'), { type: 'error' });
         }
     };
 
-    // Event listeners
     document.getElementById('search_btn').addEventListener('click', filterRecords);
     document.getElementById('clear_btn').addEventListener('click', clearSearch);
     document.getElementById('search_date').addEventListener('keyup', (e) => { if (e.key === 'Enter') filterRecords(); });
     document.getElementById('search_employee').addEventListener('keyup', (e) => { if (e.key === 'Enter') filterRecords(); });
-    document.getElementById('search_checklist').addEventListener('change', () => { filterRecords(); });
+    document.getElementById('search_checklist').addEventListener('change', filterRecords);
+    document.querySelectorAll('.search-mode-btn').forEach((btn) => btn.addEventListener('click', () => setActiveSegment(btn.dataset.target)));
 
-    document.querySelectorAll('.segment').forEach(s => s.addEventListener('click', (e) => setActiveSegment(e.currentTarget.dataset.target)));
+    document.getElementById('logout_button').addEventListener('click', () => {
+        sessionStorage.clear();
+        window.location.href = '/logout';
+    });
 
-    // Initialize
-    initializeEmployee();
-    fetchRecords();
+    // Resolve employee state before the first record render - renderRecords() decides
+    // whether to show Delete based on `employeeData`, so it must not run first.
+    (async () => {
+        await initializeEmployee();
+        await fetchRecords();
+    })();
+
+    if (window.applyTranslations) {
+        window.applyTranslations(document.body);
+    }
 </script>
 
 </body>

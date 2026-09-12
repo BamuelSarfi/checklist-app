@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>checklist-kitchen-ds preview</title>
+<link rel="stylesheet" href="dist/index.global.css" />
+<style>
+  body { font-family: sans-serif; padding: 24px; max-width: 700px; margin: 0 auto; }
+  section { margin-bottom: 32px; }
+  h2 { font-size: 14px; text-transform: uppercase; color: #666; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<h1>checklist-kitchen-ds</h1>
+<p>Local visual sanity-check - mounts every component with sample props. Not part of the design-sync output itself.</p>
+
+<section id="root-button"></section>
+<section id="root-segmented"></section>
+<section id="root-textinput"></section>
+<section id="root-textarea"></section>
+<section id="root-pininput"></section>
+<section id="root-toggle"></section>
+<section id="root-card"></section>
+<section id="root-calendar"></section>
+<section id="root-modal"></section>
+<section id="root-banner"></section>
+<section id="root-statusbadge"></section>
+
+<script src="dist/index.global.js"></script>
+<script>
+const { React, ReactDOM } = window;
+const {
+  Button, SegmentedTabs, TextInput, Textarea, PinInput, ToggleQuestion,
+  Card, CardHeader, CardTitle, CardDescription, CardArrow, CardBadge,
+  CalendarDayGrid, Modal, Banner, StatusBadge,
+} = window.KitchenDS;
+const h = React.createElement;
+const { useState } = React;
+
+function mount(id, Component) {
+  ReactDOM.createRoot(document.getElementById(id)).render(h(Component));
+}
+
+mount("root-button", () => h("div", null,
+  h("h2", null, "Button"),
+  h("div", { className: "row" },
+    h(Button, { variant: "primary" }, "Add Record"),
+    h(Button, { variant: "secondary" }, "Back"),
+    h(Button, { variant: "danger" }, "Logout"),
+    h(Button, { variant: "icon", "aria-label": "Info" }, "i"),
+    h(Button, { variant: "primary", loading: true }, "Saving"),
+    h(Button, { variant: "primary", disabled: true }, "Disabled"),
+  ),
+  h(Button, { variant: "primary", fullWidth: true }, "Full width")
+));
+
+mount("root-segmented", () => {
+  const [value, setValue] = useState("cooking");
+  return h("div", null,
+    h("h2", null, "SegmentedTabs"),
+    h(SegmentedTabs, {
+      value, onChange: setValue,
+      options: [
+        { value: "cooking", label: "Cooking" },
+        { value: "cooling", label: "Cooling" },
+        { value: "reheating", label: "Reheating" },
+      ],
+    })
+  );
+});
+
+mount("root-textinput", () => h("div", null,
+  h("h2", null, "TextInput"),
+  h(TextInput, { label: "Food item", placeholder: "e.g. Chicken breast" }),
+  h(TextInput, { label: "Temperature", error: "Required field" })
+));
+
+mount("root-textarea", () => h("div", null,
+  h("h2", null, "Textarea"),
+  h(Textarea, { label: "Corrective action", placeholder: "Describe the action taken..." })
+));
+
+mount("root-pininput", () => {
+  const [value, setValue] = useState("");
+  return h("div", null,
+    h("h2", null, "PinInput"),
+    h(PinInput, { value, onChange: setValue, error: value.length === 6 ? undefined : undefined })
+  );
+});
+
+mount("root-toggle", () => {
+  const [checked, setChecked] = useState(true);
+  return h("div", null,
+    h("h2", null, "ToggleQuestion"),
+    h(ToggleQuestion, { question: "Checked use by date and condition", checked, onToggle: setChecked })
+  );
+});
+
+mount("root-card", () => h("div", null,
+  h("h2", null, "Card"),
+  h(Card, { variant: "list-item" },
+    h("div", null,
+      h(CardTitle, null, "SC1 - Food Delivery Records", h(CardBadge, null, "Required")),
+      h(CardDescription, null, "Food delivery conditions and organization check")
+    ),
+    h(CardArrow, null)
+  ),
+  h(Card, { variant: "record" },
+    h(CardHeader, null,
+      h("strong", null, "Record 1/16"),
+      h("span", null, "29/08/2026")
+    ),
+    h("div", null, "Supplier: Acme Foods")
+  )
+));
+
+mount("root-calendar", () => h("div", null,
+  h("h2", null, "CalendarDayGrid"),
+  h(CalendarDayGrid, {
+    days: Array.from({ length: 14 }, (_, i) => ({
+      day: i + 1,
+      state: i % 5 === 0 ? "missed" : i % 3 === 0 ? "filled-other" : i % 2 === 0 ? "filled-self" : "empty",
+    })),
+  })
+));
+
+mount("root-modal", () => {
+  const [open, setOpen] = useState(true);
+  return h("div", null,
+    h("h2", null, "Modal"),
+    h(Button, { onClick: () => setOpen(true) }, "Reopen modal"),
+    h(Modal, { open, type: "success", message: "Saved successfully", onOk: () => setOpen(false) })
+  );
+});
+
+mount("root-banner", () => h("div", null,
+  h("h2", null, "Banner"),
+  h(Banner, { variant: "warning" }, "Some records haven't synced yet."),
+  h(Banner, { variant: "info" }, "Cooking temperatures must reach at least 75°C.")
+));
+
+mount("root-statusbadge", () => h("div", null,
+  h("h2", null, "StatusBadge"),
+  h("div", { className: "row" },
+    h(StatusBadge, { state: "synced" }),
+    h(StatusBadge, { state: "pending" }),
+    h(StatusBadge, { state: "syncing" }),
+    h(StatusBadge, { state: "error" }),
+  )
+));
+</script>
+</body>
+</html>

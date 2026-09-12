@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Tester Promotion</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/help_overlay.css">
+    <link rel="stylesheet" href="/design-system/index.global.css">
+    <style>
+        body {
+            margin: 0 auto;
+        }
+
+        .tp_stepper_input {
+            max-width: 110px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .tp_stat_box {
+            padding: 16px;
+        }
+
+        .tp_stat_value {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+            color: var(--color-text-heading);
+        }
+
+        .tp_stat_label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--color-text-caption, var(--color-text-muted));
+            margin-top: 8px;
+            line-height: 1.35;
+        }
+
+        .tp_live_dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 999px;
+            background: var(--color-success);
+            display: inline-block;
+            animation: tpPulse 1.6s ease-in-out infinite;
+        }
+
+        @keyframes tpPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .tp_claim_row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--color-border-soft);
+        }
+
+        .tp_claim_row:last-child {
+            border-bottom: none;
+        }
+
+        #tp_qr_overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #tp_qr_overlay.is-open {
+            display: flex;
+        }
+
+        .tp_qr_box {
+            background: var(--color-white);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            width: 90%;
+            max-width: 340px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body class="kiosk-body">
+    <div class="kiosk-frame">
+
+        <div class="kiosk-header">
+            <div style="display: flex; align-items: center; gap: 12px">
+                <a href="/" title="Back to dashboard" aria-label="Back to dashboard" class="kiosk-icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M19 12H5"></path>
+                        <path d="M12 19l-7-7 7-7"></path>
+                    </svg>
+                </a>
+                <div class="kiosk-logo-slot" id="brand-logo-slot">TP</div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                    <span id="brand-site-name"
+                        style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Uncle's
+                        Market</span>
+                    <span
+                        style="font-size: 15px; font-weight: 700; line-height: 1.2; color: var(--color-text-heading)">Tester
+                        Promotion</span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px">
+                <span style="flex: 1; font-size: 14px; color: var(--color-text-secondary)">Date: <span
+                        id="current_date"></span></span>
+                <label class="kiosk-lang-select" title="Change language">
+                    <span aria-hidden="true" style="font-size: 15px">&#127760;</span>
+                    <select id="language-select" aria-label="Change language"></select>
+                </label>
+                <button type="button" id="info" class="kiosk-icon-btn" title="About Tester Promotion" aria-label="About Tester Promotion"
+                    onclick="document.getElementById('tp_help_overlay').classList.add('is-open')">
+                    <span class="kiosk-info-glyph">i</span>
+                </button>
+            </div>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 16px">
+
+            <!-- SETUP -->
+            <div id="tp_setup_screen" style="display: none; flex-direction: column; gap: 12px">
+                <h1 class="kiosk-field-label" style="font-size: 20px;">New tester run</h1>
+                <p style="margin: 0; font-size: 13px; color: var(--color-text-muted)">Set this up once at the start of
+                    the shift. Customers claim against it until it ends or runs out.</p>
+
+                <div class="kiosk-banner-warning" style="background: var(--color-bg-panel-muted, #eef2ff);">Ends up as
+                    a dated PDF under your name in the record library.</div>
+
+                <div class="kiosk-card">
+                    <label style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px">
+                        <span class="kiosk-field-label">Tester name</span>
+                        <input type="text" id="tp_name" class="kiosk-text-input" placeholder="e.g. Naa Shea Butter 5ml">
+                    </label>
+
+                    <label style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px">
+                        <span class="kiosk-field-label">Testers available</span>
+                        <div style="display: flex; align-items: center; gap: 10px">
+                            <button type="button" id="tp_dec_stock" class="kiosk-small-btn" style="width: 56px;">&minus;</button>
+                            <input type="tel" id="tp_stock" class="kiosk-text-input tp_stepper_input" value="60">
+                            <button type="button" id="tp_inc_stock" class="kiosk-small-btn" style="width: 56px;">+</button>
+                        </div>
+                    </label>
+
+                    <div style="display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px">
+                        <label style="flex: 1; min-width: 130px; display: flex; flex-direction: column; gap: 6px">
+                            <span class="kiosk-field-label">Starts</span>
+                            <input type="time" id="tp_starts" class="kiosk-text-input" value="10:00">
+                        </label>
+                        <label style="flex: 1; min-width: 130px; display: flex; flex-direction: column; gap: 6px">
+                            <span class="kiosk-field-label">Ends</span>
+                            <input type="time" id="tp_ends" class="kiosk-text-input" value="18:00">
+                        </label>
+                    </div>
+
+                    <label style="display: flex; flex-direction: column; gap: 6px">
+                        <span class="kiosk-field-label">On the counter</span>
+                        <input type="text" id="tp_staff" class="kiosk-text-input" placeholder="Staff name">
+                    </label>
+                </div>
+
+                <div id="tp_setup_error" class="kiosk-banner-warning" style="display: none;"></div>
+
+                <div id="tp_start_button_mount" style="max-width: 360px"></div>
+            </div>
+
+            <!-- LIVE -->
+            <div id="tp_live_screen" style="display: none; flex-direction: column; gap: 14px">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap">
+                    <div>
+                        <h1 id="tp_live_name" class="kiosk-field-label" style="font-size: 20px; margin: 0 0 4px;">Tester</h1>
+                        <div id="tp_live_meta" style="font-size: 13px; color: var(--color-text-muted)"></div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px">
+                        <span class="tp_live_dot"></span>
+                        <span id="tp_live_label" style="font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-success)">Live now</span>
+                    </div>
+                </div>
+
+                <div class="kiosk-card">
+                    <div class="kiosk-field-label" style="text-transform: uppercase; font-size: 11px;">Testers left</div>
+                    <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 6px">
+                        <span id="tp_remaining" style="font-size: 44px; font-weight: 700; line-height: 1; color: var(--color-text-heading)">0</span>
+                        <span id="tp_of_stock" style="font-size: 15px; font-weight: 700; color: var(--color-text-muted)">of 0</span>
+                    </div>
+                    <div style="margin-top: 12px; height: 10px; border-radius: 999px; background: var(--color-bg-active, #eee); overflow: hidden">
+                        <div id="tp_progress_bar" style="height: 100%; border-radius: 999px; background: var(--color-success); width: 0%"></div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px">
+                    <div class="kiosk-card tp_stat_box">
+                        <div id="tp_stat_served" class="tp_stat_value">0</div>
+                        <div class="tp_stat_label">Customers served by you</div>
+                    </div>
+                    <div class="kiosk-card tp_stat_box">
+                        <div id="tp_stat_rate" class="tp_stat_value">0.0</div>
+                        <div class="tp_stat_label">Claims per hour this shift</div>
+                    </div>
+                    <div class="kiosk-card tp_stat_box">
+                        <div id="tp_stat_given" class="tp_stat_value">0</div>
+                        <div class="tp_stat_label">Testers given out</div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="kiosk-field-label" style="text-transform: uppercase; font-size: 11px; margin-bottom: 8px;">Claims through you</div>
+                    <div id="tp_claims_log" class="kiosk-card"></div>
+                    <p id="tp_no_claims" style="margin: 8px 0 0; font-size: 13px; color: var(--color-text-muted)">No claims yet this shift.</p>
+                </div>
+
+                <div style="display: flex; gap: 12px; flex-wrap: wrap">
+                    <button type="button" id="tp_show_qr_btn" class="kiosk-small-btn">Show till QR</button>
+                    <div id="tp_end_button_mount" style="width: 220px"></div>
+                </div>
+            </div>
+
+            <!-- ENDED -->
+            <div id="tp_ended_screen" style="display: none; flex-direction: column; gap: 14px">
+                <h1 class="kiosk-field-label" style="font-size: 20px;">Run closed</h1>
+                <div class="kiosk-card">
+                    <div class="tp_claim_row"><span>Customers served</span><span id="tp_end_served" style="font-weight: 700; font-size: 20px;">0</span></div>
+                    <div class="tp_claim_row"><span>Testers given out</span><span id="tp_end_given" style="font-weight: 700; font-size: 20px;">0</span></div>
+                    <div class="tp_claim_row"><span>Left in the box</span><span id="tp_end_left" style="font-weight: 700; font-size: 20px;">0</span></div>
+                </div>
+                <div class="kiosk-banner-warning" style="background: var(--color-bg-panel-muted, #eef2ff);">Saved as a PDF in the record library.</div>
+                <div id="tp_reset_button_mount" style="width: 220px"></div>
+            </div>
+
+        </div>
+
+        <div class="kiosk-bottom-bar">
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                <span
+                    style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Signed
+                    in</span>
+                <span id="employee_name_display"
+                    style="font-size: 14px; font-weight: 600; color: var(--color-text-heading); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">-</span>
+            </div>
+            <a href="/library" class="kiosk-bottom-nav-btn" title="Library" aria-label="Library">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 4v16"></path>
+                    <path d="M9.5 4v16"></path>
+                    <path d="M15 4.5l4 15.5"></path>
+                </svg>
+            </a>
+        </div>
+    </div>
+
+    <div id="tp_qr_overlay" onclick="if(event.target===this) this.classList.remove('is-open')">
+        <div class="tp_qr_box">
+            <p style="margin: 0 0 12px; font-weight: 700;">Till QR code</p>
+            <img id="tp_qr_image" src="" alt="Till QR code" style="width: 100%; height: auto; border: 1px solid var(--color-border-soft); border-radius: var(--radius-sm);">
+            <p style="margin: 12px 0 0; font-size: 12px; color: var(--color-text-muted)">Print this and place it by the till.</p>
+            <button type="button" class="kiosk-small-btn" style="margin-top: 14px;" onclick="document.getElementById('tp_qr_overlay').classList.remove('is-open')">Close</button>
+        </div>
+    </div>
+
+    <div id="tp_help_overlay" class="sc2_day_view_overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center;" onclick="if(event.target===this) this.classList.remove('is-open')">
+        <div class="kiosk-card" style="max-width: 420px; margin: 0;">
+            <h2 style="font-size: 18px; font-weight: 700; margin: 0 0 10px; color: var(--color-text-heading)">About Tester Promotion</h2>
+            <p style="margin: 0 0 14px; font-size: 13px; line-height: 1.5; color: var(--color-text-muted)">Open a tester run at the start of your shift, then leave this screen up. Every customer scan at the till adds a claim against your name - the totals here are what gets filed, so there is nothing to count by hand.</p>
+            <button type="button" class="kiosk-small-btn" onclick="document.getElementById('tp_help_overlay').classList.remove('is-open')">Close</button>
+        </div>
+    </div>
+    <style>#tp_help_overlay.is-open { display: flex !important; } #tp_help_overlay { display: none !important; }</style>
+
+    <script src="/translations.js"></script>
+    <script src="/design-system/index.global.js"></script>
+    <script>
+        const t = window.appI18n ? window.appI18n.t : (key) => key;
+        const { React, ReactDOM, Button } = window.KitchenDS;
+
+        document.getElementById('current_date').textContent = new Date().toLocaleDateString('en-GB');
+
+        let employeeName = '';
+
+        async function initializeEmployee() {
+            try {
+                const response = await fetch('/api/employee');
+                const data = await response.json();
+                if (data.success) {
+                    employeeName = data.employee.name || 'Employee';
+                    document.getElementById('employee_name_display').textContent = employeeName;
+                    const staffInput = document.getElementById('tp_staff');
+                    if (staffInput && !staffInput.value) staffInput.value = employeeName;
+                }
+            } catch (error) {
+                console.error('Error fetching employee data:', error);
+            }
+        }
+
+        function showScreen(name) {
+            ['setup', 'live', 'ended'].forEach((screen) => {
+                document.getElementById(`tp_${screen}_screen`).style.display = screen === name ? 'flex' : 'none';
+            });
+        }
+
+        const startButtonRoot = ReactDOM.createRoot(document.getElementById('tp_start_button_mount'));
+        const endButtonRoot = ReactDOM.createRoot(document.getElementById('tp_end_button_mount'));
+        const resetButtonRoot = ReactDOM.createRoot(document.getElementById('tp_reset_button_mount'));
+
+        function renderStartButton(isLoading) {
+            startButtonRoot.render(React.createElement(Button, {
+                variant: 'primary', loading: !!isLoading, fullWidth: true, onClick: startRun,
+                style: { minHeight: 48 },
+            }, t('Start tester run')));
+        }
+
+        function renderEndButton(isLoading) {
+            endButtonRoot.render(React.createElement(Button, {
+                variant: 'primary', loading: !!isLoading, fullWidth: true, onClick: endRun,
+                style: { minHeight: 44 },
+            }, t('End run & save PDF')));
+        }
+
+        function renderResetButton() {
+            resetButtonRoot.render(React.createElement(Button, {
+                fullWidth: true, onClick: () => { showScreen('setup'); },
+                style: { minHeight: 44 },
+            }, t('Start another run')));
+        }
+
+        function setSetupError(message) {
+            const el = document.getElementById('tp_setup_error');
+            if (!message) {
+                el.style.display = 'none';
+                el.textContent = '';
+                return;
+            }
+            el.style.display = '';
+            el.textContent = t(message);
+        }
+
+        document.getElementById('tp_inc_stock').addEventListener('click', () => {
+            const input = document.getElementById('tp_stock');
+            input.value = String(Math.max(0, parseInt(input.value || '0', 10) + 5));
+        });
+        document.getElementById('tp_dec_stock').addEventListener('click', () => {
+            const input = document.getElementById('tp_stock');
+            input.value = String(Math.max(0, parseInt(input.value || '0', 10) - 5));
+        });
+
+        async function startRun() {
+            setSetupError('');
+            renderStartButton(true);
+            try {
+                const response = await fetch('/api/tester-promotion/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tester_name: document.getElementById('tp_name').value,
+                        stock: parseInt(document.getElementById('tp_stock').value, 10),
+                        starts_at: document.getElementById('tp_starts').value,
+                        ends_at: document.getElementById('tp_ends').value,
+                        staff_name: document.getElementById('tp_staff').value || employeeName,
+                    }),
+                });
+                const result = await response.json();
+                if (!response.ok || !result.success) {
+                    setSetupError(result.message || 'Unable to start run');
+                    return;
+                }
+                renderLive(result.run);
+                showScreen('live');
+                startPolling();
+            } catch (err) {
+                setSetupError(err.message);
+            } finally {
+                renderStartButton(false);
+            }
+        }
+
+        function renderLive(run) {
+            document.getElementById('tp_live_name').textContent = run.tester_name;
+            document.getElementById('tp_live_meta').textContent = `${run.starts_at}–${run.ends_at} · ${run.staff_name} · ${new Date().toLocaleDateString('en-GB')}`;
+            document.getElementById('tp_live_label').textContent = run.remaining === 0 ? 'Sold out' : 'Live now';
+            document.getElementById('tp_remaining').textContent = run.remaining;
+            document.getElementById('tp_of_stock').textContent = `of ${run.stock}`;
+            const pct = run.stock ? Math.round((run.remaining / run.stock) * 100) : 0;
+            document.getElementById('tp_progress_bar').style.width = `${pct}%`;
+
+            document.getElementById('tp_stat_served').textContent = run.claimed_count;
+            document.getElementById('tp_stat_rate').textContent = run.claims_per_hour.toFixed(1);
+            document.getElementById('tp_stat_given').textContent = run.claimed_count;
+
+            const log = document.getElementById('tp_claims_log');
+            const noClaims = document.getElementById('tp_no_claims');
+            log.innerHTML = '';
+            if (run.recent_claims.length === 0) {
+                log.style.display = 'none';
+                noClaims.style.display = '';
+            } else {
+                log.style.display = '';
+                noClaims.style.display = 'none';
+                run.recent_claims.forEach((claim) => {
+                    const row = document.createElement('div');
+                    row.className = 'tp_claim_row';
+                    row.innerHTML = `<span>${claim.time} · ${claim.note}</span>`;
+                    log.appendChild(row);
+                });
+            }
+        }
+
+        let pollTimer = null;
+        function startPolling() {
+            clearInterval(pollTimer);
+            pollTimer = setInterval(async () => {
+                try {
+                    const response = await fetch('/api/tester-promotion/status');
+                    const data = await response.json();
+                    if (data.success && data.run) {
+                        renderLive(data.run);
+                    }
+                } catch (err) {
+                    console.error('Error polling Tester Promotion status:', err);
+                }
+            }, 2000);
+        }
+
+        async function endRun() {
+            renderEndButton(true);
+            try {
+                const response = await fetch('/api/tester-promotion/end', { method: 'POST' });
+                const result = await response.json();
+                if (!response.ok || !result.success) {
+                    await window.showAppModal(result.message || 'Unable to end run', { type: 'error' });
+                    return;
+                }
+                clearInterval(pollTimer);
+                document.getElementById('tp_end_served').textContent = result.summary.customers_served;
+                document.getElementById('tp_end_given').textContent = result.summary.testers_given_out;
+                document.getElementById('tp_end_left').textContent = result.summary.left_in_box;
+                renderResetButton();
+                showScreen('ended');
+            } catch (err) {
+                await window.showAppModal(err.message, { type: 'error' });
+            } finally {
+                renderEndButton(false);
+            }
+        }
+
+        document.getElementById('tp_show_qr_btn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/tester-promotion/till-qr');
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('tp_qr_image').src = data.qr_data_url;
+                    document.getElementById('tp_qr_overlay').classList.add('is-open');
+                }
+            } catch (err) {
+                console.error('Error loading till QR:', err);
+            }
+        });
+
+        async function init() {
+            await initializeEmployee();
+            renderStartButton(false);
+            renderEndButton(false);
+
+            try {
+                const response = await fetch('/api/tester-promotion/status');
+                const data = await response.json();
+                if (data.success && data.run) {
+                    renderLive(data.run);
+                    showScreen('live');
+                    startPolling();
+                    return;
+                }
+            } catch (err) {
+                console.error('Error loading Tester Promotion status:', err);
+            }
+
+            showScreen('setup');
+        }
+
+        init();
+
+        // ---- Brand lookup ----
+        (async () => {
+            try {
+                const response = await fetch('/api/brand');
+                if (!response.ok) return;
+                const data = await response.json();
+                const kitchenName = data?.kitchen?.name || data?.brand_name || data?.business?.display_name || "Uncle's Market";
+                const logoSrc = data?.kitchen?.logo_src || data?.logo_src || data?.business?.logo_src || '';
+                document.getElementById('brand-site-name').textContent = kitchenName;
+                if (logoSrc) {
+                    const slot = document.getElementById('brand-logo-slot');
+                    slot.textContent = '';
+                    const img = document.createElement('img');
+                    img.src = logoSrc;
+                    img.alt = kitchenName;
+                    slot.appendChild(img);
+                }
+            } catch (_error) { /* optional */ }
+        })();
+
+        // ---- Language switcher ----
+        const langSelect = document.getElementById('language-select');
+        if (window.appI18n) {
+            window.appI18n.getLanguageOptions().forEach(({ value, label }) => {
+                const opt = document.createElement('option');
+                opt.value = value;
+                opt.textContent = label;
+                langSelect.appendChild(opt);
+            });
+            langSelect.value = window.appI18n.getAppLanguage();
+            langSelect.addEventListener('change', () => {
+                window.appI18n.setAppLanguage(langSelect.value);
+                window.location.reload();
+            });
+        }
+    </script>
+
+    <script src="/script.js"></script>
+</body>
+
+</html>

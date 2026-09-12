@@ -1,77 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>SC4 - Hold/Display Records</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="help_overlay.css">
+    <link rel="stylesheet" href="/design-system/index.global.css">
 </head>
-<body>
-    <div id="phone_body">
-        <div id="header">
-            <button id="back_button" onclick="history.back()">
-                <img src="/asset1.png" alt="Back">
-            </button>
-            <div id="title">
-                <img src="/asset2.png" alt="Title">
-                <h1>SC4 - Hold/Display Records</h1>
+<style>
+    body {
+        margin: 0 auto;
+    }
+</style>
+
+<body class="kiosk-body">
+    <div class="kiosk-frame">
+
+        <div class="kiosk-header">
+            <div style="display: flex; align-items: center; gap: 12px">
+                <a href="/" title="Back to dashboard" aria-label="Back to dashboard" class="kiosk-icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M19 12H5"></path>
+                        <path d="M12 19l-7-7 7-7"></path>
+                    </svg>
+                </a>
+                <div class="kiosk-logo-slot" id="brand-logo-slot">SC</div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                    <span id="brand-site-name"
+                        style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Safe
+                        Catering</span>
+                    <span
+                        style="font-size: 15px; font-weight: 700; line-height: 1.2; color: var(--color-text-heading)">SC4
+                        - Hold/Display Records</span>
+                </div>
+                <span id="header" style="display: contents"></span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px">
+                <span style="flex: 1; font-size: 14px; color: var(--color-text-secondary)">Date: <span
+                        id="current_date"></span></span>
+                <label class="kiosk-lang-select" title="Change language">
+                    <span aria-hidden="true" style="font-size: 15px">&#127760;</span>
+                    <select id="language-select" aria-label="Change language"></select>
+                </label>
+                <button type="button" id="info" class="kiosk-icon-btn" data-help="sc4_info"
+                    onclick="openHelp(this.dataset.help)" title="How this form works" aria-label="How this form works">
+                    <span class="kiosk-info-glyph">i</span>
+                </button>
             </div>
         </div>
 
-        <div style="display: flex;">
-            <div id="date">Date: <span id="current_date"></span></div>
-            <button id="info" data-help="sc4_info" onclick="openHelp(this.dataset.help)">
-                <img src="https://www.svgrepo.com/show/502710/info.svg" alt="Info">
-            </button>
-        </div>
-
-    <script src="help_overlay.js"></script>
-
-        <div id="question_container">
-            <div class="sc4_info_box">
-                <strong>Hot hold/display record</strong>
-                <p>Use one card per item. The signed field will be populated with the employee's first name.</p>
+        <div id="question_container" style="flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 16px">
+            <div
+                style="display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; background: var(--color-white); border: 1px solid var(--color-border-soft); border-radius: var(--radius-sm)">
+                <span style="font-size: 12px; font-weight: 700; color: var(--color-text-heading)">Hot hold/display
+                    record</span>
+                <span style="font-size: 13px; line-height: 1.45; color: var(--color-text-muted)">Use one card per item.
+                    The signed field is populated with the employee's first name.</span>
             </div>
 
-            <div class="sc4_controls">
-                <button type="button" class="sc4_action_btn" id="add_row_btn" onclick="addRow()">+ Add Row</button>
-                <button type="button" class="sc4_action_btn" id="remove_row_btn" onclick="removeRow()">- Remove Row</button>
+            <div
+                style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--color-white); border: 1px solid var(--color-border-soft); border-radius: var(--radius-sm)">
+                <span id="row-count-label"
+                    style="flex: 1; font-size: 13px; font-weight: 700; color: var(--color-text-heading)">1 item on this
+                    form</span>
+                <button type="button" id="add_row_btn" class="kiosk-small-btn" onclick="addRow()">+ Add</button>
+                <button type="button" id="remove_row_btn" class="kiosk-small-btn is-danger" onclick="removeRow()">-
+                    Remove</button>
             </div>
 
-            <div id="sc4_rows_container"></div>
+            <div id="sc4_rows_container" style="display: flex; flex-direction: column; gap: 10px;"></div>
 
-            <div class="sc4_autofill_section">
-                <div class="sc4_autofill_item">
-                    <span class="sc4_autofill_label">Employee Name:</span>
-                    <span id="autofill_name"></span>
-                </div>
-                <div class="sc4_autofill_item">
-                    <span class="sc4_autofill_label">Date:</span>
-                    <span id="autofill_date"></span>
-                </div>
-                <div class="sc4_autofill_item">
-                    <span class="sc4_autofill_label">Signed:</span>
-                    <span id="autofill_signature"></span>
-                </div>
+            <div class="kiosk-summary-box">
+                <div class="kiosk-summary-row"><span class="kiosk-summary-row-label">Employee name</span><span
+                        class="kiosk-summary-row-value" id="autofill_name">-</span></div>
+                <div class="kiosk-summary-row"><span class="kiosk-summary-row-label">Date</span><span
+                        class="kiosk-summary-row-value" id="autofill_date">-</span></div>
+                <div class="kiosk-summary-row"><span class="kiosk-summary-row-label">Signed</span><span
+                        class="kiosk-summary-row-value" id="autofill_signature">-</span></div>
             </div>
         </div>
 
-        <div id="bottom">
-            <div id="employee_section">
-                <span id="employee_name_display"></span>
+        <div class="kiosk-bottom-bar">
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                <span
+                    style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Signed
+                    in</span>
+                <span id="employee_name_display"
+                    style="font-size: 14px; font-weight: 600; color: var(--color-text-heading); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">-</span>
             </div>
-            <div id="library_section">
-                <img src="https://www.svgrepo.com/show/435359/library.svg" alt="Library" onclick="openLibrary()">
-            </div>
-            <button id="export_button_sc4" class="save_button" onclick="exportPdf()" style="background-color:rgba(121, 252, 164, 0.822);" title="Export PDF">
-                <img src="https://www.svgrepo.com/show/510957/download.svg" alt="Export PDF">
-            </button>
+            <a href="/library" class="kiosk-bottom-nav-btn" title="Library" aria-label="Library">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 4v16"></path>
+                    <path d="M9.5 4v16"></path>
+                    <path d="M15 4.5l4 15.5"></path>
+                </svg>
+            </a>
+            <div id="save-button-mount"></div>
         </div>
     </div>
 
+    <script src="translations.js"></script>
+    <script src="/design-system/index.global.js"></script>
     <script>
         const today = new Date();
+        const t = window.appI18n ? window.appI18n.t : (key) => key;
         const MAX_ROWS = 16;
         let employee_id = null;
         let employeeData = null;
@@ -120,106 +157,152 @@
             const todayValue = `${year}-${month}-${day}`;
             document.getElementById('current_date').textContent = `${day}/${month}/${year}`;
             document.getElementById('autofill_date').textContent = `${day}/${month}/${year}`;
-            document.querySelectorAll('[id^="date_"]').forEach(input => {
-                if (!input.value) {
-                    input.value = todayValue;
-                }
+            document.querySelectorAll('[id^="date_"]').forEach((input) => {
+                if (!input.value) input.value = todayValue;
             });
         };
 
         const fillSignatureFields = () => {
-            document.querySelectorAll('[id^="signed_"]').forEach(input => {
+            document.querySelectorAll('[id^="signed_"]').forEach((input) => {
                 input.value = employeeFirstName;
             });
         };
 
         const updateButtonStates = () => {
-            const addBtn = document.getElementById('add_row_btn');
-            const removeBtn = document.getElementById('remove_row_btn');
-            if (addBtn) addBtn.disabled = rowCount >= MAX_ROWS;
-            if (removeBtn) removeBtn.disabled = rowCount <= 1;
-            if (addBtn) addBtn.classList.toggle('is-disabled', rowCount >= MAX_ROWS);
-            if (removeBtn) removeBtn.classList.toggle('is-disabled', rowCount <= 1);
+            document.getElementById('add_row_btn').disabled = rowCount >= MAX_ROWS;
+            document.getElementById('remove_row_btn').disabled = rowCount <= 1;
+            document.getElementById('row-count-label').textContent = rowCount === 1 ? t('1 item on this form') : t('{count} items on this form', { count: rowCount });
         };
 
         const renderRows = () => {
             const container = document.getElementById('sc4_rows_container');
             container.innerHTML = '';
             for (let i = 0; i < rowCount; i++) {
-                const rowNumber = i + 1;
+                const n = i + 1;
                 container.innerHTML += `
-                    <div class="sc4_row_card">
-                        <div class="sc4_row_header">Row ${rowNumber}</div>
-                        <div class="sc4_grid">
-                            <div class="sc4_field_group">
-                                <label>Date</label>
-                                <input type="date" class="sc4_input" id="date_${rowNumber}" value="${today.toISOString().split('T')[0]}">
-                            </div>
-                            <div class="sc4_field_group">
-                                <label>Food</label>
-                                <input type="text" class="sc4_input" id="food_${rowNumber}" placeholder="Food item">
-                            </div>
-                            <div class="sc4_field_group">
-                                <label>Time into hot hold</label>
-                                <input type="time" class="sc4_input" id="time_into_hot_hold_${rowNumber}">
-                            </div>
-                            <div class="sc4_field_group">
-                                <label>Core temp (2 hrs)</label>
-                                <input type="number" step="0.1" class="sc4_input" id="core_temp_2hrs_${rowNumber}" placeholder="°C">
-                            </div>
-                            <div class="sc4_field_group">
-                                <label>Core temp (4 hrs)</label>
-                                <input type="number" step="0.1" class="sc4_input" id="core_temp_4hrs_${rowNumber}" placeholder="°C">
-                            </div>
-                            <div class="sc4_field_group">
-                                <label>Core temp (6 hrs)</label>
-                                <input type="number" step="0.1" class="sc4_input" id="core_temp_6hrs_${rowNumber}" placeholder="°C">
-                            </div>
-                            <div class="sc4_field_group sc4_full_width">
-                                <label>Comments</label>
-                                <textarea class="sc4_textarea" id="comment_${rowNumber}" placeholder="Notes or actions"></textarea>
-                            </div>
-                            <div class="sc4_field_group">
-                                <label>Signed</label>
-                                <input type="text" class="sc4_input" id="signed_${rowNumber}" maxlength="30">
-                            </div>
-                        </div>
+                <div class="kiosk-card">
+                    <div class="kiosk-card-head">
+                        <span style="flex: 1; font-size: 13px; font-weight: 700; color: var(--color-text-heading)">${t('Row {n}', { n })}</span>
+                        <span style="font-size: 12px; color: var(--color-text-muted)">${today.toLocaleDateString('en-GB')}</span>
                     </div>
-                `;
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
+                        <label style="display: flex; flex-direction: column; gap: 6px">
+                            <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-text-muted)">Date</span>
+                            <input type="date" class="kiosk-text-input" style="min-height: 46px;" id="date_${n}">
+                        </label>
+                        <label style="display: flex; flex-direction: column; gap: 6px">
+                            <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-text-muted)">Food</span>
+                            <input type="text" class="kiosk-text-input" style="min-height: 46px;" id="food_${n}" placeholder="Food item">
+                        </label>
+                        <label style="display: flex; flex-direction: column; gap: 6px">
+                            <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-text-muted)">Time into hot hold</span>
+                            <input type="time" class="kiosk-text-input" style="min-height: 46px;" id="time_into_hot_hold_${n}">
+                        </label>
+                        <label style="display: flex; flex-direction: column; gap: 6px">
+                            <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-text-muted)">Core temp (2 hrs)</span>
+                            <input type="number" step="0.1" inputmode="decimal" class="kiosk-text-input" style="min-height: 46px;" id="core_temp_2hrs_${n}" placeholder="&deg;C">
+                        </label>
+                        <label style="display: flex; flex-direction: column; gap: 6px">
+                            <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-text-muted)">Core temp (4 hrs)</span>
+                            <input type="number" step="0.1" inputmode="decimal" class="kiosk-text-input" style="min-height: 46px;" id="core_temp_4hrs_${n}" placeholder="&deg;C">
+                        </label>
+                        <label style="display: flex; flex-direction: column; gap: 6px">
+                            <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-text-muted)">Core temp (6 hrs)</span>
+                            <input type="number" step="0.1" inputmode="decimal" class="kiosk-text-input" style="min-height: 46px;" id="core_temp_6hrs_${n}" placeholder="&deg;C">
+                        </label>
+                    </div>
+                    <label style="display: flex; flex-direction: column; gap: 6px">
+                        <span class="kiosk-field-label">Comments</span>
+                        <textarea class="kiosk-textarea" rows="3" id="comment_${n}" placeholder="Notes or actions"></textarea>
+                    </label>
+                    <div class="kiosk-signature-row">
+                        <span class="kiosk-signature-label">Signed</span>
+                        <span class="kiosk-signature-value" id="signed_display_${n}">${employeeFirstName}</span>
+                    </div>
+                    <input type="hidden" id="signed_${n}" value="${employeeFirstName}">
+                </div>
+            `;
             }
             fillSignatureFields();
             updateButtonStates();
+            if (window.applyTranslations) {
+                window.applyTranslations(container);
+            }
+        };
+
+        // renderRows() always rebuilds every input blank - unlike SC2/SC3, addRow/removeRow had
+        // no value-preservation step, so clicking either wiped every row already filled in.
+        const captureRowValues = () => {
+            const rows = [];
+            for (let i = 0; i < rowCount; i++) {
+                const n = i + 1;
+                rows.push({
+                    date: document.getElementById(`date_${n}`)?.value || '',
+                    food: document.getElementById(`food_${n}`)?.value || '',
+                    time_into_hot_hold: document.getElementById(`time_into_hot_hold_${n}`)?.value || '',
+                    core_temp_2hrs: document.getElementById(`core_temp_2hrs_${n}`)?.value || '',
+                    core_temp_4hrs: document.getElementById(`core_temp_4hrs_${n}`)?.value || '',
+                    core_temp_6hrs: document.getElementById(`core_temp_6hrs_${n}`)?.value || '',
+                    comment: document.getElementById(`comment_${n}`)?.value || '',
+                    signed: document.getElementById(`signed_${n}`)?.value || '',
+                });
+            }
+            return rows;
+        };
+
+        const restoreRowValues = (rows) => {
+            rows.forEach((row, index) => {
+                const n = index + 1;
+                const dateEl = document.getElementById(`date_${n}`);
+                if (!dateEl) return;
+                dateEl.value = row.date;
+                document.getElementById(`food_${n}`).value = row.food;
+                document.getElementById(`time_into_hot_hold_${n}`).value = row.time_into_hot_hold;
+                document.getElementById(`core_temp_2hrs_${n}`).value = row.core_temp_2hrs;
+                document.getElementById(`core_temp_4hrs_${n}`).value = row.core_temp_4hrs;
+                document.getElementById(`core_temp_6hrs_${n}`).value = row.core_temp_6hrs;
+                document.getElementById(`comment_${n}`).value = row.comment;
+                if (row.signed) {
+                    document.getElementById(`signed_${n}`).value = row.signed;
+                    const disp = document.getElementById(`signed_display_${n}`);
+                    if (disp) disp.textContent = row.signed;
+                }
+            });
         };
 
         const addRow = () => {
             if (rowCount < MAX_ROWS) {
+                const existing = captureRowValues();
                 rowCount += 1;
                 renderRows();
+                restoreRowValues(existing);
             }
         };
 
         const removeRow = () => {
             if (rowCount > 1) {
+                const existing = captureRowValues();
                 rowCount -= 1;
                 renderRows();
+                restoreRowValues(existing.slice(0, rowCount));
             }
         };
 
         const collectFormData = () => {
             const rows = [];
             for (let i = 0; i < rowCount; i++) {
-                const rowNumber = i + 1;
+                const n = i + 1;
                 const row = {
-                    date: document.getElementById(`date_${rowNumber}`)?.value || '',
-                    food: document.getElementById(`food_${rowNumber}`)?.value || '',
-                    time_into_hot_hold: document.getElementById(`time_into_hot_hold_${rowNumber}`)?.value || '',
-                    core_temp_2hrs: document.getElementById(`core_temp_2hrs_${rowNumber}`)?.value || '',
-                    core_temp_4hrs: document.getElementById(`core_temp_4hrs_${rowNumber}`)?.value || '',
-                    core_temp_6hrs: document.getElementById(`core_temp_6hrs_${rowNumber}`)?.value || '',
-                    comment: document.getElementById(`comment_${rowNumber}`)?.value || '',
-                    signed: document.getElementById(`signed_${rowNumber}`)?.value || employeeFirstName
+                    date: document.getElementById(`date_${n}`)?.value || '',
+                    food: document.getElementById(`food_${n}`)?.value || '',
+                    time_into_hot_hold: document.getElementById(`time_into_hot_hold_${n}`)?.value || '',
+                    core_temp_2hrs: document.getElementById(`core_temp_2hrs_${n}`)?.value || '',
+                    core_temp_4hrs: document.getElementById(`core_temp_4hrs_${n}`)?.value || '',
+                    core_temp_6hrs: document.getElementById(`core_temp_6hrs_${n}`)?.value || '',
+                    comment: document.getElementById(`comment_${n}`)?.value || '',
+                    signed: document.getElementById(`signed_${n}`)?.value || employeeFirstName,
                 };
-                if (Object.values(row).some(value => value !== '')) {
+                if (Object.values(row).some((value) => value !== '')) {
                     rows.push(row);
                 }
             }
@@ -236,15 +319,17 @@
                         rowCount = rows.length;
                         renderRows();
                         rows.forEach((row, index) => {
-                            const rowNumber = index + 1;
-                            document.getElementById(`date_${rowNumber}`).value = row.date || '';
-                            document.getElementById(`food_${rowNumber}`).value = row.food || '';
-                            document.getElementById(`time_into_hot_hold_${rowNumber}`).value = row.time_into_hot_hold || '';
-                            document.getElementById(`core_temp_2hrs_${rowNumber}`).value = row.core_temp_2hrs || '';
-                            document.getElementById(`core_temp_4hrs_${rowNumber}`).value = row.core_temp_4hrs || '';
-                            document.getElementById(`core_temp_6hrs_${rowNumber}`).value = row.core_temp_6hrs || '';
-                            document.getElementById(`comment_${rowNumber}`).value = row.comment || '';
-                            document.getElementById(`signed_${rowNumber}`).value = row.signed || employeeFirstName;
+                            const n = index + 1;
+                            document.getElementById(`date_${n}`).value = row.date || '';
+                            document.getElementById(`food_${n}`).value = row.food || '';
+                            document.getElementById(`time_into_hot_hold_${n}`).value = row.time_into_hot_hold || '';
+                            document.getElementById(`core_temp_2hrs_${n}`).value = row.core_temp_2hrs || '';
+                            document.getElementById(`core_temp_4hrs_${n}`).value = row.core_temp_4hrs || '';
+                            document.getElementById(`core_temp_6hrs_${n}`).value = row.core_temp_6hrs || '';
+                            document.getElementById(`comment_${n}`).value = row.comment || '';
+                            document.getElementById(`signed_${n}`).value = row.signed || employeeFirstName;
+                            const disp = document.getElementById(`signed_display_${n}`);
+                            if (disp) disp.textContent = row.signed || employeeFirstName;
                         });
                     }
                 }
@@ -253,49 +338,121 @@
             }
         };
 
-        const saveForm = async () => {
-            const rows = collectFormData();
-            try {
-                const response = await fetch('/api/sc4/submit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ rows, saveMode: 'draft' })
-                });
-                const result = await response.json();
-                if (result.success) {
-                    window.location.href = '/';
-                } else {
-                    alert(result.message || 'Unable to save SC4 form');
-                }
-            } catch (err) {
-                console.error('Error saving SC4 form:', err);
-                alert('Unable to save SC4 form');
-            }
-        };
+        const offlineSavedMessage = () => window.appI18n ? window.appI18n.t('Saved locally. Will sync automatically when online.') : 'Saved locally. Will sync automatically when online.';
+
+        const { React, ReactDOM, Button } = window.KitchenDS;
+        const saveButtonRoot = ReactDOM.createRoot(document.getElementById('save-button-mount'));
+
+        function renderSaveButton(isLoading) {
+            saveButtonRoot.render(React.createElement(Button, {
+                variant: 'primary',
+                loading: !!isLoading,
+                onClick: () => exportPdf(),
+                style: { minHeight: 48, padding: '0 18px', fontSize: 14, fontWeight: 600, borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-success)', boxShadow: 'none' },
+            }, t('Save')));
+        }
+        renderSaveButton(false);
 
         const exportPdf = async () => {
             const rows = collectFormData();
+            const requestOptions = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rows }),
+            };
+
+            renderSaveButton(true);
+
             try {
-                const response = await fetch('/api/sc4/export', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ rows })
-                });
-                const result = await response.json();
+                const outcome = window.syncEngine
+                    ? await window.syncEngine.submitOrQueue('/api/sc4/export', requestOptions, { formType: 'SC4', employeeId: employee_id })
+                    : { ok: true, response: await fetch('/api/sc4/export', requestOptions) };
+
+                if (outcome.queued) {
+                    await window.showAppModal(offlineSavedMessage(), { type: 'success' });
+                    window.location.href = '/';
+                    return;
+                }
+
+                const result = await outcome.response.json();
                 if (result.success) {
-                    window.open(result.pdfUrl, '_blank');
+                    window.notifySyncWarning?.(result.sync_warning);
+                    if (result.pdfUrl) {
+                        const win = window.open(result.pdfUrl, '_blank', 'noopener,noreferrer');
+                        if (!win) window.location.href = result.pdfUrl;
+                    }
+                    window.location.href = '/';
                 } else {
-                    alert(result.message || 'Unable to export SC4 PDF');
+                    await window.showAppModal(result.message || t('Unable to export SC4 PDF'), { type: 'error' });
                 }
             } catch (err) {
                 console.error('Error exporting SC4 PDF:', err);
-                alert('Unable to export SC4 PDF');
+                await window.showAppModal(t('Unable to export SC4 PDF'), { type: 'error' });
+            } finally {
+                renderSaveButton(false);
             }
         };
 
-        const openLibrary = () => {
-            window.location.href = '/library';
-        };
+        // ---- Brand lookup ----
+        (async () => {
+            try {
+                const response = await fetch('/api/brand');
+                if (!response.ok) return;
+                const data = await response.json();
+                const kitchenName = data?.kitchen?.name || data?.brand_name || data?.business?.display_name || 'Safe Catering';
+                const logoSrc = data?.kitchen?.logo_src || data?.logo_src || data?.business?.logo_src || '';
+                document.getElementById('brand-site-name').textContent = kitchenName;
+                if (logoSrc) {
+                    const slot = document.getElementById('brand-logo-slot');
+                    slot.textContent = '';
+                    const img = document.createElement('img');
+                    img.src = logoSrc;
+                    img.alt = kitchenName;
+                    slot.appendChild(img);
+                }
+            } catch (_error) { /* optional */ }
+        })();
+
+        // ---- Language switcher ----
+        const langSelect = document.getElementById('language-select');
+        if (window.appI18n) {
+            window.appI18n.getLanguageOptions().forEach(({ value, label }) => {
+                const opt = document.createElement('option');
+                opt.value = value;
+                opt.textContent = label;
+                langSelect.appendChild(opt);
+            });
+            langSelect.value = window.appI18n.getAppLanguage();
+            langSelect.addEventListener('change', () => {
+                window.appI18n.setAppLanguage(langSelect.value);
+                window.location.reload();
+            });
+        }
     </script>
+
+    <script src="help_overlay.js"></script>
+
+    <div id="help_overlay" aria-hidden="true">
+        <div id="help_inner">
+            <div id="help_header">
+                <div id="help_title">Help</div>
+                <button id="help_close" aria-label="Close">Close</button>
+            </div>
+            <footer class="site_footer">
+                <a href="/privacy-policy">Privacy Policy</a>
+                <span>&copy; 2026 Safecateruk</span>
+            </footer>
+            <div id="help_body">
+                <img id="help_image" src="" alt="Help image">
+                <div id="help_caption">Tap the image to view details. Tap outside to close.</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/offline-store.js"></script>
+    <script src="js/sync-engine.js"></script>
+    <script src="js/status-badge.js"></script>
+    <script src="script.js"></script>
 </body>
+
 </html>

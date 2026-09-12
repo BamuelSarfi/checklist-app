@@ -10,34 +10,37 @@ exports.showForm = (req, res) => {
 // Handle SC1 form submission
 exports.submitForm = async (req, res) => {
   try {
-    const { employee_id, employee_name, records } = req.body;
+    const { records } = req.body;
 
-    // Validate input
-    if (!employee_id || !records || !Array.isArray(records)) {
+    if (!records || !Array.isArray(records)) {
       return res.json({
         success: false,
         message: 'Invalid form data'
       });
     }
 
-    // Load employee data from employees.json
-    const employeesPath = path.join(__dirname, '../../records/employees.json');
-    const employeesData = JSON.parse(fs.readFileSync(employeesPath, 'utf8'));
-
-    // Find the employee by ID
-    const employee = employeesData.find(emp => emp.id === parseInt(employee_id));
-
-    // Add employee position/role to the data
-    if (employee) {
-      req.body.position = employee.role;
+    // Identity comes from the authenticated session (set by auth.middleware.js), never from
+    // the request body - previously employee_id/employee_name were taken directly from
+    // req.body with no cross-check, so any authenticated kiosk session could submit a form
+    // attributed to a completely different (or entirely fabricated, non-existent) employee.
+    const employee = req.employee;
+    if (!employee) {
+      return res.status(401).json({ success: false, message: 'Employee not identified' });
     }
 
-    const fileName = await fillSc1(req.body);
+    req.body.employee_id = employee.id;
+    req.body.employee_name = employee.name;
+    req.body.position = employee.role || employee.preferred_language || 'Employee';
+
+    const { fileName, syncStatus, syncMessage } = await fillSc1(req.body);
 
     res.json({
       success: true,
       message: 'Form saved successfully',
-      filename: fileName
+      filename: fileName,
+      // Non-blocking: the form above already saved successfully. This just tells the
+      // manager the record hasn't synced to SafeCater yet (e.g. inactive subscription).
+      sync_warning: syncStatus === 'subscription_inactive' ? syncMessage : null,
     });
 
   } catch (err) {

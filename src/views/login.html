@@ -1,225 +1,269 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Safe Catering - Login</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/design-system/index.global.css">
     <style>
-        /* ===== LOGIN PAGE SPECIFIC STYLES ===== */
-        #login_container {
-            flex: 1;
+        body {
+            background: var(--color-bg-phone);
+            min-height: 100dvh;
+            margin: 0 autota;
             display: flex;
-            flex-direction: column;
             justify-content: center;
-            align-items: center;
-            margin-bottom: 8pt;
+            font-family: var(--font-family-base);
         }
 
-        #login_form {
+        .kiosk-frame {
             width: 100%;
-            background-color: #fff;
-            border: 1pt solid #000;
-            padding: 20pt;
+            max-width: 460px;
+            min-height: 100dvh;
+            background: var(--color-white);
+            color: var(--color-text-secondary);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 12pt;
         }
 
-        #login_form h2 {
-            font-size: 14pt;
-            margin: 0 0 12pt 0;
-            text-align: center;
-        }
-
-        .form_group {
-            width: 100%;
+        .brand-logo-slot {
+            width: 76px;
+            height: 76px;
+            border-radius: 18px;
+            background: var(--color-bg-subtle);
+            border: 1px solid var(--color-border-soft);
             display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 8pt;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--color-text-disabled);
+            overflow: hidden;
+            flex-shrink: 0;
         }
 
-        .form_label {
-            font-size: 10pt;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        #pin_input {
-            font-size: 24pt;
-            font-weight: bold;
-            width: 120px;
-            height: 50px;
-            text-align: center;
-            border: 1pt solid #000;
-            background-color: #f5f5f5;
-            letter-spacing: 8pt;
-            padding: 8pt;
-            font-family: monospace;
-        }
-
-        #pin_input::placeholder {
-            color: #ccc;
-        }
-
-        #pin_input:focus {
-            outline: none;
-            background-color: #fff;
-            border: 2pt solid #000;
-        }
-
-        #login_button {
+        .brand-logo-slot img {
             width: 100%;
-            padding: 12pt;
-            font-size: 12pt;
-            font-weight: bold;
-            background-color: #fff;
-            border: 1pt solid #000;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            margin-top: 8pt;
+            height: 100%;
+            object-fit: cover;
         }
 
-        #login_button:hover {
-            background-color: #f0f0f0;
+        a {
+            color: var(--color-info);
+            text-decoration: none;
         }
 
-        #login_button:active {
-            background-color: #e0e0e0;
-        }
-
-        #login_button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .error_message {
-            color: #ff6b6b;
-            font-size: 9pt;
-            text-align: center;
-            margin-top: 8pt;
-            display: none;
-        }
-
-        .error_message.show {
-            display: block;
-        }
-
-        #library_button {
-            width: 100%;
-            padding: 12pt;
-            font-size: 10pt;
-            background-color: #fff;
-            border: 1pt solid #000;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        #library_button:hover {
-            background-color: #f0f0f0;
+        a:hover {
+            color: var(--color-text-heading);
+            text-decoration: underline;
         }
     </style>
 </head>
 
 <body>
+    <div class="kiosk-frame">
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 32px; padding: 56px 24px 32px">
 
-<div id="phone_body">
-
-    <!-- LOGIN CONTAINER -->
-    <div id="login_container">
-        <form id="login_form" onsubmit="handleLogin(event)">
-            <div style="display: flex; align-items: center; gap: 8pt; align-items: center;">
-                <img src="/asset2.png" alt="Safe Catering" style="height: 30px;">
-                <h2 style="margin: 0;">Enter PIN</h2>
-            </div>
-            
-
-            <div class="form_group">
-                <label class="form_label">Enter your 4-digit PIN</label>
-                <input 
-                    type="password" 
-                    id="pin_input" 
-                    maxlength="4" 
-                    inputmode="numeric"
-                    placeholder="••••"
-                    autocomplete="off"
-                >
-                <div class="error_message" id="error_message">Invalid PIN. Please try again.</div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 14px">
+                <div class="brand-logo-slot" id="brand-logo-slot">Logo</div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 4px">
+                    <h1 id="brand-name"
+                        style="margin: 0; font-size: 30px; line-height: 1.1; letter-spacing: -0.5px; font-weight: 700; color: var(--color-text-heading)">
+                        Safe Catering</h1>
+                    <p style="margin: 0; font-size: 14px; color: var(--color-text-muted)">Employee login</p>
+                </div>
             </div>
 
-            <button type="submit" id="login_button">Login</button>
-            <button type="button" id="library_button">View Library</button>
-        </form>
-        <!-- Footer-->
-            <footer class="site_footer" style="background-color: rgba(0,0,0,0.1);">
-                <a href="/privacy-policy">Privacy Policy</a>
-                <span>© 2026 Checklist App</span>
-            </footer>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 14px">
+                <label
+                    style="font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Enter
+                    your 6-digit PIN</label>
+                <div id="pin-mount"></div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px">
+                <div id="login-button-mount"></div>
+                <div id="library-button-mount"></div>
+                <button type="button" id="forgot-pin-btn"
+                    style="align-self: center; margin-top: 4px; padding: 10px 8px; border: 0; background: none; font-family: inherit; font-size: 14px; color: var(--color-info); cursor: pointer">Forgot
+                    your PIN?</button>
+                <div id="forgot-modal-mount"></div>
+            </div>
+        </div>
+
+        <div
+            style="display: flex; flex-direction: column; gap: 6px; padding: 18px 24px 26px; background: var(--color-bg-subtle); border-top: 1px solid var(--color-border-soft); font-size: 12px; color: var(--color-text-muted)">
+            <p style="margin: 0">By logging in you agree to our use of <a href="/privacy-policy#cookies">cookies</a>.
+            </p>
+            <div style="display: flex; justify-content: space-between; align-items: center">
+                <a href="/privacy-policy">Privacy policy</a>
+                <span>&copy; 2026 Safecateruk</span>
+            </div>
+        </div>
     </div>
 
-</div>
+    <script src="/design-system/index.global.js"></script>
+    <script>
+        const React = window.KitchenDS.React;
+        const ReactDOM = window.KitchenDS.ReactDOM;
+        const { PinInput, Button, Modal } = window.KitchenDS;
 
-<script>
-    const pinInput = document.getElementById('pin_input');
-    const errorMessage = document.getElementById('error_message');
+        const PIN_LENGTH = 6;
 
-    // Handle keyboard input
-    pinInput.addEventListener('keypress', (e) => {
-        if (!/[0-9]/.test(e.key)) {
-            e.preventDefault();
+        const state = {
+            pin: '',
+            error: '',
+            loading: false,
+            forgotOpen: false,
+        };
+
+        const pinRoot = ReactDOM.createRoot(document.getElementById('pin-mount'));
+        const loginButtonRoot = ReactDOM.createRoot(document.getElementById('login-button-mount'));
+        const libraryButtonRoot = ReactDOM.createRoot(document.getElementById('library-button-mount'));
+        const forgotModalRoot = ReactDOM.createRoot(document.getElementById('forgot-modal-mount'));
+
+        function focusFirstDigit() {
+            requestAnimationFrame(() => {
+                document.querySelector('#pin-mount .ds-pin-digit')?.focus();
+            });
         }
-    });
 
-    // Handle login
-    function handleLogin(event) {
-        event.preventDefault();
-        
-        const pin = pinInput.value;
-
-        if (pin.length !== 4) {
-            errorMessage.classList.add('show');
-            return;
+        function setPin(value) {
+            state.pin = value;
+            state.error = '';
+            render();
         }
 
-        // Send PIN to server for verification
-        fetch('/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ pin: pin })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Store employee info in sessionStorage for use in other pages
-                sessionStorage.setItem('employeeData', JSON.stringify(data.employee));
-                // Redirect to home page on successful login
-                window.location.href = '/';
-            } else {
-                errorMessage.classList.add('show');
-                pinInput.value = '';
+        function submit() {
+            if (state.pin.length < PIN_LENGTH) {
+                state.error = `Enter all ${PIN_LENGTH} digits.`;
+                render();
+                return;
             }
-        })
-        .catch(err => {
-            console.error('Login error:', err);
-            errorMessage.classList.add('show');
-            pinInput.value = '';
+
+            state.loading = true;
+            state.error = '';
+            render();
+
+            fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pin: state.pin }),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.success) {
+                        sessionStorage.setItem('employeeData', JSON.stringify(data.employee));
+                        window.location.href = '/';
+                        return;
+                    }
+
+                    state.loading = false;
+                    state.pin = '';
+                    state.error = "That PIN doesn't match. Try again.";
+                    render();
+                    focusFirstDigit();
+                })
+                .catch((err) => {
+                    console.error('Login error:', err);
+                    state.loading = false;
+                    state.pin = '';
+                    state.error = 'Something went wrong. Try again.';
+                    render();
+                    focusFirstDigit();
+                });
+        }
+
+        function render() {
+            pinRoot.render(React.createElement(PinInput, {
+                length: PIN_LENGTH,
+                value: state.pin,
+                onChange: setPin,
+                onComplete: submit,
+                error: state.error,
+                autoFocus: true,
+                'aria-label': 'Employee PIN',
+            }));
+
+            loginButtonRoot.render(React.createElement(Button, {
+                variant: 'primary',
+                fullWidth: true,
+                loading: state.loading,
+                type: 'button',
+                onClick: submit,
+                style: { minHeight: 56, fontSize: 16, fontWeight: 600, borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-success)', boxShadow: 'none' },
+            }, 'Login'));
+
+            libraryButtonRoot.render(React.createElement(Button, {
+                variant: 'secondary',
+                fullWidth: true,
+                onClick: () => { window.location.href = '/library'; },
+                style: { minHeight: 56, fontSize: 16, fontWeight: 600, borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border-soft)', background: 'var(--color-white)', color: 'var(--color-text-heading)', boxShadow: 'none' },
+            }, 'View library'));
+
+            forgotModalRoot.render(React.createElement(Modal, {
+                open: state.forgotOpen,
+                type: 'info',
+                message: 'Ask your kitchen manager to reset your PIN. For security, PINs can only be reissued in person by a manager or supervisor.',
+                onOk: () => { state.forgotOpen = false; render(); },
+                okLabel: 'Got it',
+            }));
+        }
+
+        document.getElementById('forgot-pin-btn').addEventListener('click', () => {
+            state.forgotOpen = true;
+            render();
         });
-    }
 
-    // Library button
-    document.getElementById('library_button').addEventListener('click', () => {
-        window.location.href = '/library';
-    });
+        render();
 
-    // Auto-focus on page load
-    window.addEventListener('load', () => {
-        pinInput.focus();
-    });
-</script>
+        // --- Brand lookup (kitchen name/logo for multi-tenant kiosks) ---
+        function getBrandQuery() {
+            const params = new URLSearchParams(window.location.search);
+            const querySlug = String(params.get('slug') || params.get('subdomain') || '').trim();
+            const queryKitchenId = String(params.get('kitchen_id') || params.get('kitchenId') || '').trim();
 
+            if (queryKitchenId) return `kitchen_id=${encodeURIComponent(queryKitchenId)}`;
+            if (querySlug) return `slug=${encodeURIComponent(querySlug)}`;
+
+            const pathSegments = window.location.pathname.split('/').filter(Boolean);
+            if (pathSegments.length >= 2 && pathSegments[pathSegments.length - 1] === 'login') {
+                const maybeSlug = pathSegments[pathSegments.length - 2];
+                if (maybeSlug && maybeSlug !== 'login') return `slug=${encodeURIComponent(maybeSlug)}`;
+            }
+
+            return '';
+        }
+
+        async function initializeBranding() {
+            try {
+                const query = getBrandQuery();
+                const response = await fetch(`/api/brand${query ? `?${query}` : ''}`);
+                if (!response.ok) return;
+
+                const data = await response.json();
+                const kitchenName = data?.kitchen?.name || data?.kitchen_name || data?.brand_name || data?.business?.display_name || 'Safe Catering';
+                const logoSrc = data?.kitchen?.logo_src || data?.logo_src || data?.business?.logo_src || '';
+
+                document.getElementById('brand-name').textContent = kitchenName;
+                document.title = `${kitchenName} - Login`;
+
+                if (logoSrc) {
+                    const slot = document.getElementById('brand-logo-slot');
+                    slot.textContent = '';
+                    const img = document.createElement('img');
+                    img.src = logoSrc;
+                    img.alt = kitchenName;
+                    slot.appendChild(img);
+                }
+            } catch (_error) {
+                // Fall back to the default brand if the lookup fails.
+            }
+        }
+
+        initializeBranding();
+    </script>
 </body>
+
 </html>

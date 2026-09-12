@@ -1,0 +1,18 @@
+@import "../../tokens/tokens.css";
+
+.ds-textarea {
+    width: 100%;
+    min-height: 80px;
+    border: 1px solid var(--color-black);
+    border-radius: var(--radius-sm);
+    padding: 8px;
+    font-family: var(--font-family-base);
+    font-size: 13px;
+    background-color: var(--color-white);
+    resize: vertical;
+}
+
+.ds-textarea:focus {
+    outline: 2px solid var(--color-info);
+    background-color: var(--color-focus-bg);
+}

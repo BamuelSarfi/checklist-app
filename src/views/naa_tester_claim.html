@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Naa Kenkey - Free Tester</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caprasimo:wght@400&family=Figtree:wght@400;600;700&family=Archivo:wght@600;700;800&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js"></script>
+<style>
+/* Organic design system tokens/components - copied verbatim from the "Organic" Claude
+   Design project (see _ds/organic-.../styles.css) so this page matches its look exactly,
+   per the brief: the customer-facing app keeps its Claude Design styling as-is. */
+:root {
+  --color-bg: #f5ead8;
+  --color-surface: #ebddc5;
+  --color-text: #201e1d;
+  --color-accent: #c67139;
+  --color-accent-2: #7a8a5e;
+  --color-divider: color-mix(in srgb, #201e1d 16%, transparent);
+
+  --color-neutral-100: #f9f4ed;
+  --color-neutral-200: #eee7db;
+  --color-neutral-300: #dcd3c4;
+  --color-neutral-400: #c0b6a5;
+  --color-neutral-500: #a19786;
+  --color-neutral-600: #82796a;
+  --color-neutral-700: #645c50;
+  --color-neutral-800: #474238;
+  --color-neutral-900: #2e2b25;
+
+  --color-accent-200: #ffe1d0;
+  --color-accent-700: #8c491a;
+  --color-accent-800: #643312;
+  --color-accent-900: #402310;
+
+  --color-accent-2-200: #e1eecc;
+  --color-accent-2-300: #ccdbb2;
+  --color-accent-2-700: #56633f;
+
+  /* This page's own override, matching the mockup's inline <style>. */
+  --font-heading: "Archivo", "Figtree", system-ui, sans-serif;
+  --font-heading-weight: 800;
+  --font-body: "Figtree", system-ui, sans-serif;
+
+  --radius-md: 16px;
+  --radius-lg: 28px;
+
+  --shadow-lg: 0 12px 32px color-mix(in srgb, #2e2b25 22%, transparent);
+}
+
+* , *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); }
+h1, h2 { font-family: var(--font-heading); font-weight: var(--font-heading-weight) !important; letter-spacing: -0.02em; }
+a { color: var(--color-accent-700); }
+a:hover { color: var(--color-accent-800); }
+input[type="text"], input[type="tel"] { font-family: var(--font-body); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer; text-decoration: none; width: 100%;
+  font-family: var(--font-heading); font-weight: 700;
+  font-size: 16px; border: 2px solid var(--color-neutral-900);
+  padding: 14px 20px; border-radius: 999px; background: transparent; color: var(--color-text);
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-ghost { border-color: transparent; background: transparent; color: var(--color-text); width: auto; }
+.input {
+  width: 100%; min-height: 58px; padding: 0 16px; font-size: 18px; font: inherit;
+  background: var(--color-bg); border: 1px solid var(--color-divider); border-radius: 999px;
+  color: var(--color-text);
+}
+.tag { display: inline-flex; align-items: center; font-size: 11px; letter-spacing: 0.02em; padding: 4px 12px; border-radius: 999px; font-weight: 700; }
+.tag-accent-2 { background: var(--color-accent-2-200); color: var(--color-accent-2-700); }
+
+@keyframes naaSpin { to { transform: rotate(360deg); } }
+@keyframes naaScan { 0% { transform: translateY(0); } 100% { transform: translateY(196px); } }
+</style>
+</head>
+<body>
+
+<div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 22px; padding: 28px 18px 40px; box-sizing: border-box; font-family: var(--font-body); color: var(--color-text)">
+
+  <div style="width: 402px; max-width: 100%; background: var(--color-neutral-100); border-radius: 40px; box-shadow: var(--shadow-lg); padding: 30px 26px 34px; box-sizing: border-box; display: flex; flex-direction: column; min-height: 720px">
+
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 26px">
+      <div style="font-family: var(--font-heading); font-weight: 800; font-size: 19px; letter-spacing: 0.01em">Naa Kenkey</div>
+      <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-neutral-600)">Uncles Market</div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="screen-register" class="naa-screen" style="display: flex; flex-direction: column; flex: 1">
+      <h1 style="font-family: var(--font-heading); font-weight: 400; font-size: 46px; line-height: 1.02; margin: 0 0 14px; text-wrap: pretty">Free Sample</h1>
+      <p style="margin: 0 0 30px; font-size: 17px; line-height: 1.45; color: var(--color-neutral-700); max-width: 20ch">Enter your details to see if you qualify for a free tester</p>
+
+      <label style="display: block; font-size: 14px; font-weight: 700; margin-bottom: 8px">First name</label>
+      <input type="text" id="reg-name" class="input" placeholder="e.g. Amara" style="margin-bottom: 20px">
+
+      <label style="display: block; font-size: 14px; font-weight: 700; margin-bottom: 8px">WhatsApp mobile number</label>
+      <input type="tel" id="reg-phone" class="input" placeholder="07xxx xxx xxx">
+      <p style="margin: 8px 0 4px 16px; font-size: 13px; color: var(--color-neutral-700)">We check this number has WhatsApp before you claim</p>
+      <p id="reg-error" style="display: none; margin: 0 0 4px 16px; font-size: 14px; font-weight: 700; color: var(--color-accent-800)"></p>
+      <div style="height: 18px"></div>
+
+      <div id="reg-optin-row" style="display: flex; gap: 14px; align-items: flex-start; cursor: pointer; padding: 14px 16px; border-radius: var(--radius-md); background: var(--color-bg); margin-bottom: 28px">
+        <div id="reg-optin-mark" style="width: 28px; height: 28px; flex: 0 0 28px; border-radius: 9px; display: grid; place-items: center; font-size: 17px; color: var(--color-neutral-100); background: transparent; border: 2px solid var(--color-neutral-900)"></div>
+        <span style="font-size: 15px; line-height: 1.35">I would like to receive Naa offers and promotions by text or WhatsApp</span>
+      </div>
+
+      <div style="margin-top: auto">
+        <button id="reg-submit" class="btn" style="min-height: 68px; font-size: 18px; letter-spacing: 0.03em; background: var(--color-neutral-900); color: var(--color-neutral-100); border-color: var(--color-neutral-900)">CHECK &amp; CLAIM FREE TESTER</button>
+      </div>
+    </div>
+
+    <!-- VERIFY -->
+    <div id="screen-verify" class="naa-screen" style="display: none; flex-direction: column; flex: 1; align-items: center; justify-content: center; text-align: center; padding-bottom: 40px">
+      <div style="width: 96px; height: 96px; border-radius: 999px; border: 6px solid var(--color-accent-2-200); border-top-color: var(--color-accent-2-700); animation: naaSpin 1s linear infinite; margin-bottom: 30px"></div>
+      <h2 style="font-family: var(--font-heading); font-size: 32px; line-height: 1.08; margin: 0 0 14px">Checking your WhatsApp number</h2>
+      <p style="margin: 0 0 6px; font-size: 17px; line-height: 1.4; color: var(--color-neutral-700)">This takes a second</p>
+      <p id="verify-phone-display" style="margin: 0; font-size: 19px; font-weight: 700"></p>
+    </div>
+
+    <!-- NO WHATSAPP -->
+    <div id="screen-nowhatsapp" class="naa-screen" style="display: none; flex-direction: column; flex: 1">
+      <div style="width: 62px; height: 62px; border-radius: 999px; background: var(--color-accent-200); display: grid; place-items: center; font-size: 30px; margin-bottom: 20px">&#128245;</div>
+      <h2 style="font-family: var(--font-heading); font-size: 34px; line-height: 1.05; margin: 0 0 14px">No WhatsApp on that number</h2>
+      <p style="margin: 0 0 8px; font-size: 17px; line-height: 1.45; color: var(--color-neutral-700)">We could not find a WhatsApp account for</p>
+      <p id="nowhatsapp-phone-display" style="margin: 0 0 26px; font-size: 20px; font-weight: 700"></p>
+      <div style="background: var(--color-bg); border-radius: var(--radius-lg); padding: 20px 22px; font-size: 16px; line-height: 1.45">
+        Enter the number your WhatsApp is registered to, then try again. A free tester needs a working WhatsApp number.
+      </div>
+      <div style="margin-top: auto; display: flex; flex-direction: column; gap: 12px; padding-top: 26px">
+        <button class="btn" id="nowhatsapp-diff-number" style="min-height: 68px; font-size: 18px; letter-spacing: 0.03em; background: var(--color-neutral-900); color: var(--color-neutral-100); border-color: var(--color-neutral-900)">USE A DIFFERENT NUMBER</button>
+      </div>
+    </div>
+
+    <!-- ELIGIBLE -->
+    <div id="screen-eligible" class="naa-screen" style="display: none; flex-direction: column; flex: 1">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px">
+        <div style="width: 78px; height: 78px; border-radius: 999px; background: var(--color-accent-2-200); display: grid; place-items: center; font-size: 38px">&#127881;</div>
+        <span class="tag tag-accent-2">WhatsApp verified</span>
+      </div>
+      <h1 style="font-family: var(--font-heading); font-weight: 800; font-size: 44px; line-height: 1.04; margin: 0 0 22px">You Qualify!</h1>
+
+      <div style="background: var(--color-bg); border-radius: var(--radius-lg); padding: 22px 22px; font-size: 17px; line-height: 1.45; margin-bottom: 28px">
+        Go to the shop counter. When you are at the counter, press the button below and scan the Naa Tester QR code displayed beside the till.
+      </div>
+
+      <div style="margin-top: auto; display: flex; flex-direction: column; gap: 14px">
+        <button id="eligible-scan" class="btn" style="min-height: 68px; font-size: 18px; letter-spacing: 0.02em; background: var(--color-accent-2-700); color: var(--color-neutral-100); border-color: var(--color-accent-2-700)">&#128247; SCAN COUNTER QR</button>
+        <button id="eligible-nfc" class="btn" style="min-height: 60px; font-size: 16px; background: transparent; border: 2px solid var(--color-neutral-900); color: var(--color-neutral-900)">&#128242; TAP TO CLAIM (NFC)</button>
+        <p style="margin: 2px 0 0; text-align: center; font-size: 13px; color: var(--color-neutral-600)">For phones without a camera scanner</p>
+      </div>
+    </div>
+
+    <!-- SCANNER -->
+    <div id="screen-scanner" class="naa-screen" style="display: none; flex-direction: column; flex: 1">
+      <h2 style="font-family: var(--font-heading); font-weight: 400; font-size: 30px; margin: 0 0 20px">Scan the till QR</h2>
+
+      <div style="position: relative; width: 100%; aspect-ratio: 1/1; border-radius: var(--radius-lg); overflow: hidden; background: #211f1b; display: grid; place-items: center">
+        <video id="scanner-video" autoplay playsinline muted style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;"></video>
+        <canvas id="scanner-canvas" style="display: none;"></canvas>
+        <div style="position: relative; width: 196px; height: 196px; pointer-events: none;">
+          <div style="position: absolute; top: 0; left: 0; width: 46px; height: 46px; border-top: 5px solid var(--color-accent-2-300); border-left: 5px solid var(--color-accent-2-300); border-radius: 18px 0 0 0"></div>
+          <div style="position: absolute; top: 0; right: 0; width: 46px; height: 46px; border-top: 5px solid var(--color-accent-2-300); border-right: 5px solid var(--color-accent-2-300); border-radius: 0 18px 0 0"></div>
+          <div style="position: absolute; bottom: 0; left: 0; width: 46px; height: 46px; border-bottom: 5px solid var(--color-accent-2-300); border-left: 5px solid var(--color-accent-2-300); border-radius: 0 0 0 18px"></div>
+          <div style="position: absolute; bottom: 0; right: 0; width: 46px; height: 46px; border-bottom: 5px solid var(--color-accent-2-300); border-right: 5px solid var(--color-accent-2-300); border-radius: 0 0 18px 0"></div>
+          <div style="position: absolute; left: 6px; right: 6px; top: 0; height: 3px; border-radius: 999px; background: var(--color-accent-2-300); animation: naaScan 2.2s ease-in-out infinite alternate"></div>
+        </div>
+        <div id="scanner-error" style="display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.75); color: #fff; align-items: center; justify-content: center; text-align: center; padding: 24px; font-size: 14px;"></div>
+      </div>
+
+      <p style="margin: 24px 0 0; font-size: 18px; line-height: 1.4; font-weight: 600; text-align: center">Point your camera at the counter QR code</p>
+
+      <div style="margin-top: auto; display: flex; justify-content: center">
+        <button id="scanner-cancel" class="btn btn-ghost" style="min-height: 52px; font-size: 16px; font-weight: 700">Cancel</button>
+      </div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div id="screen-success" class="naa-screen" style="display: none; flex-direction: column; flex: 1">
+      <div style="font-size: 20px; font-weight: 700; letter-spacing: 0.08em; color: var(--color-accent-2-700); margin-bottom: 18px">&#9989; TESTER CLAIMED</div>
+      <div id="success-time" style="font-family: var(--font-heading); font-weight: 800; font-size: 64px; line-height: 1; letter-spacing: -0.01em"></div>
+      <div id="success-date" style="font-size: 17px; color: var(--color-neutral-700); margin-top: 10px"></div>
+      <div style="font-size: 22px; font-weight: 700; margin-top: 22px">Uncles Market</div>
+
+      <div style="margin-top: 30px; background: var(--color-accent-2-700); color: var(--color-neutral-100); border-radius: var(--radius-lg); padding: 26px 24px; font-size: 21px; font-weight: 700; line-height: 1.3; box-shadow: var(--shadow-md, var(--shadow-lg))">
+        &#127873; JUST CLAIMED &mdash; GIVE CUSTOMER 1 FREE TESTER
+      </div>
+
+      <div style="margin-top: auto; display: flex; justify-content: center; padding-top: 26px">
+        <button id="success-done" class="btn btn-ghost" style="min-height: 52px; font-size: 16px; font-weight: 700">Done</button>
+      </div>
+    </div>
+
+    <!-- ALREADY CLAIMED -->
+    <div id="screen-claimed" class="naa-screen" style="display: none; flex-direction: column; flex: 1">
+      <h1 style="font-family: var(--font-heading); font-weight: 400; font-size: 38px; line-height: 1.05; margin: 0 0 16px; color: var(--color-accent-800)">&#10060; ALREADY CLAIMED</h1>
+      <p style="margin: 0 0 26px; font-size: 18px; line-height: 1.4">This free tester has already been collected</p>
+
+      <div style="background: var(--color-bg); border-radius: var(--radius-lg); padding: 22px 24px">
+        <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 8px">Previous claim</div>
+        <div id="claimed-time" style="font-family: var(--font-heading); font-weight: 800; font-size: 44px; line-height: 1"></div>
+        <div id="claimed-meta" style="font-size: 16px; color: var(--color-neutral-700); margin-top: 8px"></div>
+      </div>
+
+      <div style="margin-top: 26px; background: var(--color-accent-200); border: 3px solid var(--color-accent-700); color: var(--color-accent-900); border-radius: var(--radius-lg); padding: 24px; font-size: 22px; font-weight: 700; letter-spacing: 0.02em; line-height: 1.25">
+        DO NOT GIVE ANOTHER TESTER
+      </div>
+
+      <div style="margin-top: auto; display: flex; justify-content: center; padding-top: 26px">
+        <button id="claimed-restart" class="btn btn-ghost" style="min-height: 52px; font-size: 16px; font-weight: 700">Start again</button>
+      </div>
+    </div>
+
+    <!-- GENERIC MESSAGE (sold out / no run / outside window) -->
+    <div id="screen-message" class="naa-screen" style="display: none; flex-direction: column; flex: 1">
+      <h1 style="font-family: var(--font-heading); font-weight: 400; font-size: 34px; line-height: 1.05; margin: 0 0 16px">Not available</h1>
+      <p id="message-text" style="margin: 0 0 26px; font-size: 18px; line-height: 1.4"></p>
+      <div style="margin-top: auto; display: flex; justify-content: center; padding-top: 26px">
+        <button id="message-restart" class="btn btn-ghost" style="min-height: 52px; font-size: 16px; font-weight: 700">Start again</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  const screens = ['register', 'verify', 'nowhatsapp', 'eligible', 'scanner', 'success', 'claimed', 'message'];
+  function showScreen(name) {
+    screens.forEach((s) => {
+      document.getElementById(`screen-${s}`).style.display = s === name ? 'flex' : 'none';
+    });
+  }
+
+  let optedIn = false;
+  let verificationId = null;
+  let phoneDisplay = '';
+  let pollTimer = null;
+  let scannerStream = null;
+
+  // A customer's first instinct is to scan the till's physical QR code with their phone's
+  // own native camera app, not to already be on this page with its in-page scanner open -
+  // the QR encodes a real URL (?till=...) so that "just works" and lands them here with the
+  // till already known, rather than a bare unclickable string. Persisted to sessionStorage
+  // too, in case the OS backgrounds the tab during the WhatsApp check and the page reloads.
+  const urlTill = new URLSearchParams(window.location.search).get('till');
+  if (urlTill) {
+    try { sessionStorage.setItem('naa_till_id', urlTill); } catch (_e) { /* ignore */ }
+  }
+  function getKnownTillId() {
+    try { return urlTill || sessionStorage.getItem('naa_till_id') || null; } catch (_e) { return urlTill || null; }
+  }
+
+  document.getElementById('reg-optin-row').addEventListener('click', () => {
+    optedIn = !optedIn;
+    const mark = document.getElementById('reg-optin-mark');
+    mark.textContent = optedIn ? '✓' : '';
+    mark.style.background = optedIn ? 'var(--color-neutral-900)' : 'transparent';
+  });
+
+  function setRegError(message) {
+    const el = document.getElementById('reg-error');
+    if (!message) {
+      el.style.display = 'none';
+      return;
+    }
+    el.style.display = '';
+    el.textContent = message;
+  }
+
+  async function submitRegister() {
+    const name = document.getElementById('reg-name').value.trim();
+    const phone = document.getElementById('reg-phone').value.trim();
+    const digits = phone.replace(/[^0-9]/g, '');
+
+    setRegError('');
+    if (!name) return setRegError('Enter your first name');
+    if (digits.length < 10) return setRegError('Enter a full mobile number that uses WhatsApp');
+
+    phoneDisplay = phone;
+    document.getElementById('verify-phone-display').textContent = phoneDisplay;
+    document.getElementById('nowhatsapp-phone-display').textContent = phoneDisplay;
+    showScreen('verify');
+
+    try {
+        const response = await fetch('/naa-tester-claim/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ first_name: name, phone, opted_in: optedIn }),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            setRegError(result.message || 'Something went wrong');
+            showScreen('register');
+            return;
+        }
+        verificationId = result.verification_id;
+        pollVerification();
+    } catch (err) {
+        setRegError('Network error - please try again');
+        showScreen('register');
+    }
+  }
+
+  function pollVerification() {
+    clearInterval(pollTimer);
+    pollTimer = setInterval(async () => {
+        try {
+            const response = await fetch(`/naa-tester-claim/verify-status/${verificationId}`);
+            const result = await response.json();
+            if (!result.success) return;
+            if (result.status === 'verified') {
+                clearInterval(pollTimer);
+                showScreen('eligible');
+            } else if (result.status === 'failed') {
+                clearInterval(pollTimer);
+                showScreen('nowhatsapp');
+            }
+        } catch (err) {
+            // keep polling - a single network blip shouldn't fail the whole check
+        }
+    }, 1200);
+  }
+
+  document.getElementById('reg-submit').addEventListener('click', submitRegister);
+  document.getElementById('nowhatsapp-diff-number').addEventListener('click', () => showScreen('register'));
+
+  document.getElementById('eligible-nfc').addEventListener('click', () => {
+    alert('Tap your phone against the NFC sticker at the till to claim.');
+  });
+
+  async function stopScanner() {
+    if (scannerStream) {
+        scannerStream.getTracks().forEach((track) => track.stop());
+        scannerStream = null;
+    }
+  }
+
+  async function startScanner() {
+    showScreen('scanner');
+    const errorEl = document.getElementById('scanner-error');
+    errorEl.style.display = 'none';
+
+    try {
+        scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        const video = document.getElementById('scanner-video');
+        video.srcObject = scannerStream;
+        await video.play();
+
+        const canvas = document.getElementById('scanner-canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+        const tick = () => {
+            if (!scannerStream) return;
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = window.jsQR(imageData.data, imageData.width, imageData.height);
+                if (code && code.data) {
+                    handleScanResult(code.data);
+                    return;
+                }
+            }
+            requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+    } catch (err) {
+        errorEl.textContent = 'Could not access the camera. Check your browser permissions and try again.';
+        errorEl.style.display = 'flex';
+    }
+  }
+
+  async function handleScanResult(payload) {
+    await stopScanner();
+    // The QR now encodes a real URL (?till=...), not the old "naa-tester:<id>" custom scheme -
+    // parse it the same way regardless of whether it's this page's own origin or was somehow
+    // scanned from a printout with a different host.
+    let tillId = 'till-1';
+    try {
+        tillId = new URL(String(payload || '').trim()).searchParams.get('till') || tillId;
+    } catch (_e) {
+        const match = /[?&]till=([^&]+)/.exec(String(payload || '').trim());
+        if (match) tillId = decodeURIComponent(match[1]);
+    }
+    await submitClaim(tillId);
+  }
+
+  async function submitClaim(tillId) {
+    try {
+        const response = await fetch('/naa-tester-claim/claim', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ verification_id: verificationId, till_id: tillId }),
+        });
+        const result = await response.json();
+
+        if (!result.success) {
+            document.getElementById('message-text').textContent = result.message || 'Unable to claim right now.';
+            showScreen('message');
+            return;
+        }
+
+        if (result.outcome === 'success') {
+            document.getElementById('success-time').textContent = result.claim_time;
+            document.getElementById('success-date').textContent = result.claim_date;
+            showScreen('success');
+        } else if (result.outcome === 'already_claimed') {
+            document.getElementById('claimed-time').textContent = result.previous_time;
+            document.getElementById('claimed-meta').textContent = `${result.claim_date} · Uncles Market`;
+            showScreen('claimed');
+        } else {
+            document.getElementById('message-text').textContent = result.message || 'Unable to claim right now.';
+            showScreen('message');
+        }
+    } catch (err) {
+        document.getElementById('message-text').textContent = 'Network error - please try again.';
+        showScreen('message');
+    }
+  }
+
+  document.getElementById('eligible-scan').addEventListener('click', () => {
+    // If we already know the till - the customer scanned the QR with their phone's native
+    // camera app and landed here via ?till=..., which is the expected path - just claim
+    // directly instead of reopening an in-page camera to scan the same code again.
+    const knownTillId = getKnownTillId();
+    if (knownTillId) {
+        submitClaim(knownTillId);
+        return;
+    }
+    startScanner();
+  });
+  document.getElementById('scanner-cancel').addEventListener('click', async () => {
+    await stopScanner();
+    showScreen('eligible');
+  });
+
+  function resetAll() {
+    document.getElementById('reg-name').value = '';
+    document.getElementById('reg-phone').value = '';
+    optedIn = false;
+    document.getElementById('reg-optin-mark').textContent = '';
+    document.getElementById('reg-optin-mark').style.background = 'transparent';
+    verificationId = null;
+    setRegError('');
+    showScreen('register');
+  }
+
+  document.getElementById('success-done').addEventListener('click', resetAll);
+  document.getElementById('claimed-restart').addEventListener('click', resetAll);
+  document.getElementById('message-restart').addEventListener('click', resetAll);
+
+  showScreen('register');
+})();
+</script>
+
+</body>
+</html>

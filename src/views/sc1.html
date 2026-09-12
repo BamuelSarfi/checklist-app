@@ -1,376 +1,442 @@
 <!DOCTYPE html>
-
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>SC1 Checklist</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="help_overlay.css">
+    <link rel="stylesheet" href="/design-system/index.global.css">
 </head>
 
-<body>
-
-<div id="phone_body">
-
-<div id="header">
-    <button id="back_button" onclick="window.location.href='/'">
-        <img src="/asset1.png" alt="Back">
-    </button>
-
-    <div id="title">
-        <img src="/asset2.png" alt="Title">
-        <h1>SC1 - Food Delivery Records</h1>
-    </div>
-</div>
-
-    <div style="display: flex;">
-    <div id="date">Date: <span id="current_date"></span></div>
-    <button id="info" data-help="sc1_info" onclick="openHelp(this.dataset.help)">
-        <img src="https://www.svgrepo.com/show/502710/info.svg" alt="Info">
-    </button>
-</div>
-
-<!-- SC1 FORM CARDS -->
-<div id="question_container">
-    <form id="sc1_form">
-        <!-- Records will be dynamically added here -->
-    </form>
-
-    <!-- Add Record Button -->
-    <button id="add_record_button" type="button">
-        <img src="https://www.svgrepo.com/show/510785/add-plus.svg" alt="Add Record" style="width: 20px; height: 20px; margin-right: 8px;">
-        Add Record
-    </button>
-</div>
-
-<!-- BOTTOM -->
-<div id="bottom">
-    <div id="employee_section">
-        Employee: <span id="employee_name_display"></span>
-    </div>
-    <div id="library_section">
-        <img src="https://www.svgrepo.com/show/435359/library.svg" alt="Library">
-    </div>
-    <!--Alert if sure-->
-    <button id="save_button_sc1" class="save_button">
-        <img src="https://www.svgrepo.com/show/502821/save.svg">
-    </button>
-</div>
-
-</div>
-
-<script>
-document.getElementById('current_date').textContent = new Date().toLocaleDateString('en-GB');
-
-let employee_id = null;
-let employeeData = null;
-
-const initializeEmployee = async () => {
-    // Try to get from sessionStorage first
-    const stored = sessionStorage.getItem('employeeData');
-    if (stored) {
-        employeeData = JSON.parse(stored);
-    } else {
-        // Fallback to API call
-        try {
-            const response = await fetch('/api/employee');
-            const data = await response.json();
-            if (data.success) {
-                employeeData = data.employee;
-                sessionStorage.setItem('employeeData', JSON.stringify(employeeData));
-            }
-        } catch (err) {
-            console.error('Error fetching employee data:', err);
-        }
+<style>
+    body {
+        margin: 0 auto;
     }
+</style>
 
-    // Display employee name
-    if (employeeData) {
-        employee_id = employeeData.id;
-        document.getElementById('employee_name_display').textContent = employeeData.name || "Employee";
-    } else {
-        document.getElementById('employee_name_display').textContent = "Employee";
-    }
-};
+<body class="kiosk-body">
+    <div class="kiosk-frame">
 
-initializeEmployee();
-
-// SC1 FORM INITIALIZATION
-let recordCount = 0;
-const maxRecords = 16;
-
-const initializeSC1Form = () => {
-    const container = document.getElementById('question_container');
-    const form = document.getElementById('sc1_form');
-
-    // Clear existing content
-    form.innerHTML = '';
-
-    // Add initial record
-    addRecord();
-
-    // Set up add record button
-    document.getElementById('add_record_button').addEventListener('click', addRecord);
-};
-
-const addRecord = () => {
-    if (recordCount >= maxRecords) {
-        alert('Maximum of 16 records allowed');
-        return;
-    }
-
-    recordCount++;
-    const currentDate = new Date().toLocaleDateString('en-GB');
-    const employeeName = employeeData?.name || "Employee";
-
-    const card = document.createElement('div');
-    card.className = 'sc1_record_card';
-    card.id = `record_${recordCount}`;
-
-    card.innerHTML = `
-        <div class="sc1_record_header">
-            <div class="sc1_record_number">Record ${recordCount}/${maxRecords}</div>
-            <div class="sc1_record_date">${currentDate}</div>
-            <button type="button" class="sc1_remove_button" onclick="removeRecord(${recordCount})">
-                <img src="https://www.svgrepo.com/show/491212/cross.svg" alt="Remove" style="width: 16px; height: 16px;">
-            </button>
-        </div>
-
-        <div class="sc1_field_group">
-            <label class="sc1_field_label" for="food_item${recordCount}">Food Item (high risk ready-to-eat foods only)</label>
-            <input type="text" class="sc1_text_input" id="food_item${recordCount}" name="food_item${recordCount}" placeholder="Enter food item">
-        </div>
-
-        <div class="sc1_field_group">
-            <label class="sc1_field_label" for="supplied_by${recordCount}">Supplied By (name of supplier)</label>
-            <input type="text" class="sc1_text_input" id="supplied_by${recordCount}" name="supplied_by${recordCount}" placeholder="Enter supplier name">
-        </div>
-
-        <div class="sc1_field_group">
-            <div class="sc1_checkbox_container">
-                <input type="checkbox" class="sc1_checkbox_input" id="checked_use_by${recordCount}" name="checked_use_by${recordCount}">
-                <label class="sc1_checkbox_label" for="checked_use_by${recordCount}">Checked use by date and condition</label>
+        <div class="kiosk-header">
+            <div style="display: flex; align-items: center; gap: 12px">
+                <a href="/" title="Back to dashboard" aria-label="Back to dashboard" class="kiosk-icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M19 12H5"></path>
+                        <path d="M12 19l-7-7 7-7"></path>
+                    </svg>
+                </a>
+                <div class="kiosk-logo-slot" id="brand-logo-slot">SC</div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                    <span id="brand-site-name"
+                        style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Safe
+                        Catering</span>
+                    <span
+                        style="font-size: 15px; font-weight: 700; line-height: 1.2; color: var(--color-text-heading)">SC1
+                        - Food Delivery Records</span>
+                </div>
+                <span id="header" style="display: contents"></span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px">
+                <span style="flex: 1; font-size: 14px; color: var(--color-text-secondary)">Date: <span
+                        id="current_date"></span></span>
+                <label class="kiosk-lang-select" title="Change language">
+                    <span aria-hidden="true" style="font-size: 15px">&#127760;</span>
+                    <select id="language-select" aria-label="Change language"></select>
+                </label>
+                <button type="button" id="info" class="kiosk-icon-btn" data-help="sc1_info"
+                    onclick="openHelp(this.dataset.help)" title="How this form works" aria-label="How this form works">
+                    <span class="kiosk-info-glyph">i</span>
+                </button>
             </div>
         </div>
 
-        <div class="sc1_field_group">
-            <label class="sc1_field_label" for="temp${recordCount}">Temperature (°C)</label>
-            <input type="number" class="sc1_temp_input" id="temp${recordCount}" name="temp${recordCount}" placeholder="Enter temperature">
+        <div id="question_container" style="flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 16px">
+            <form id="sc1_form" style="display: flex; flex-direction: column; gap: 10px;"></form>
+            <div id="add-record-mount"></div>
+            <p id="record-count-label" style="margin: 0; font-size: 12px; color: var(--color-text-muted)"></p>
         </div>
 
-        <div class="sc1_sign_field">
-            <label class="sc1_field_label" for="sign${recordCount}">Signature</label>
-            <input type="text" class="sc1_text_input sc1_readonly_field" id="sign${recordCount}" name="sign${recordCount}" value="${employeeName}" readonly>
-            <input type="hidden" id="date${recordCount}" name="date${recordCount}" value="${currentDate}">
-        </div>
-    `;
-
-    document.getElementById('sc1_form').appendChild(card);
-
-    // Update button state
-    updateAddButtonState();
-};
-
-const removeRecord = (recordId) => {
-    const card = document.getElementById(`record_${recordId}`);
-    if (card) {
-        card.remove();
-        recordCount--;
-
-        // Renumber remaining records
-        const cards = document.querySelectorAll('.sc1_record_card');
-        cards.forEach((card, index) => {
-            const newNumber = index + 1;
-            card.id = `record_${newNumber}`;
-            card.querySelector('.sc1_record_number').textContent = `Record ${newNumber}`;
-
-            // Update button onclick
-            const removeBtn = card.querySelector('.sc1_remove_button');
-            if (removeBtn) {
-                removeBtn.onclick = () => removeRecord(newNumber);
-            }
-        });
-
-        updateAddButtonState();
-    }
-};
-
-const updateAddButtonState = () => {
-    const addButton = document.getElementById('add_record_button');
-    if (recordCount >= maxRecords) {
-        addButton.disabled = true;
-        addButton.textContent = 'Maximum Records Reached';
-    } else {
-        addButton.disabled = false;
-        addButton.innerHTML = '<img src="https://www.svgrepo.com/show/510785/add-plus.svg" alt="Add Record" style="width: 20px; height: 20px; margin-right: 8px;">Add Record';
-    }
-};
-
-// Load existing SC1 records for today
-const loadExistingRecords = async () => {
-    try {
-        const today = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
-        const sanitizedName = (employeeData?.name || 'Employee').replace(/[^a-zA-Z0-9]/g, '_');
-        const filename = `SC1-${today}-${sanitizedName}.json`;
-
-        const response = await fetch(`/records/${filename}`);
-        if (response.ok) {
-            const existingData = await response.json();
-            if (existingData.records && existingData.records.length > 0) {
-                // Load existing records into the form
-                for (const record of existingData.records) {
-                    if (recordCount < 16) {
-                        addRecord();
-                        const index = recordCount;
-
-                        // Fill in the data
-                        document.getElementById(`food_item${index}`).value = record.food_item || '';
-                        document.getElementById(`supplied_by${index}`).value = record.supplied_by || '';
-                        document.getElementById(`checked_use_by${index}`).checked = record.checked_use_by || false;
-                        document.getElementById(`temp${index}`).value = record.temp || '';
-                    }
-                }
-                updateAddButtonState();
-            }
-        }
-    } catch (err) {
-        // Silently fail if no existing records - this is expected for new days
-        console.log('No existing records found for today');
-    }
-};
-
-// Handle save button for SC1 form
-document.getElementById('save_button_sc1')?.addEventListener('click', async (e) => {
-    e.preventDefault();
-
-    // Collect form data
-    const formData = {
-        employee_id: employee_id,
-        employee_name: employeeData?.name || "Employee",
-        records: []
-    };
-
-    // Collect data from all existing records
-    for (let i = 1; i <= recordCount; i++) {
-        const date = document.getElementById(`date${i}`)?.value;
-        const foodItem = document.getElementById(`food_item${i}`)?.value;
-        const suppliedBy = document.getElementById(`supplied_by${i}`)?.value;
-        const checkedUseBy = document.getElementById(`checked_use_by${i}`)?.checked;
-        const temp = document.getElementById(`temp${i}`)?.value;
-        const sign = document.getElementById(`sign${i}`)?.value;
-
-        // Only include rows with at least some data
-        if (foodItem || suppliedBy || temp) {
-            formData.records.push({
-                row: i,
-                date: date,
-                food_item: foodItem,
-                supplied_by: suppliedBy,
-                checked_use_by: checkedUseBy,
-                temp: temp,
-                sign: sign
-            });
-        }
-    }
-
-    // Send to backend
-    try {
-        const response = await fetch('/sc1', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData)
-        });
-
-        const result = await response.json();
-        if (result.success) {
-            alert(result.message + (result.totalRecords ? ` (${result.totalRecords} total records)` : ''));
-            
-            // // Download the PDF
-            // if (result.filename) {
-            //     const downloadLink = document.createElement('a');
-            //     downloadLink.href = `/records/${result.filename}`;
-            //     downloadLink.download = result.filename;
-            //     document.body.appendChild(downloadLink);
-            //     downloadLink.click();
-            //     document.body.removeChild(downloadLink);
-                
-            // }
-            
-            // Reset form to initial state after successful save
-            recordCount = 0;
-            initializeSC1Form();
-            window.location.href = '/';
-        } else {
-            // alert('Error saving form: ' + (result.message || 'Unknown error'));
-            window.location.href = '/';
-        }
-    } catch (err) {
-        console.error('Error submitting form:', err);
-        // alert('Error saving form: ' + err.message);
-        window.location.href = '/';
-    }
-});
-
-// Toggle checklist for SC5 page
-document.querySelectorAll('.button_checklist_container').forEach(container => {
-    container.addEventListener('click', () => {
-        const img = container.querySelector('.check_img');
-        const input = container.parentElement.querySelector('input');
-
-        if (img.style.display === 'none') {
-            img.style.display = 'block';
-            input.value = 'yes';
-        } else {
-            img.style.display = 'none';
-            input.value = 'no';
-        }
-    });
-});
-
-// Initialize SC1 form when DOM is loaded
-if (document.getElementById('question_container')) {
-    initializeSC1Form();
-    // Load existing records after employee data is available
-    const initializeWhenReady = () => {
-        if (employeeData) {
-            loadExistingRecords();
-        } else {
-            // Wait for employee data to load
-            setTimeout(initializeWhenReady, 100);
-        }
-    };
-    initializeWhenReady();
-}
-
-</script>
-
-<script src="help_overlay.js"></script>
-
-<!-- Help overlay -->
-<div id="help_overlay" aria-hidden="true">
-    <div id="help_inner">
-        <div id="help_header">
-            <div id="help_title">Help</div>
-            <button id="help_close" aria-label="Close">Close</button>
-        </div>
-
-        <!-- Footer-->
-            <footer class="site_footer">
-                <a href="/privacy-policy">Privacy Policy</a>
-                <span>© 2026 Checklist App</span>
-            </footer>
-        <div id="help_body">
-            <img id="help_image" src="" alt="Help image">
-            <div id="help_caption">Tap the image to view details. Tap outside to close.</div>
+        <div class="kiosk-bottom-bar">
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                <span
+                    style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Signed
+                    in</span>
+                <span id="employee_name_display"
+                    style="font-size: 14px; font-weight: 600; color: var(--color-text-heading); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">-</span>
+            </div>
+            <a href="/library" class="kiosk-bottom-nav-btn" title="Library" aria-label="Library">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 4v16"></path>
+                    <path d="M9.5 4v16"></path>
+                    <path d="M15 4.5l4 15.5"></path>
+                </svg>
+            </a>
+            <div id="save-button-mount"></div>
         </div>
     </div>
-</div>
-</script>
 
-<script src="script.js"></script>
+    <script src="translations.js"></script>
+    <script src="/design-system/index.global.js"></script>
+    <script>
+        document.getElementById('current_date').textContent = new Date().toLocaleDateString('en-GB');
+
+        let employee_id = null;
+        let employeeData = null;
+
+        const initializeEmployee = async () => {
+            const stored = sessionStorage.getItem('employeeData');
+            if (stored) {
+                employeeData = JSON.parse(stored);
+            } else {
+                try {
+                    const response = await fetch('/api/employee');
+                    const data = await response.json();
+                    if (data.success) {
+                        employeeData = data.employee;
+                        sessionStorage.setItem('employeeData', JSON.stringify(employeeData));
+                    }
+                } catch (err) {
+                    console.error('Error fetching employee data:', err);
+                }
+            }
+
+            if (employeeData) {
+                employee_id = employeeData.id;
+                document.getElementById('employee_name_display').textContent = employeeData.name || 'Employee';
+            } else {
+                document.getElementById('employee_name_display').textContent = 'Employee';
+            }
+        };
+
+        initializeEmployee();
+
+        // ---- Brand lookup ----
+        (async () => {
+            try {
+                const response = await fetch('/api/brand');
+                if (!response.ok) return;
+                const data = await response.json();
+                const kitchenName = data?.kitchen?.name || data?.brand_name || data?.business?.display_name || 'Safe Catering';
+                const logoSrc = data?.kitchen?.logo_src || data?.logo_src || data?.business?.logo_src || '';
+                document.getElementById('brand-site-name').textContent = kitchenName;
+                if (logoSrc) {
+                    const slot = document.getElementById('brand-logo-slot');
+                    slot.textContent = '';
+                    const img = document.createElement('img');
+                    img.src = logoSrc;
+                    img.alt = kitchenName;
+                    slot.appendChild(img);
+                }
+            } catch (_error) { /* optional */ }
+        })();
+
+        // ---- Language switcher ----
+        const langSelect = document.getElementById('language-select');
+        if (window.appI18n) {
+            window.appI18n.getLanguageOptions().forEach(({ value, label }) => {
+                const opt = document.createElement('option');
+                opt.value = value;
+                opt.textContent = label;
+                langSelect.appendChild(opt);
+            });
+            langSelect.value = window.appI18n.getAppLanguage();
+            langSelect.addEventListener('change', () => {
+                window.appI18n.setAppLanguage(langSelect.value);
+                window.location.reload();
+            });
+        }
+
+        const t = window.appI18n ? window.appI18n.t : (key) => key;
+
+        // ---- Buttons (real DS components) ----
+        const { React, ReactDOM, Button } = window.KitchenDS;
+        const addButtonRoot = ReactDOM.createRoot(document.getElementById('add-record-mount'));
+        const saveButtonRoot = ReactDOM.createRoot(document.getElementById('save-button-mount'));
+
+        function renderAddButton() {
+            const atMax = recordCount >= maxRecords;
+            addButtonRoot.render(React.createElement(Button, {
+                variant: 'primary',
+                fullWidth: true,
+                disabled: atMax,
+                onClick: () => addRecord(),
+                style: { minHeight: 52, fontSize: 15, fontWeight: 600, borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-success)', boxShadow: 'none' },
+            }, atMax ? t('Maximum Records Reached') : t('+ Add record')));
+            document.getElementById('record-count-label').textContent = recordCount === 1 ? t('{count} record on this form', { count: recordCount }) : t('{count} records on this form', { count: recordCount });
+        }
+
+        function renderSaveButton(isLoading) {
+            saveButtonRoot.render(React.createElement(Button, {
+                variant: 'primary',
+                loading: !!isLoading,
+                onClick: () => handleSave(),
+                style: { minHeight: 48, padding: '0 18px', fontSize: 14, fontWeight: 600, borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-success)', boxShadow: 'none' },
+            }, t('Save')));
+        }
+
+        // ---- SC1 form (imperative record cards, matching the field/id scheme the save handler
+        // below reads from - only the visual chrome/markup changed here, not the collection logic) ----
+        let recordCount = 0;
+        const maxRecords = 16;
+
+        const initializeSC1Form = () => {
+            document.getElementById('sc1_form').innerHTML = '';
+            recordCount = 0;
+            addRecord();
+        };
+
+        const addRecord = async () => {
+            if (recordCount >= maxRecords) {
+                await window.showAppModal(t('Maximum of {max} records allowed', { max: maxRecords }), { type: 'info' });
+                return;
+            }
+
+            recordCount++;
+            const currentDate = new Date().toLocaleDateString('en-GB');
+            const employeeName = employeeData?.name || 'Employee';
+            const n = recordCount;
+
+            const card = document.createElement('div');
+            card.className = 'kiosk-card';
+            card.id = `record_${n}`;
+
+            card.innerHTML = `
+        <div class="kiosk-card-head">
+            <span style="flex: 1; font-size: 15px; font-weight: 700; color: var(--color-text-heading)" class="sc1_record_number">${t('Record {n}/{max}', { n, max: maxRecords })}</span>
+            <span style="font-size: 13px; color: var(--color-text-muted)">${currentDate}</span>
+            <button type="button" class="kiosk-remove-btn" onclick="removeRecord(${n})" title="${t('Remove record')}" aria-label="${t('Remove record')}">&times;</button>
+        </div>
+
+        <label style="display: flex; flex-direction: column; gap: 6px">
+            <span class="kiosk-field-label">${t('Food item')} <span class="kiosk-field-label-sub">(${t('high risk ready-to-eat foods only')})</span></span>
+            <input type="text" class="kiosk-text-input" id="food_item${n}" name="food_item${n}" placeholder="${t('Enter food item')}">
+        </label>
+
+        <label style="display: flex; flex-direction: column; gap: 6px">
+            <span class="kiosk-field-label">${t('Supplied by')} <span class="kiosk-field-label-sub">(${t('name of supplier')})</span></span>
+            <input type="text" class="kiosk-text-input" id="supplied_by${n}" name="supplied_by${n}" placeholder="${t('Enter supplier name')}">
+        </label>
+
+        <input type="checkbox" id="checked_use_by${n}" name="checked_use_by${n}" hidden>
+        <button type="button" class="kiosk-toggle-row" id="checked_use_by${n}_toggle" aria-pressed="false">
+            <span class="kiosk-toggle-box" id="checked_use_by${n}_box"></span>
+            <span style="flex: 1; font-size: 14px; line-height: 1.4; color: var(--color-text-heading)">${t('Checked use by date and condition')}</span>
+        </button>
+
+        <label style="display: flex; flex-direction: column; gap: 6px">
+            <span class="kiosk-field-label">${t('Temperature (°C)')}</span>
+            <input type="number" inputmode="decimal" class="kiosk-text-input" id="temp${n}" name="temp${n}" placeholder="${t('Enter temperature')}">
+        </label>
+
+        <div class="kiosk-signature-row">
+            <span class="kiosk-signature-label">${t('Signature')}</span>
+            <span class="kiosk-signature-value">${employeeName}</span>
+        </div>
+        <input type="hidden" id="sign${n}" name="sign${n}" value="${employeeName}">
+        <input type="hidden" id="date${n}" name="date${n}" value="${currentDate}">
+    `;
+
+            document.getElementById('sc1_form').appendChild(card);
+
+            const checkbox = document.getElementById(`checked_use_by${n}`);
+            const toggleBtn = document.getElementById(`checked_use_by${n}_toggle`);
+            const toggleBox = document.getElementById(`checked_use_by${n}_box`);
+            const renderToggle = () => {
+                toggleBtn.setAttribute('aria-pressed', String(checkbox.checked));
+                toggleBox.className = `kiosk-toggle-box${checkbox.checked ? ' is-checked' : ''}`;
+                toggleBox.innerHTML = checkbox.checked
+                    ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>'
+                    : '';
+            };
+            toggleBtn.addEventListener('click', () => {
+                checkbox.checked = !checkbox.checked;
+                renderToggle();
+            });
+            renderToggle();
+
+            if (window.applyTranslations) {
+                window.applyTranslations(card);
+            }
+
+            renderAddButton();
+        };
+
+        // Every field inside a card is created (in addRecord) with the card's number baked into its
+        // id/name - renumbering the card without also renumbering these means handleSave(), which
+        // reads fields by id from 1..recordCount, silently misses or misattributes data for every
+        // card after the one removed.
+        const CARD_FIELD_ID_TEMPLATES = [
+            (n) => `food_item${n}`,
+            (n) => `supplied_by${n}`,
+            (n) => `checked_use_by${n}`,
+            (n) => `checked_use_by${n}_toggle`,
+            (n) => `checked_use_by${n}_box`,
+            (n) => `temp${n}`,
+            (n) => `sign${n}`,
+            (n) => `date${n}`,
+        ];
+
+        const removeRecord = (recordId) => {
+            const card = document.getElementById(`record_${recordId}`);
+            if (!card) return;
+            card.remove();
+            recordCount--;
+
+            const cards = document.querySelectorAll('#sc1_form .kiosk-card');
+            cards.forEach((c, index) => {
+                const oldNumber = Number(c.id.replace('record_', ''));
+                const newNumber = index + 1;
+
+                if (oldNumber !== newNumber) {
+                    CARD_FIELD_ID_TEMPLATES.forEach((template) => {
+                        const el = document.getElementById(template(oldNumber));
+                        if (!el) return;
+                        el.id = template(newNumber);
+                        if (el.hasAttribute('name')) el.name = template(newNumber);
+                    });
+                }
+
+                c.id = `record_${newNumber}`;
+                c.querySelector('.sc1_record_number').textContent = t('Record {n}/{max}', { n: newNumber, max: maxRecords });
+                const removeBtn = c.querySelector('.kiosk-remove-btn');
+                if (removeBtn) removeBtn.onclick = () => removeRecord(newNumber);
+            });
+
+            renderAddButton();
+        };
+        window.removeRecord = removeRecord;
+
+        const loadExistingRecords = async () => {
+            try {
+                const today = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+                const sanitizedName = (employeeData?.name || 'Employee').replace(/[^a-zA-Z0-9]/g, '_');
+                const filename = `SC1-${today}-${sanitizedName}.json`;
+
+                const response = await fetch(`/records/${filename}`);
+                if (response.ok) {
+                    const existingData = await response.json();
+                    if (existingData.records && existingData.records.length > 0) {
+                        for (const record of existingData.records) {
+                            if (recordCount < 16) {
+                                await addRecord();
+                                const index = recordCount;
+                                document.getElementById(`food_item${index}`).value = record.food_item || '';
+                                document.getElementById(`supplied_by${index}`).value = record.supplied_by || '';
+                                const cb = document.getElementById(`checked_use_by${index}`);
+                                cb.checked = !!record.checked_use_by;
+                                const box = document.getElementById(`checked_use_by${index}_box`);
+                                box.className = `kiosk-toggle-box${cb.checked ? ' is-checked' : ''}`;
+                                box.innerHTML = cb.checked ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>' : '';
+                                document.getElementById(`checked_use_by${index}_toggle`).setAttribute('aria-pressed', String(cb.checked));
+                                document.getElementById(`temp${index}`).value = record.temp || '';
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                console.log('No existing records found for today');
+            }
+        };
+
+        const handleSave = async () => {
+            const formData = {
+                employee_id: employee_id,
+                employee_name: employeeData?.name || 'Employee',
+                records: [],
+            };
+
+            for (let i = 1; i <= recordCount; i++) {
+                const date = document.getElementById(`date${i}`)?.value;
+                const foodItem = document.getElementById(`food_item${i}`)?.value;
+                const suppliedBy = document.getElementById(`supplied_by${i}`)?.value;
+                const checkedUseBy = document.getElementById(`checked_use_by${i}`)?.checked;
+                const temp = document.getElementById(`temp${i}`)?.value;
+                const sign = document.getElementById(`sign${i}`)?.value;
+
+                if (foodItem || suppliedBy || temp) {
+                    formData.records.push({ row: i, date, food_item: foodItem, supplied_by: suppliedBy, checked_use_by: checkedUseBy, temp, sign });
+                }
+            }
+
+            const requestOptions = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            };
+
+            renderSaveButton(true);
+
+            try {
+                const outcome = window.syncEngine
+                    ? await window.syncEngine.submitOrQueue('/sc1', requestOptions, { formType: 'SC1', employeeId: employee_id })
+                    : { ok: true, response: await fetch('/sc1', requestOptions) };
+
+                if (outcome.queued) {
+                    await window.showAppModal(window.appI18n ? window.appI18n.t('Saved locally. Will sync automatically when online.') : 'Saved locally. Will sync automatically when online.', { type: 'success' });
+                    window.location.href = '/';
+                    return;
+                }
+
+                const result = await outcome.response.json();
+                if (result.success) {
+                    await window.showAppModal(result.message + (result.totalRecords ? ` (${result.totalRecords} total records)` : ''), { type: 'success' });
+                    window.notifySyncWarning?.(result.sync_warning);
+                    window.location.href = '/';
+                } else {
+                    window.location.href = '/';
+                }
+            } catch (err) {
+                console.error('Error submitting form:', err);
+                window.location.href = '/';
+            } finally {
+                renderSaveButton(false);
+            }
+        };
+
+        if (document.getElementById('question_container')) {
+            initializeSC1Form();
+            renderSaveButton(false);
+            const initializeWhenReady = () => {
+                if (employeeData) {
+                    loadExistingRecords();
+                } else {
+                    setTimeout(initializeWhenReady, 100);
+                }
+            };
+            initializeWhenReady();
+        }
+    </script>
+
+    <script src="help_overlay.js"></script>
+
+    <!-- Help overlay -->
+    <div id="help_overlay" aria-hidden="true">
+        <div id="help_inner">
+            <div id="help_header">
+                <div id="help_title">Help</div>
+                <button id="help_close" aria-label="Close">Close</button>
+            </div>
+            <footer class="site_footer">
+                <a href="/privacy-policy">Privacy Policy</a>
+                <span>&copy; 2026 Safecateruk</span>
+            </footer>
+            <div id="help_body">
+                <img id="help_image" src="" alt="Help image">
+                <div id="help_caption">Tap the image to view details. Tap outside to close.</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/offline-store.js"></script>
+    <script src="js/sync-engine.js"></script>
+    <script src="js/status-badge.js"></script>
+    <script src="script.js"></script>
 
 </body>
+
 </html>

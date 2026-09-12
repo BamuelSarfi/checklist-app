@@ -1,0 +1,97 @@
+@import "../../tokens/tokens.css";
+
+/* Shared base - the "white box, 1px black border" DNA behind checklist_card,
+   checklist_card_l, sc1_record_card, sc4_row_card, and sc3_row_container. */
+.ds-card {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-black);
+    padding: 12px;
+    margin-bottom: 8px;
+}
+
+.ds-card--list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+}
+
+.ds-card--list-item:hover {
+    background-color: var(--color-bg-hover);
+}
+
+.ds-card--list-item.is-completed {
+    background-color: var(--color-success-tint-bg);
+    opacity: 0.7;
+}
+
+.ds-card--list-item-column {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+}
+
+.ds-card--record {
+    border-radius: var(--radius-md);
+}
+
+.ds-card--row {
+    /* plain bordered block - sc3_row_container / sc4_row_card look */
+}
+
+.ds-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--color-border-soft);
+}
+
+.ds-card-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0 0 4px 0;
+}
+
+.ds-card-description {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin: 0;
+}
+
+.ds-card-arrow {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    margin-left: 8px;
+}
+
+.ds-card-badge {
+    display: inline-block;
+    background-color: var(--color-error-badge-bg);
+    color: var(--color-white);
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    margin-left: 8px;
+    font-weight: bold;
+}
+
+.ds-card--list-item.is-completed .ds-card-badge {
+    background-color: var(--color-success);
+}
+
+.ds-card-corner-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+}

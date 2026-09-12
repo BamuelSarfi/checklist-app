@@ -1,0 +1,25 @@
+{
+    "name": "checklist-kitchen-ds",
+    "version": "0.1.0",
+    "private": true,
+    "description": "React component library derived from checklist-app's existing CSS/markup patterns, for syncing to Claude Design (/design-sync). Not wired into the live kitchen-kiosk app.",
+    "type": "module",
+    "main": "dist/index.esm.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "node scripts/build.mjs && tsc --emitDeclarationOnly --outDir dist",
+        "typecheck": "tsc --noEmit"
+    },
+    "peerDependencies": {
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
+    },
+    "devDependencies": {
+        "@types/react": "^18.2.79",
+        "@types/react-dom": "^18.2.25",
+        "esbuild": "^0.20.2",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "typescript": "^5.4.5"
+    }
+}

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SC7 Fitness to Work Assessment</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="help_overlay.css">
+    <link rel="stylesheet" href="/design-system/index.global.css">
+</head>
+
+<style>
+    body {
+        margin: 0 auto;
+    }
+</style>
+
+<body class="kiosk-body">
+    <div class="kiosk-frame">
+
+        <div class="kiosk-header">
+            <div style="display: flex; align-items: center; gap: 12px">
+                <a href="/" title="Back to dashboard" aria-label="Back to dashboard" class="kiosk-icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M19 12H5"></path>
+                        <path d="M12 19l-7-7 7-7"></path>
+                    </svg>
+                </a>
+                <div class="kiosk-logo-slot" id="brand-logo-slot">SC</div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                    <span id="brand-site-name"
+                        style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Safe
+                        Catering</span>
+                    <span
+                        style="font-size: 15px; font-weight: 700; line-height: 1.2; color: var(--color-text-heading)">SC7
+                        - Fitness to Work Assessment</span>
+                </div>
+                <span id="header" style="display: contents"></span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px">
+                <span style="flex: 1; font-size: 14px; color: var(--color-text-secondary)">Date: <span
+                        id="current_date"></span></span>
+                <label class="kiosk-lang-select" title="Change language">
+                    <span aria-hidden="true" style="font-size: 15px">&#127760;</span>
+                    <select id="language-select" aria-label="Change language"></select>
+                </label>
+            </div>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 16px">
+            <div class="kiosk-banner-warning" id="sc7_intro_banner">
+                <strong>This form is optional.</strong>
+                <span>If you answer "Yes" to any question below, you should not handle food or enter food handling areas
+                    until you have spoken to your manager.</span>
+            </div>
+
+            <div class="kiosk-card">
+                <span class="kiosk-field-label">Reason for assessment</span>
+                <div id="reason_container" style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px">
+                </div>
+            </div>
+
+            <div id="question_container" style="display: flex; flex-direction: column; gap: 8px;"></div>
+
+            <div class="kiosk-card" style="margin-top: 2px;">
+                <label style="display: flex; flex-direction: column; gap: 6px">
+                    <span class="kiosk-field-label">Action taken / notes</span>
+                    <textarea id="sc7_action_taken" rows="4" class="kiosk-textarea"
+                        placeholder="Record any managerial action taken, if applicable..."></textarea>
+                </label>
+                <div class="kiosk-summary-box">
+                    <div class="kiosk-summary-row"><span class="kiosk-summary-row-label">Employee name</span><span
+                            class="kiosk-summary-row-value" id="summary-name">-</span></div>
+                    <div class="kiosk-summary-row"><span class="kiosk-summary-row-label">Date</span><span
+                            class="kiosk-summary-row-value" id="summary-date">-</span></div>
+                    <div class="kiosk-summary-row"><span class="kiosk-summary-row-label">Signature/initial</span><span
+                            class="kiosk-summary-row-value" id="summary-sign">-</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="kiosk-bottom-bar">
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                <span
+                    style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Signed
+                    in</span>
+                <span id="employee_name_display"
+                    style="font-size: 14px; font-weight: 600; color: var(--color-text-heading); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">-</span>
+            </div>
+            <a href="/library" class="kiosk-bottom-nav-btn" title="Library" aria-label="Library">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 4v16"></path>
+                    <path d="M9.5 4v16"></path>
+                    <path d="M15 4.5l4 15.5"></path>
+                </svg>
+            </a>
+            <div id="save-button-mount"></div>
+        </div>
+    </div>
+
+    <script src="translations.js"></script>
+    <script src="/design-system/index.global.js"></script>
+    <script>
+        const t = window.appI18n ? window.appI18n.t : (key) => key;
+
+        const REASONS = [
+            { id: 'existing_food_handler', text: 'Existing food handler' },
+            { id: 'pre_employment', text: 'Pre-employment assessment' },
+            { id: 'return_to_work', text: 'Return to work after illness' },
+        ];
+
+        // q2 is a sub-question of q1 (only shown/answered if q1 is "no"), q3-q5 are the three
+        // parts of "at present are you suffering from...", q6/q7 are independent - matches the
+        // real PDF's 7 independent Question1-Question7 radio groups in top-to-bottom order.
+        const QUESTIONS = [
+            { id: 'q1', text: 'Have you suffered from diarrhoea and/or vomiting within the last 48 hours?' },
+            { id: 'q2', text: 'If no, have you in the last 48 hours taken any medication to control diarrhoea and/or vomiting?', showIf: () => answers.q1 === 'no' },
+            { id: 'q3', text: 'At present, do you have any infected wounds, skin infections or sores?' },
+            { id: 'q4', text: 'At present, do you have any boils, styes or septic fingers?' },
+            { id: 'q5', text: 'At present, do you have any discharge from eye, ear or gums/mouth?' },
+            { id: 'q6', text: 'Have you ever had, or are you known to be a carrier of, typhoid or paratyphoid?' },
+            { id: 'q7', text: 'In the last 21 days have you been in contact with anyone, at home or abroad, who may have been suffering from typhoid or paratyphoid?' },
+        ];
+
+        let reason = null;
+        const answers = {};
+
+        const reasonContainer = document.getElementById('reason_container');
+        const questionContainer = document.getElementById('question_container');
+
+        function toggleRow({ checked, text, onClick }) {
+            const row = document.createElement('button');
+            row.type = 'button';
+            row.className = 'kiosk-toggle-row';
+            row.setAttribute('aria-pressed', String(checked));
+            row.innerHTML = `
+            <span class="kiosk-toggle-box${checked ? ' is-checked' : ''}">${checked ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>' : ''}</span>
+            <span style="flex: 1; font-size: 14px; line-height: 1.4; color: var(--color-text-heading)">${text}</span>
+        `;
+            row.addEventListener('click', onClick);
+            return row;
+        }
+
+        function renderReasons() {
+            reasonContainer.innerHTML = '';
+            REASONS.forEach((r) => {
+                reasonContainer.appendChild(toggleRow({
+                    checked: reason === r.id,
+                    text: t(r.text),
+                    onClick: () => {
+                        reason = reason === r.id ? null : r.id;
+                        renderReasons();
+                    },
+                }));
+            });
+            if (window.applyTranslations) window.applyTranslations(reasonContainer);
+        }
+
+        function renderQuestions() {
+            questionContainer.innerHTML = '';
+            QUESTIONS.forEach((q) => {
+                if (q.showIf && !q.showIf()) {
+                    delete answers[q.id];
+                    return;
+                }
+                const checked = answers[q.id] === 'yes';
+                questionContainer.appendChild(toggleRow({
+                    checked,
+                    text: t(q.text),
+                    onClick: () => {
+                        answers[q.id] = answers[q.id] === 'yes' ? 'no' : 'yes';
+                        renderQuestions();
+                        updateWarningBanner();
+                    },
+                }));
+            });
+            if (window.applyTranslations) window.applyTranslations(questionContainer);
+        }
+
+        function updateWarningBanner() {
+            const anyYes = QUESTIONS.some((q) => answers[q.id] === 'yes');
+            const banner = document.getElementById('sc7_intro_banner');
+            banner.style.background = anyYes ? 'var(--color-error-soft-bg)' : '';
+            banner.style.borderColor = anyYes ? 'var(--color-error)' : '';
+        }
+
+        renderReasons();
+        renderQuestions();
+
+        const date_input = new Date().toLocaleDateString('en-GB');
+        document.getElementById('current_date').textContent = date_input;
+        document.getElementById('summary-date').textContent = date_input;
+
+        let employee_id = null;
+        let employeeData = null;
+
+        const initializeEmployee = async () => {
+            const stored = sessionStorage.getItem('employeeData');
+            if (stored) {
+                try {
+                    employeeData = JSON.parse(stored);
+                } catch (_error) {
+                    employeeData = null;
+                }
+            }
+
+            if (!employeeData) {
+                try {
+                    const response = await fetch('/api/employee');
+                    const data = await response.json();
+                    if (data.success) {
+                        employeeData = data.employee;
+                        sessionStorage.setItem('employeeData', JSON.stringify(employeeData));
+                    }
+                } catch (error) {
+                    console.error('Error fetching employee data for SC7:', error);
+                }
+            }
+
+            if (employeeData) {
+                employee_id = employeeData.id;
+                const name = employeeData.name || 'Employee';
+                document.getElementById('employee_name_display').textContent = name;
+                document.getElementById('summary-name').textContent = name;
+                document.getElementById('summary-sign').textContent = name;
+            }
+        };
+
+        const { React, ReactDOM, Button } = window.KitchenDS;
+        const saveButtonRoot = ReactDOM.createRoot(document.getElementById('save-button-mount'));
+
+        function renderSaveButton(isLoading) {
+            saveButtonRoot.render(React.createElement(Button, {
+                variant: 'primary',
+                loading: !!isLoading,
+                onClick: () => saveForm(),
+                style: { minHeight: 48, padding: '0 18px', fontSize: 14, fontWeight: 600, borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-success)', boxShadow: 'none' },
+            }, t('Save')));
+        }
+        renderSaveButton(false);
+
+        initializeEmployee();
+
+        // ---- Brand lookup ----
+        (async () => {
+            try {
+                const response = await fetch('/api/brand');
+                if (!response.ok) return;
+                const data = await response.json();
+                const kitchenName = data?.kitchen?.name || data?.brand_name || data?.business?.display_name || 'Safe Catering';
+                const logoSrc = data?.kitchen?.logo_src || data?.logo_src || data?.business?.logo_src || '';
+                document.getElementById('brand-site-name').textContent = kitchenName;
+                if (logoSrc) {
+                    const slot = document.getElementById('brand-logo-slot');
+                    slot.textContent = '';
+                    const img = document.createElement('img');
+                    img.src = logoSrc;
+                    img.alt = kitchenName;
+                    slot.appendChild(img);
+                }
+            } catch (_error) { /* optional */ }
+        })();
+
+        // ---- Language switcher ----
+        const langSelect = document.getElementById('language-select');
+        if (window.appI18n) {
+            window.appI18n.getLanguageOptions().forEach(({ value, label }) => {
+                const opt = document.createElement('option');
+                opt.value = value;
+                opt.textContent = label;
+                langSelect.appendChild(opt);
+            });
+            langSelect.value = window.appI18n.getAppLanguage();
+            langSelect.addEventListener('change', () => {
+                window.appI18n.setAppLanguage(langSelect.value);
+                window.location.reload();
+            });
+        }
+
+        const saveForm = async () => {
+            if (!employee_id) {
+                await initializeEmployee();
+            }
+
+            if (!employee_id) {
+                await window.showAppModal(t('Employee not identified. Please log in again.'), { type: 'error' });
+                return;
+            }
+
+            const data = {
+                date: date_input,
+                employee_id,
+                reason,
+                action_taken: document.getElementById('sc7_action_taken').value || '',
+            };
+            QUESTIONS.forEach((q) => { data[q.id] = answers[q.id] === 'yes' ? 'yes' : 'no'; });
+
+            const requestOptions = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            };
+
+            renderSaveButton(true);
+
+            try {
+                const outcome = window.syncEngine
+                    ? await window.syncEngine.submitOrQueue('/sc7', requestOptions, { formType: 'SC7', employeeId: employee_id })
+                    : { ok: true, response: await fetch('/sc7', requestOptions) };
+
+                if (outcome.queued) {
+                    if (employeeData) sessionStorage.setItem('employeeData', JSON.stringify(employeeData));
+                    await window.showAppModal(window.appI18n ? window.appI18n.t('Saved locally. Will sync automatically when online.') : 'Saved locally. Will sync automatically when online.', { type: 'success' });
+                    window.location.href = '/';
+                    return;
+                }
+
+                const response = outcome.response;
+                const text = await response.text();
+                let result = {};
+                if (text) {
+                    try { result = JSON.parse(text); } catch (_err) { result = { error: text }; }
+                }
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.error || result.message || `Unable to submit SC7 form (${response.status})`);
+                }
+
+                if (employeeData) sessionStorage.setItem('employeeData', JSON.stringify(employeeData));
+
+                await window.showAppModal(t('SC7 form submitted successfully'), { type: 'success' });
+                window.notifySyncWarning?.(result.sync_warning);
+                window.location.href = '/';
+            } catch (err) {
+                console.error('Error submitting form:', err);
+                await window.showAppModal(t('Error submitting SC7 form: {message}', { message: err.message }), { type: 'error' });
+            } finally {
+                renderSaveButton(false);
+            }
+        };
+    </script>
+
+    <script src="help_overlay.js"></script>
+
+    <div id="help_overlay" aria-hidden="true">
+        <div id="help_inner">
+            <div id="help_header">
+                <div id="help_title">Help</div>
+                <button id="help_close" aria-label="Close">Close</button>
+            </div>
+            <footer class="site_footer">
+                <a href="/privacy-policy">Privacy Policy</a>
+                <span>&copy; 2026 Safecateruk</span>
+            </footer>
+            <div id="help_body">
+                <img id="help_image" src="" alt="Help image">
+                <div id="help_caption">Tap the image to view details. Tap outside to close.</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/offline-store.js"></script>
+    <script src="js/sync-engine.js"></script>
+    <script src="js/status-badge.js"></script>
+    <script src="script.js"></script>
+
+</body>
+
+</html>

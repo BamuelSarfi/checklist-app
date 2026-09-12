@@ -1,268 +1,980 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Safe Catering Checklist</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="help_overlay.css">
+    <link rel="stylesheet" href="/design-system/index.global.css">
+    <style>
+        body {
+            background: var(--color-bg-phone);
+            min-height: 100dvh;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            font-family: var(--font-family-base);
+        }
+
+        .kiosk-frame {
+            width: 100%;
+            max-width: 460px;
+            min-height: 100dvh;
+            background: var(--color-bg-subtle);
+            color: var(--color-text-secondary);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kiosk-header {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 14px 16px 12px;
+            background: var(--color-white);
+            border-bottom: 1px solid var(--color-border-soft);
+        }
+
+        .kiosk-logo-slot {
+            width: 40px;
+            height: 40px;
+            flex: 0 0 40px;
+            border-radius: 8px;
+            background: var(--color-bg-subtle);
+            border: 1px solid var(--color-border-soft);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--color-text-disabled);
+            overflow: hidden;
+        }
+
+        .kiosk-logo-slot img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .kiosk-lang-select {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 44px;
+            padding: 0 10px;
+            border: 1px solid var(--color-border-soft);
+            border-radius: var(--radius-sm);
+            background: var(--color-white);
+            cursor: pointer;
+        }
+
+        .kiosk-lang-select select {
+            border: 0;
+            background: none;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-heading);
+            cursor: pointer;
+        }
+
+        .kiosk-icon-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            min-height: 44px;
+            padding: 0;
+            border: 1px solid var(--color-border-soft);
+            border-radius: var(--radius-sm);
+            background: var(--color-white);
+            font-family: inherit;
+            color: var(--color-info);
+            cursor: pointer;
+        }
+
+        .kiosk-info-glyph {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border: 1.5px solid currentColor;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: 700;
+            font-style: italic;
+        }
+
+        .kiosk-bottom-bar {
+            position: sticky;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px 14px;
+            background: var(--color-white);
+            border-top: 1px solid var(--color-border-soft);
+        }
+
+        .kiosk-bottom-nav-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 52px;
+            min-height: 48px;
+            padding: 0;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--color-border-soft);
+            background: var(--color-white);
+            color: var(--color-text-heading);
+            cursor: pointer;
+        }
+
+        .kiosk-bottom-nav-btn.is-danger {
+            border-color: var(--color-error);
+            color: var(--color-error);
+        }
+
+        a {
+            color: var(--color-info);
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: var(--color-text-heading);
+            text-decoration: underline;
+        }
+
+        #document_upload_status {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        /* Task reminder banner - scoped here rather than the shared style.css since it's
+           specific to this page's daily-reminder feature. Colors/shape now match the rest
+           of the kiosk redesign (bordered flat card + error tokens) instead of the old
+           solid-red floating alert. */
+        #task_reminder_banner {
+            position: fixed;
+            left: 12px;
+            right: 12px;
+            top: 60px;
+            z-index: 1002;
+            max-width: 400px;
+            margin: 0 auto;
+            background: var(--color-error-soft-bg);
+            color: var(--color-text-heading);
+            border: 1px solid var(--color-error);
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+            animation: task-reminder-in 200ms ease;
+            min-height: 60px;
+        }
+
+        #task_reminder_banner[hidden] {
+            display: none;
+        }
+
+        #task_reminder_text {
+            font-weight: 700;
+            font-size: 14px;
+            line-height: 1.35;
+        }
+
+        #task_reminder_dismiss {
+            background: var(--color-white);
+            color: var(--color-error);
+            border: 1px solid var(--color-error);
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        #task_reminder_dismiss:hover {
+            background: var(--color-error-soft-bg-hover);
+        }
+
+        @keyframes task-reminder-in {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Upload Document metadata-confirmation modal. */
+        .upload_modal_overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1200;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload_modal_overlay.is-open {
+            display: flex;
+        }
+
+        .upload_modal_box {
+            background: #fff;
+            border: 1px solid #000;
+            border-radius: 8px;
+            padding: 20px;
+            width: 90%;
+            max-width: 360px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .upload_modal_title {
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .upload_modal_subtitle {
+            font-size: 0.85rem;
+            color: #444;
+            margin-bottom: 12px;
+        }
+
+        .upload_modal_preview {
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .upload_modal_preview_image {
+            max-width: 100%;
+            max-height: 220px;
+            border: 1px solid #000;
+        }
+
+        .upload_modal_preview_pdf {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #000;
+            padding: 12px;
+            width: 100%;
+        }
+
+        .upload_modal_pdf_badge {
+            font-weight: 700;
+            border: 1px solid #000;
+            padding: 4px 8px;
+        }
+
+        .upload_modal_field {
+            margin-bottom: 10px;
+        }
+
+        .upload_modal_label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .upload_modal_input,
+        .upload_modal_textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #000;
+            font: inherit;
+            background: #fff;
+        }
+
+        .upload_modal_textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+
+        .upload_modal_error {
+            display: block;
+            color: #c0392b;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        .upload_modal_actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .upload_modal_actions button {
+            padding: 8px 14px;
+            border: 1px solid #000;
+            background: #fff;
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .upload_modal_actions button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 
 <body>
+    <div class="kiosk-frame">
 
-<div id="phone_body">
+        <div class="kiosk-header">
+            <div style="display: flex; align-items: center; gap: 12px">
+                <div class="kiosk-logo-slot" id="brand-logo-slot">SC</div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                    <span id="brand-site-name"
+                        style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Safe
+                        Catering</span>
+                    <span
+                        style="font-size: 16px; font-weight: 700; line-height: 1.2; color: var(--color-text-heading)">Safe
+                        Catering Virtual Checklist</span>
+                </div>
+                <span id="header" style="display: contents"></span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px">
+                <span id="date" style="flex: 1; font-size: 14px; color: var(--color-text-secondary)">Date: <span
+                        id="current_date"></span></span>
+                <label class="kiosk-lang-select" title="Change language">
+                    <span aria-hidden="true" style="font-size: 15px">&#127760;</span>
+                    <select id="language-select" aria-label="Change language"></select>
+                </label>
+                <button type="button" id="info" class="kiosk-icon-btn"
+                    data-help="checklist_selection_info,library_explanation_selection"
+                    onclick="openHelp(this.dataset.help)" title="How this works" aria-label="How this works">
+                    <span class="kiosk-info-glyph">i</span>
+                </button>
+            </div>
+        </div>
 
-    <!-- HEADER -->
-    <div id="header">
-        <div id="logo_section">
-            <img src="/asset2.png" alt="Safe Catering">
-            <h1>Safe Catering Virtual Checklist</h1>
+        <div style="display: flex; flex-direction: column; gap: 8px; padding: 20px 16px 16px">
+            <h1
+                style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px; color: var(--color-text-heading)">
+                Welcome, <span id="employee_name_welcome">Employee</span></h1>
+            <div style="display: flex; align-items: center; gap: 10px">
+                <div
+                    style="flex: 1; height: 6px; border-radius: 999px; background: var(--color-bg-active); overflow: hidden">
+                    <div id="progress-bar-fill" style="width: 0%; height: 100%; background: var(--color-success)"></div>
+                </div>
+                <span id="progress-label"
+                    style="font-size: 13px; font-weight: 600; color: var(--color-text-muted); white-space: nowrap">0 of
+                    0 required done</span>
+            </div>
+        </div>
+
+        <div id="content_container" style="flex: 1; display: flex; flex-direction: column; padding: 0 16px 24px"></div>
+
+        <input id="document_upload_input" type="file" accept="image/*,application/pdf" capture="environment" hidden>
+
+        <div id="upload_modal_overlay" class="upload_modal_overlay">
+            <div class="upload_modal_box">
+                <div class="upload_modal_title">Confirm Document Details</div>
+                <div class="upload_modal_subtitle">Review the file, then add a title and category before uploading.
+                </div>
+
+                <div class="upload_modal_preview">
+                    <img id="upload_modal_preview_image" class="upload_modal_preview_image" hidden
+                        alt="Document preview">
+                    <div id="upload_modal_preview_pdf" class="upload_modal_preview_pdf" hidden>
+                        <span class="upload_modal_pdf_badge">PDF</span>
+                        <span id="upload_modal_preview_pdf_size"></span>
+                    </div>
+                </div>
+
+                <div class="upload_modal_field">
+                    <label class="upload_modal_label" for="upload_modal_title_input">Title</label>
+                    <input type="text" id="upload_modal_title_input" class="upload_modal_input" maxlength="80">
+                </div>
+
+                <div class="upload_modal_field">
+                    <label class="upload_modal_label" for="upload_modal_category_select">Category</label>
+                    <select id="upload_modal_category_select" class="upload_modal_input">
+                        <option value="delivery_note">Delivery Note (paper)</option>
+                        <option value="legacy_fridge_log">Legacy Fridge Log (paper)</option>
+                        <option value="legacy_cooking_log">Legacy Cooking Log (paper)</option>
+                        <option value="pest_control">Pest Control Report</option>
+                        <option value="legacy_record">Previous Record (Legacy)</option>
+                        <option value="custom_document" selected>Other</option>
+                    </select>
+                </div>
+
+                <div class="upload_modal_field">
+                    <label class="upload_modal_label" for="upload_modal_date_input">Record Date</label>
+                    <input type="date" id="upload_modal_date_input" class="upload_modal_input">
+                </div>
+
+                <div class="upload_modal_field">
+                    <label class="upload_modal_label" for="upload_modal_notes_input">Notes (optional)</label>
+                    <textarea id="upload_modal_notes_input" class="upload_modal_textarea"
+                        placeholder="e.g. Page 1 of 2"></textarea>
+                </div>
+
+                <span id="upload_modal_error" class="upload_modal_error" hidden></span>
+
+                <div class="upload_modal_actions">
+                    <button type="button" id="upload_modal_cancel">Cancel</button>
+                    <button type="button" id="upload_modal_confirm">Upload</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="task_reminder_banner" hidden>
+            <span id="task_reminder_text"></span>
+            <button id="task_reminder_dismiss" type="button" aria-label="Dismiss">Dismiss</button>
+        </div>
+
+        <div class="kiosk-bottom-bar">
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                <span
+                    style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Signed
+                    in</span>
+                <span id="employee_name_display"
+                    style="font-size: 14px; font-weight: 600; color: var(--color-text-heading); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">-</span>
+            </div>
+            <button type="button" id="library_section" class="kiosk-bottom-nav-btn" title="Library"
+                aria-label="Library">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 4v16"></path>
+                    <path d="M9.5 4v16"></path>
+                    <path d="M15 4.5l4 15.5"></path>
+                </svg>
+            </button>
+            <button type="button" id="logout_button" class="kiosk-bottom-nav-btn is-danger" title="Log out"
+                aria-label="Log out">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8"></path>
+                    <path d="M16 8l4 4-4 4"></path>
+                    <path d="M20 12h-9"></path>
+                </svg>
+            </button>
         </div>
     </div>
 
-    <!-- DATE -->
-    <div style="display: flex;">
-    <div id="date">Date: <span id="current_date"></span></div>
-    <button id="info" data-help="checklist_selection_info,library_explanation_selection" onclick="openHelp(this.dataset.help)">
-        <img src="https://www.svgrepo.com/show/502710/info.svg" alt="Info">
-    </button>
-</div>
+    <script src="translations.js"></script>
+    <script src="/design-system/index.global.js"></script>
+    <script>
+        // Get employee data from sessionStorage or API
+        let employeeData = null;
 
-    <!-- WELCOME -->
-    <div id="welcome_section">
-        <h2>Welcome, <span id="employee_name_welcome">John Doe</span></h2>
-        <p><span id="completed_count">0</span> of <span id="required_count">0</span> required checklists completed today.</p>
-    </div>
+        const initializeEmployee = async () => {
+            const stored = sessionStorage.getItem('employeeData');
+            if (stored) {
+                employeeData = JSON.parse(stored);
+            } else {
+                try {
+                    const response = await fetch('/api/employee');
+                    const data = await response.json();
+                    if (data.success) {
+                        employeeData = data.employee;
+                        sessionStorage.setItem('employeeData', JSON.stringify(employeeData));
+                    }
+                } catch (err) {
+                    console.error('Error fetching employee data:', err);
+                }
+            }
 
-    <!-- CONTENT -->
-    <div id="content_container">
-        <!-- Checklist cards will be inserted here -->
-    </div>
+            const employeeName = employeeData?.name || 'Employee';
+            document.getElementById('employee_name_display').textContent = employeeName;
+            document.getElementById('employee_name_welcome').textContent = employeeName;
+        };
 
+        initializeEmployee();
 
-
-
-    <!-- BOTTOM -->
-    <div id="bottom">
-        <div id="employee_section">
-            Employee: <span id="employee_name_display">-</span>
-        </div>
-        <div id="library_section">
-            <img src="https://www.svgrepo.com/show/435359/library.svg" alt="Library">
-        </div>
-        <button id="logout_button" style="background: #f7818b; border: 1pt solid #000; cursor: pointer;">
-            <img src="https://www.svgrepo.com/show/470849/logout.svg" alt="Logout">
-        </button>
-    </div>
-
-
-</div>
-
-
-
-<script>
-    // Initialize date
-    const today = new Date().toLocaleDateString('en-GB');
-    document.getElementById('current_date').textContent = today;
-
-    // Get employee data from sessionStorage or API
-    let employeeData = null;
-
-    const initializeEmployee = async () => {
-        // Try to get from sessionStorage first
-        const stored = sessionStorage.getItem('employeeData');
-        if (stored) {
-            employeeData = JSON.parse(stored);
-        } else {
-            // Fallback to API call
+        // ---- Brand lookup (kitchen name/logo) ----
+        (async () => {
             try {
-                const response = await fetch('/api/employee');
+                const response = await fetch('/api/brand');
+                if (!response.ok) return;
                 const data = await response.json();
-                if (data.success) {
-                    employeeData = data.employee;
-                    sessionStorage.setItem('employeeData', JSON.stringify(employeeData));
+                const kitchenName = data?.kitchen?.name || data?.brand_name || data?.business?.display_name || 'Safe Catering';
+                const logoSrc = data?.kitchen?.logo_src || data?.logo_src || data?.business?.logo_src || '';
+
+                document.getElementById('brand-site-name').textContent = kitchenName;
+                document.title = `${kitchenName} Checklist`;
+
+                if (logoSrc) {
+                    const slot = document.getElementById('brand-logo-slot');
+                    slot.textContent = '';
+                    const img = document.createElement('img');
+                    img.src = logoSrc;
+                    img.alt = kitchenName;
+                    slot.appendChild(img);
+                }
+            } catch (_error) {
+                // Fall back to the default brand if the lookup fails.
+            }
+        })();
+
+        // ---- Language switcher (real i18n, wired to translations.js's appI18n) ----
+        // Reloads on change rather than re-translating in place - React-rendered content
+        // (checklist cards, buttons) re-renders from English state on the next poll/interaction
+        // regardless of any live DOM translation pass, so a full reload is the only way to
+        // guarantee every string (including ones not yet on screen) comes up translated.
+        const langSelect = document.getElementById('language-select');
+        if (window.appI18n) {
+            window.appI18n.getLanguageOptions().forEach(({ value, label }) => {
+                const opt = document.createElement('option');
+                opt.value = value;
+                opt.textContent = label;
+                langSelect.appendChild(opt);
+            });
+            langSelect.value = window.appI18n.getAppLanguage();
+            langSelect.addEventListener('change', () => {
+                window.appI18n.setAppLanguage(langSelect.value);
+                window.location.reload();
+            });
+        }
+
+        const t = window.appI18n ? window.appI18n.t : (key) => key;
+
+        // ---- Document capture: digitize a physical document via the tablet camera ----
+        const documentUploadInput = document.getElementById('document_upload_input');
+
+        function readFileAsDataUrl(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(reader.error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function setDocumentUploadStatus(text) {
+            const statusEl = document.getElementById('document_upload_status');
+            if (statusEl) statusEl.textContent = text;
+        }
+
+        const SUPPORTED_UPLOAD_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+
+        let pendingUpload = null;
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return `${bytes} B`;
+            if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+            return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+        }
+
+        function showUploadModalError(message) {
+            const errorEl = document.getElementById('upload_modal_error');
+            errorEl.textContent = message || '';
+            errorEl.hidden = !message;
+        }
+
+        function openUploadModal(file, dataUrl) {
+            showUploadModalError('');
+            const isPdf = file.type === 'application/pdf';
+            const previewImg = document.getElementById('upload_modal_preview_image');
+            const previewPdf = document.getElementById('upload_modal_preview_pdf');
+
+            previewImg.hidden = isPdf;
+            previewPdf.hidden = !isPdf;
+            if (isPdf) {
+                document.getElementById('upload_modal_preview_pdf_size').textContent = formatFileSize(file.size);
+            } else {
+                previewImg.src = dataUrl;
+            }
+
+            const defaultTitle = file.name.replace(/\.[^./\\]+$/, '');
+            document.getElementById('upload_modal_title_input').value = defaultTitle;
+            document.getElementById('upload_modal_category_select').value = 'custom_document';
+            const todayIso = new Date().toISOString().slice(0, 10);
+            const dateInput = document.getElementById('upload_modal_date_input');
+            dateInput.value = todayIso;
+            dateInput.max = todayIso;
+            document.getElementById('upload_modal_notes_input').value = '';
+
+            document.getElementById('upload_modal_overlay').classList.add('is-open');
+        }
+
+        function closeUploadModal() {
+            document.getElementById('upload_modal_overlay').classList.remove('is-open');
+        }
+
+        documentUploadInput.addEventListener('change', async () => {
+            const file = documentUploadInput.files?.[0];
+            if (!file) return;
+
+            if (!SUPPORTED_UPLOAD_TYPES.includes(file.type)) {
+                setDocumentUploadStatus(t('Unsupported file type: {type}', { type: file.type || 'unknown' }));
+                documentUploadInput.value = '';
+                return;
+            }
+
+            setDocumentUploadStatus(t('Preparing preview...'));
+            try {
+                const dataUrl = await readFileAsDataUrl(file);
+                pendingUpload = { file, dataUrl };
+                setDocumentUploadStatus('');
+                openUploadModal(file, dataUrl);
+            } catch (err) {
+                console.error('Error reading selected file:', err);
+                setDocumentUploadStatus(t('Could not read file - try again.'));
+                documentUploadInput.value = '';
+            }
+        });
+
+        document.getElementById('upload_modal_cancel').addEventListener('click', () => {
+            pendingUpload = null;
+            documentUploadInput.value = '';
+            closeUploadModal();
+        });
+
+        document.getElementById('upload_modal_confirm').addEventListener('click', async () => {
+            if (!pendingUpload) return;
+
+            const rawDate = document.getElementById('upload_modal_date_input').value;
+            const todayIso = new Date().toISOString().slice(0, 10);
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(rawDate) || rawDate > todayIso) {
+                showUploadModalError(t('Please pick a valid date that is not in the future.'));
+                return;
+            }
+            showUploadModalError('');
+
+            const confirmBtn = document.getElementById('upload_modal_confirm');
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = t('Uploading...');
+
+            try {
+                const response = await fetch('/api/documents/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        file_data_url: pendingUpload.dataUrl,
+                        record_type: document.getElementById('upload_modal_category_select').value,
+                        custom_title: document.getElementById('upload_modal_title_input').value.trim(),
+                        record_date: rawDate,
+                        notes: document.getElementById('upload_modal_notes_input').value.trim(),
+                    }),
+                });
+
+                const result = await response.json();
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || 'Upload failed');
+                }
+
+                closeUploadModal();
+                pendingUpload = null;
+                documentUploadInput.value = '';
+                setDocumentUploadStatus(t('Uploaded.'));
+                setTimeout(() => setDocumentUploadStatus(''), 4000);
+            } catch (err) {
+                console.error('Error uploading document:', err);
+                showUploadModalError(err.message === 'Upload failed' ? t('Upload failed - try again.') : (err.message || t('Upload failed - try again.')));
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = t('Upload');
+            }
+        });
+
+        // ---- Checklist cards (real completion state from the server) ----
+        const SAFECATERING_CHECKLISTS = [
+            { id: 'sc7', code: 'SC7', title: 'SC7 - Fitness to Work Assessment', description: 'Optional self-assessment if you feel unwell or are returning to work after illness', url: '/sc7', required: false, completed: false },
+            { id: 'sc5', code: 'SC5', title: 'SC5 - Hygiene Checklist', description: 'Complete food safety and hygiene inspection', url: '/sc5', required: true, completed: false },
+            { id: 'sc4', code: 'SC4', title: 'SC4 - Hold/Display Records', description: 'Hot hold, cold display and salad bar temperature records', url: '/sc4', required: false, completed: false },
+            { id: 'sc3', code: 'SC3', title: 'SC3 - Cooking/Cooling/Reheating Records', description: 'Cooking, cooling and reheating temperature records', url: '/sc3', required: false, completed: false },
+            { id: 'sc2', code: 'SC2', title: 'SC2 - Fridge/Cold Room Temperature Records', description: 'Daily fridge and cold room temperature checks for up to 6 units', url: '/sc2', required: true, completed: false },
+            { id: 'sc1', code: 'SC1', title: 'SC1 - Food Delivery Records', description: 'Food delivery conditions and organization check', url: '/sc1', required: false, completed: false },
+        ];
+
+        // Uncle's Market is a business-specific bolt-on (not a module_type - only this one
+        // kitchen's deployment sets ENABLE_UNCLES_MARKET, surfaced to the frontend via
+        // /api/brand's uncles_market_enabled flag) - not tracked in the required-checklists
+        // completion count above, since "done" for it means all 9 sections done today, a
+        // different shape than the other single-form tiles; its own selection page already
+        // shows that progress.
+        const UNCLES_MARKET_CHECKLIST = { id: 'unclesmarket', code: 'UM', title: "Uncle's Market Cleaning Checklist", description: 'Daily cleaning checks across all 9 shop sections', url: '/unclesmarket', required: false, completed: false };
+
+        // Tester Promotion - another business-specific bolt-on, independent of
+        // ENABLE_UNCLES_MARKET (see server.js) since the tester promotion runs on its own
+        // schedule. Not tracked in the required-checklists count either - it's not a daily
+        // compliance form, and it isn't part of the numbered SC1-SC7 series.
+        const TESTER_PROMOTION_CHECKLIST = { id: 'testerpromotion', code: 'TP', title: 'Tester Promotion', description: 'Run the till tester giveaway and log claims', url: '/tester-promotion', required: false, completed: false };
+
+        let kitchenModuleType = 'safecatering';
+        let unclesMarketEnabled = false;
+        let testerPromotionEnabled = false;
+        let checklists = SAFECATERING_CHECKLISTS;
+
+        const fetchKitchenModuleType = async () => {
+            try {
+                const response = await fetch('/api/brand');
+                if (response.ok) {
+                    const data = await response.json();
+                    kitchenModuleType = data?.kitchen?.module_type || 'safecatering';
+                    unclesMarketEnabled = !!data?.uncles_market_enabled;
+                    testerPromotionEnabled = !!data?.tester_promotion_enabled;
                 }
             } catch (err) {
-                console.error('Error fetching employee data:', err);
+                console.error('Error fetching kitchen module type:', err);
+            } finally {
+                checklists = kitchenModuleType === 'safecatering' ? SAFECATERING_CHECKLISTS : [];
+                if (unclesMarketEnabled) {
+                    checklists = [...checklists, UNCLES_MARKET_CHECKLIST];
+                }
+                if (testerPromotionEnabled) {
+                    checklists = [...checklists, TESTER_PROMOTION_CHECKLIST];
+                }
             }
+        };
+
+        const checkCompletedChecklists = async () => {
+            try {
+                const response = await fetch('/api/completed-checklists');
+                const data = await response.json();
+                if (data.success && data.completed) {
+                    checklists.forEach((checklist) => {
+                        if (data.completed[checklist.id]) {
+                            checklist.completed = true;
+                        }
+                    });
+                }
+                renderChecklists();
+            } catch (err) {
+                console.error('Error checking completed checklists:', err);
+                renderChecklists();
+            }
+        };
+
+        const { React, ReactDOM, Card, CardTitle, CardDescription, CardBadge, CardArrow } = window.KitchenDS;
+        const cardListRoot = ReactDOM.createRoot(document.getElementById('content_container'));
+
+        const CARD_STYLE = { gap: 14, alignItems: 'center', padding: '14px 16px', border: '1px solid var(--color-border-soft)', borderRadius: 'var(--radius-sm)', boxShadow: 'none', background: 'var(--color-white)' };
+
+        function iconBox(label) {
+            return React.createElement('div', {
+                style: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, flex: '0 0 44px', borderRadius: 'var(--radius-sm)', background: 'var(--color-bg-subtle)', fontSize: 13, fontWeight: 700, letterSpacing: '0.02em', color: 'var(--color-text-heading)' },
+            }, label);
         }
 
-        // Use employee data or default
-        const employeeName = employeeData?.name || "Employee";
-        document.getElementById('employee_name_display').textContent = employeeName;
-        document.getElementById('employee_name_welcome').textContent = employeeName;
-    };
-
-    initializeEmployee();
-
-    // Checklists available
-    const checklists = [
-        {
-            id: "sc7",
-            title: "SC7 - Fitness to Work assessment",
-            description: "Complete fitness to work assessment for all staff - coming soon",
-            questions: 49,
-            url: "/sc7",
-            required: false,
-            completed: true
-        },
-        {
-            id: "sc6",
-            title: "SC6 - Hygiene Training Records",
-            description: "Complete hygiene training records for all staff - coming soon",
-            questions: 49,
-            url: "/sc6",
-            required: false,
-            completed: true
-        },
-        {
-            id: "sc5",
-            title: "SC5 - Hygiene Checklist",
-            description: "Complete food safety and hygiene inspection",
-            questions: 49,
-            url: "/sc5",
-            required: true,
-            completed: false
-        },
-        {
-            id: "sc4",
-            title: "SC4 - Hold/Display Records",
-            description: "Hot hold, cold display and salad bar temperature records",
-            questions: 32,
-            url: "/sc4",
-            required: false,
-            completed: false
-        },
-        {
-            id: "sc3",
-            title: "SC3 - Cooking/Cooling/Reheating Records",
-            description: "Cooking, cooling and reheating temperature records",
-            questions: 18,
-            url: "/sc3",
-            required: false,
-            completed: false
-        },
-        {
-            id: "sc2",
-            title: "SC2 - Fridge/Cold Room Temperature Records",
-            description: "Daily fridge and cold room temperature checks for up to 6 units",
-            questions: 31,
-            url: "/sc2",
-            required: true,
-            completed: false
-        },
-        {
-            id: "sc1",
-            title: "SC1 - Food Delivery Records",
-            description: "Food delivery conditions and organization check",
-            questions: 16,
-            url: "/sc1",
-            required: false,
-            completed: false
+        function translatedShortTitle(fullTitle) {
+            const translated = t(fullTitle);
+            const parts = translated.split(' - ');
+            return parts.length > 1 ? parts.slice(1).join(' - ') : translated;
         }
-    ];
 
-    // Check for completed checklists today
-    const checkCompletedChecklists = async () => {
-        try {
-            const response = await fetch('/api/completed-checklists');
-            const data = await response.json();
-            if (data.success && data.completed) {
-                checklists.forEach(checklist => {
-                    if (data.completed[checklist.id.toLowerCase()]) {
-                        checklist.completed = true;
-                    }
+        const renderChecklistsSkeleton = (count = 6) => {
+            cardListRoot.render(React.createElement(React.Fragment, null, Array.from({ length: count }).map((_, i) => (
+                React.createElement(Card, { key: i, variant: 'list-item', 'aria-hidden': 'true', style: CARD_STYLE },
+                    React.createElement('div', { className: 'skeleton_line', style: { width: 44, height: 44, flex: '0 0 44px', borderRadius: 'var(--radius-sm)' } }),
+                    React.createElement('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 } },
+                        React.createElement('div', { className: 'skeleton_line', style: { width: '55%', height: 14 } }),
+                        React.createElement('div', { className: 'skeleton_line', style: { width: '85%', height: 11 } }),
+                    ),
+                )
+            ))));
+        };
+
+        renderChecklistsSkeleton();
+
+        const renderChecklists = () => {
+            const requiredChecklists = checklists.filter((c) => c.required);
+            const completedChecklists = requiredChecklists.filter((c) => c.completed).length;
+
+            document.getElementById('progress-label').textContent = t('{count} of {total} required done', { count: completedChecklists, total: requiredChecklists.length });
+            document.getElementById('progress-bar-fill').style.width = `${requiredChecklists.length ? (completedChecklists / requiredChecklists.length) * 100 : 0}%`;
+
+            const cards = [];
+
+            if (kitchenModuleType !== 'safecatering' && checklists.length === 0) {
+                cards.push(React.createElement(Card, { key: 'placeholder', variant: 'list-item', style: CARD_STYLE },
+                    React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: 5 } },
+                        React.createElement(CardTitle, null, t('Module not yet available')),
+                        React.createElement(CardDescription, null, t("This kitchen is set up for a safety module that isn't live in the app yet. Ask your manager to switch it back to SafeCatering for now.")),
+                    ),
+                ));
+            }
+
+            checklists.forEach((checklist) => {
+                const shortTitle = translatedShortTitle(checklist.title);
+                cards.push(React.createElement(Card, {
+                    key: checklist.id,
+                    variant: 'list-item',
+                    completed: checklist.completed,
+                    style: CARD_STYLE,
+                    onClick: checklist.completed || !checklist.url ? undefined : () => { window.location.href = checklist.url; },
+                },
+                    iconBox(checklist.code),
+                    React.createElement('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 } },
+                        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
+                            React.createElement(CardTitle, null, shortTitle),
+                            checklist.required ? React.createElement(CardBadge, null, t('Required')) : null,
+                        ),
+                        React.createElement(CardDescription, null, t(checklist.description)),
+                        checklist.completed ? React.createElement('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 1, fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-success)' } },
+                            React.createElement('span', { style: { display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'var(--color-success)' } }),
+                            t('Completed today'),
+                        ) : null,
+                    ),
+                    checklist.completed ? null : React.createElement(CardArrow, null),
+                ));
+            });
+
+            cards.push(React.createElement(Card, {
+                key: 'upload',
+                variant: 'list-item',
+                style: CARD_STYLE,
+                onClick: () => documentUploadInput.click(),
+            },
+                iconBox('↑'),
+                React.createElement('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 } },
+                    React.createElement(CardTitle, null, t('Upload Document')),
+                    React.createElement(CardDescription, null, t('Digitize a delivery note, previous temperature log, or other documents using your camera')),
+                    React.createElement('span', { id: 'document_upload_status' }),
+                ),
+                React.createElement(CardArrow, null, '↑'),
+            ));
+
+            cardListRoot.render(React.createElement(React.Fragment, null, ...cards));
+
+            if (window.applyTranslations) {
+                window.applyTranslations(document.getElementById('content_container'));
+            }
+
+            evaluateTaskReminder();
+        };
+
+        // ---- Task reminder ----
+        const REMINDER_CUTOFF_HOUR = 14;
+        const REMINDER_CUTOFF_MINUTE = 0;
+        const REMINDER_POLL_INTERVAL_MS = 60 * 1000;
+
+        const reminderBanner = document.getElementById('task_reminder_banner');
+        const reminderText = document.getElementById('task_reminder_text');
+        const reminderDismissBtn = document.getElementById('task_reminder_dismiss');
+
+        let reminderDismissedThisCycle = false;
+        let reminderWasActive = false;
+
+        function playReminderChime() {
+            try {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContextClass) return;
+                const ctx = new AudioContextClass();
+
+                [880, 660].forEach((freq, index) => {
+                    const oscillator = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    oscillator.type = 'sine';
+                    oscillator.frequency.value = freq;
+                    const startTime = ctx.currentTime + index * 0.25;
+                    gain.gain.setValueAtTime(0.0001, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.3, startTime + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.22);
+                    oscillator.connect(gain);
+                    gain.connect(ctx.destination);
+                    oscillator.start(startTime);
+                    oscillator.stop(startTime + 0.25);
                 });
+            } catch (_error) {
+                // Web Audio unavailable - the visual banner is still shown regardless.
             }
-            renderChecklists();
-        } catch (err) {
-            console.error('Error checking completed checklists:', err);
-            renderChecklists();
         }
-    };
 
-    // Render checklist cards function
-    const renderChecklists = () => {
-        // Calculate required checklists
-        const requiredChecklists = checklists.filter(c => c.required);
-        const completedChecklists = checklists.filter(c => c.required && c.completed).length;
+        function evaluateTaskReminder() {
+            const requiredChecklists = checklists.filter((c) => c.required);
+            const missing = requiredChecklists.filter((c) => !c.completed);
 
-        // Update progress display
-        document.getElementById('required_count').textContent = requiredChecklists.length;
-        document.getElementById('completed_count').textContent = completedChecklists;
+            const now = new Date();
+            const nowMinutes = now.getHours() * 60 + now.getMinutes();
+            const cutoffMinutes = REMINDER_CUTOFF_HOUR * 60 + REMINDER_CUTOFF_MINUTE;
+            const isPastCutoff = nowMinutes >= cutoffMinutes;
+            const shouldAlert = isPastCutoff && missing.length > 0;
 
-        // Clear and render checklist cards
-        const container = document.getElementById('content_container');
-        container.innerHTML = '';
-
-        checklists.forEach(checklist => {
-            const card = document.createElement('div');
-            card.className = 'checklist_card';
-            
-            const requiredBadge = checklist.required ? '<span class="required_badge">Required</span>' : '';
-            const disabledText = checklist.completed ? '<span style="color: #999; font-size: 12px;">Completed today</span>' : '';
-
-            card.innerHTML = `
-                <div class="checklist_info">
-                    <p class="checklist_title">${checklist.title}${requiredBadge}</p>
-                    <p class="checklist_description">${checklist.description}</p>
-                    ${disabledText}
-                </div>
-                <div class="checklist_arrow">→</div>
-            `;
-            
-            if (checklist.completed) {
-                card.classList.add('completed');
-                card.style.opacity = '0.5';
-                card.style.cursor = 'not-allowed';
-                card.style.pointerEvents = 'none';
-            } else {
-                card.addEventListener('click', () => {
-                    window.location.href = checklist.url;
-                });
+            if (!shouldAlert) {
+                reminderBanner.hidden = true;
+                reminderWasActive = false;
+                reminderDismissedThisCycle = false;
+                return;
             }
 
-            container.appendChild(card);
+            if (!reminderWasActive) {
+                playReminderChime();
+            }
+            reminderWasActive = true;
+
+            const names = missing.map((c) => c.title.split(' - ')[0]).join(', ');
+            reminderText.textContent = t('Action required: {names} not yet completed today.', { names });
+
+            if (!reminderDismissedThisCycle) {
+                reminderBanner.hidden = false;
+            }
+        }
+
+        reminderDismissBtn.addEventListener('click', () => {
+            reminderBanner.hidden = true;
+            reminderDismissedThisCycle = true;
+            setTimeout(() => { reminderDismissedThisCycle = false; }, REMINDER_POLL_INTERVAL_MS);
         });
-    };
 
-    // Check completed checklists and render
-    checkCompletedChecklists();
+        (async () => {
+            await fetchKitchenModuleType();
+            await checkCompletedChecklists();
+            setInterval(checkCompletedChecklists, REMINDER_POLL_INTERVAL_MS);
+        })();
 
-    // Library button
-    document.getElementById('library_section').addEventListener('click', () => {
-        window.location.href = '/library';
-    });
+        document.getElementById('library_section').addEventListener('click', () => {
+            window.location.href = '/library';
+        });
 
-    // Logout button
-    document.getElementById('logout_button').addEventListener('click', () => {
-        sessionStorage.clear();
-        window.location.href = '/logout';
-    });
+        document.getElementById('logout_button').addEventListener('click', () => {
+            sessionStorage.clear();
+            window.location.href = '/logout';
+        });
+    </script>
 
-</script>
+    <script src="js/offline-store.js"></script>
+    <script src="js/sync-engine.js"></script>
+    <script src="js/status-badge.js"></script>
+    <script src="script.js"></script>
+    <script src="help_overlay.js"></script>
 
-<script src="script.js"></script>
-<script src="help_overlay.js"></script>
-
-<!-- Help overlay -->
-<div id="help_overlay" aria-hidden="true">
-    <div id="help_inner">
-        <div id="help_header">
-            <div id="help_title">Help</div>
-            <button id="help_close" aria-label="Close">Close</button>
-        </div>
-        <!-- Footer-->
+    <!-- Help overlay -->
+    <div id="help_overlay" aria-hidden="true">
+        <div id="help_inner">
+            <div id="help_header">
+                <div id="help_title">Help</div>
+                <button id="help_close" aria-label="Close">Close</button>
+            </div>
             <footer class="site_footer">
                 <a href="/privacy-policy">Privacy Policy</a>
-                <span>© 2026 Checklist App</span>
+                <span>&copy; 2026 Safecateruk</span>
             </footer>
-        <div id="help_body">
-            <img id="help_image" src="" alt="Help image">
-            <div id="help_caption">Tap the image to view details. Tap outside to close.</div>
+            <div id="help_body">
+                <img id="help_image" src="" alt="Help image">
+                <div id="help_caption">Tap the image to view details. Tap outside to close.</div>
+            </div>
         </div>
     </div>
-</div>
 
 </body>
+
 </html>

@@ -1,27 +1,24 @@
 const fs = require('fs');
 const path = require('path');
+const { getEmployeeById } = require('../services/employeeDirectory');
 
 // Load employees from JSON file
-const loadEmployees = () => {
-  const employeesPath = path.join(__dirname, '../../records/employees.json');
-  const data = fs.readFileSync(employeesPath, 'utf8');
-  return JSON.parse(data);
-};
-
 // Authentication middleware
-const authenticateEmployee = (req, res, next) => {
-  const employeeId = req.cookies.employeeId;
-  const sessionToken = req.cookies.sessionToken;
+const authenticateEmployee = async (req, res, next) => {
+  // signedCookies, not cookies - an unsigned employeeId cookie (e.g. hand-crafted via
+  // devtools or a MITM on plain HTTP) must not be trusted just because it names a real
+  // employee id; only a cookie this server actually issued at /login should authenticate.
+  const employeeId = req.signedCookies.employeeId;
+  const sessionToken = req.signedCookies.sessionToken;
 
-  // Check if cookies exist
-  if (!employeeId && !sessionToken) {
+  // Both cookies must be present - this previously only redirected when BOTH were missing
+  // (&&), so a request carrying just one of the two still fell through to getEmployeeById.
+  if (!employeeId || !sessionToken) {
     return res.redirect('/login');
   }
 
   try {
-    // Verify that the employee still exists in the database
-    const employees = loadEmployees();
-    const employee = employees.find(emp => emp.id === parseInt(employeeId));
+    const employee = await getEmployeeById(employeeId);
 
     if (!employee) {
       // Employee not found in database, clear cookies and redirect

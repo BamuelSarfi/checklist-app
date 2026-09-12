@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Uncle's Market Checklist</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/help_overlay.css">
+    <link rel="stylesheet" href="/design-system/index.global.css">
+    <style>
+        body {
+            margin: 0 auto;
+        }
+
+        .um_section_grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            padding: 16px;
+        }
+
+        .um_section_card {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 14px;
+            border: 1px solid var(--color-border-soft);
+            border-radius: var(--radius-sm);
+            background: var(--color-white);
+            text-align: left;
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .um_section_card_title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--color-text-heading);
+        }
+
+        .um_section_card_status {
+            font-size: 12px;
+            color: var(--color-text-muted);
+        }
+
+        .um_section_card.is-done {
+            background: var(--color-success-cell-bg);
+        }
+    </style>
+</head>
+
+<body class="kiosk-body">
+    <div class="kiosk-frame">
+
+        <div class="kiosk-header">
+            <div style="display: flex; align-items: center; gap: 12px">
+                <a href="/" title="Back to dashboard" aria-label="Back to dashboard" class="kiosk-icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M19 12H5"></path>
+                        <path d="M12 19l-7-7 7-7"></path>
+                    </svg>
+                </a>
+                <div class="kiosk-logo-slot" id="brand-logo-slot">UM</div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                    <span id="brand-site-name"
+                        style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Uncle's
+                        Market</span>
+                    <span
+                        style="font-size: 15px; font-weight: 700; line-height: 1.2; color: var(--color-text-heading)">Cleaning
+                        Checklist</span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px">
+                <span style="flex: 1; font-size: 14px; color: var(--color-text-secondary)">Date: <span
+                        id="current_date"></span></span>
+                <label class="kiosk-lang-select" title="Change language">
+                    <span aria-hidden="true" style="font-size: 15px">&#127760;</span>
+                    <select id="language-select" aria-label="Change language"></select>
+                </label>
+            </div>
+        </div>
+
+        <div id="question_container" style="flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 16px">
+
+            <div class="kiosk-card">
+                <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
+                    <span style="font-size: 15px; font-weight: 700; color: var(--color-text-heading)">Month
+                        progress</span>
+                    <span id="progress_text" style="font-size: 13px; color: var(--color-text-muted)">0 / 0 days
+                        complete</span>
+                </div>
+                <div id="calendar-mount"></div>
+                <div
+                    style="display: flex; flex-wrap: wrap; gap: 10px 16px; font-size: 12px; color: var(--color-text-muted)">
+                    <span style="display: inline-flex; align-items: center; gap: 6px"><span
+                            style="width: 12px; height: 12px; border: 1px solid var(--color-border-soft); border-radius: var(--radius-xs); background: var(--color-bg-panel-muted)"></span>No
+                        sections done</span>
+                    <span style="display: inline-flex; align-items: center; gap: 6px"><span
+                            style="width: 12px; height: 12px; border: 1px solid var(--color-border-soft); border-radius: var(--radius-xs); background: var(--color-warning-cell-bg)"></span>Some
+                        sections done</span>
+                    <span style="display: inline-flex; align-items: center; gap: 6px"><span
+                            style="width: 12px; height: 12px; border: 1px solid var(--color-border-soft); border-radius: var(--radius-xs); background: var(--color-success-cell-bg)"></span>All
+                        9 sections done</span>
+                </div>
+            </div>
+
+            <div class="kiosk-card">
+                <span class="kiosk-field-label">Choose a section to complete</span>
+                <div id="section_cards" class="um_section_grid" style="padding: 0;"></div>
+            </div>
+        </div>
+
+        <div class="kiosk-bottom-bar">
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                <span
+                    style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Signed
+                    in</span>
+                <span id="employee_name_display"
+                    style="font-size: 14px; font-weight: 600; color: var(--color-text-heading); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">-</span>
+            </div>
+            <a href="/library" class="kiosk-bottom-nav-btn" title="Library" aria-label="Library">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 4v16"></path>
+                    <path d="M9.5 4v16"></path>
+                    <path d="M15 4.5l4 15.5"></path>
+                </svg>
+            </a>
+        </div>
+    </div>
+
+    <script src="/translations.js"></script>
+    <script src="/design-system/index.global.js"></script>
+    <script>
+        const t = window.appI18n ? window.appI18n.t : (key) => key;
+        const { React, ReactDOM, CalendarDayGrid } = window.KitchenDS;
+        const calendarRoot = ReactDOM.createRoot(document.getElementById('calendar-mount'));
+
+        document.getElementById('current_date').textContent = new Date().toLocaleDateString('en-GB');
+
+        async function initializeEmployee() {
+            try {
+                const response = await fetch('/api/employee');
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('employee_name_display').textContent = data.employee.name || 'Employee';
+                }
+            } catch (error) {
+                console.error('Error fetching employee data:', error);
+            }
+        }
+
+        function renderSectionCards(sections) {
+            const container = document.getElementById('section_cards');
+            container.innerHTML = '';
+            sections.forEach((section) => {
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = `um_section_card${section.done_today ? ' is-done' : ''}`;
+                card.innerHTML = `
+                    <span class="um_section_card_title">${section.title}</span>
+                    <span class="um_section_card_status">${section.done_today ? `&check; Done today${section.employee_name ? ' by ' + section.employee_name : ''}` : 'Not done today'}</span>
+                `;
+                card.addEventListener('click', () => {
+                    window.location.href = `/unclesmarket/checklist?section=${encodeURIComponent(section.id)}`;
+                });
+                container.appendChild(card);
+            });
+        }
+
+        async function loadOverview() {
+            try {
+                const response = await fetch('/api/unclesmarket/overview');
+                const data = await response.json();
+                if (!data.success) return;
+
+                renderSectionCards(data.sections);
+
+                const completedDays = data.boxes.filter((box) => box.state === 'complete').length;
+                document.getElementById('progress_text').textContent = t('{completed} / {total} days complete', { completed: completedDays, total: data.daysInMonth });
+
+                // CalendarDayGrid only styles 'missed'/'filled-self'/'filled-other' states (the
+                // same three sc2.html uses) - map Uncle's Market's own 3-state model
+                // (missed/partial/complete across all 9 sections) onto those so the calendar
+                // cells always render with real, tested styling instead of an unstyled state.
+                const days = data.boxes.map((box) => ({
+                    day: box.day,
+                    state: box.state === 'complete' ? 'filled-self' : box.state === 'partial' ? 'filled-other' : 'missed',
+                }));
+                calendarRoot.render(React.createElement(CalendarDayGrid, { days }));
+            } catch (error) {
+                console.error("Error loading Uncle's Market overview:", error);
+            }
+        }
+
+        initializeEmployee();
+        loadOverview();
+
+        // ---- Brand lookup ----
+        (async () => {
+            try {
+                const response = await fetch('/api/brand');
+                if (!response.ok) return;
+                const data = await response.json();
+                const kitchenName = data?.kitchen?.name || data?.brand_name || data?.business?.display_name || "Uncle's Market";
+                const logoSrc = data?.kitchen?.logo_src || data?.logo_src || data?.business?.logo_src || '';
+                document.getElementById('brand-site-name').textContent = kitchenName;
+                if (logoSrc) {
+                    const slot = document.getElementById('brand-logo-slot');
+                    slot.textContent = '';
+                    const img = document.createElement('img');
+                    img.src = logoSrc;
+                    img.alt = kitchenName;
+                    slot.appendChild(img);
+                }
+            } catch (_error) { /* optional */ }
+        })();
+
+        // ---- Language switcher ----
+        const langSelect = document.getElementById('language-select');
+        if (window.appI18n) {
+            window.appI18n.getLanguageOptions().forEach(({ value, label }) => {
+                const opt = document.createElement('option');
+                opt.value = value;
+                opt.textContent = label;
+                langSelect.appendChild(opt);
+            });
+            langSelect.value = window.appI18n.getAppLanguage();
+            langSelect.addEventListener('change', () => {
+                window.appI18n.setAppLanguage(langSelect.value);
+                window.location.reload();
+            });
+        }
+    </script>
+
+    <script src="/script.js"></script>
+</body>
+
+</html>

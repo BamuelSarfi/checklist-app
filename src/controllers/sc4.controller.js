@@ -1,6 +1,22 @@
 const fs = require('fs');
 const path = require('path');
 const { PDFDocument } = require('pdf-lib');
+const { getEmployeeById } = require('../services/employeeDirectory');
+const { saveGeneratedRecord } = require('../services/generatedRecords');
+const checklistDrafts = require('../services/checklistDrafts');
+
+async function resolveEmployee(req) {
+  if (req.employee) {
+    return req.employee;
+  }
+
+  const employeeId = req.signedCookies?.employeeId;
+  if (!employeeId) {
+    return null;
+  }
+
+  return getEmployeeById(employeeId);
+}
 
 const fillSc4Pdf = async (rows, employeeName, employeeId, date) => {
   const templatePath = path.join(__dirname, '../../templates/SC4_template.pdf');
@@ -53,59 +69,39 @@ const fillSc4Pdf = async (rows, employeeName, employeeId, date) => {
   return await pdfDoc.save();
 };
 
-const getSc4FilePath = () => {
-  const today = new Date();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const year = today.getFullYear();
-  return path.join(__dirname, '../../records', `SC4-${year}-${month}.json`);
-};
-
 exports.submitForm = async (req, res) => {
   try {
     const { rows, saveMode } = req.body;
-    const { employeeId, employeeName } = req.cookies;
-    const employee_id = parseInt(employeeId);
+    const employee = await resolveEmployee(req);
 
-    if (!employee_id || !employeeName) {
+    if (!employee) {
       return res.json({ success: false, message: 'Employee not authenticated' });
     }
 
     const today = new Date();
     const day = today.getDate();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const month = today.getMonth() + 1;
     const year = today.getFullYear();
-    const date = `${year}-${month}-${String(day).padStart(2, '0')}`;
-
-    const jsonFileName = `SC4-${year}-${month}.json`;
-    const jsonPath = path.join(__dirname, '../../records', jsonFileName);
-
-    let monthData = { month, year, entries: [] };
-
-    if (fs.existsSync(jsonPath)) {
-      try {
-        monthData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-      } catch (err) {
-        console.warn('Could not read existing SC4 file, starting fresh:', err);
-      }
-    }
+    const date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
     const newEntry = {
-      employee_id,
-      employee_name: employeeName,
+      employee_id: employee.id,
+      employee_name: employee.name,
       day,
       date,
       rows: Array.isArray(rows) ? rows : [],
       timestamp: new Date().toISOString()
     };
 
-    const entryIndex = monthData.entries.findIndex(e => e.employee_id === employee_id && e.day === day);
-    if (entryIndex >= 0) {
-      monthData.entries[entryIndex] = newEntry;
-    } else {
-      monthData.entries.push(newEntry);
-    }
-
-    fs.writeFileSync(jsonPath, JSON.stringify(monthData, null, 2));
+    await checklistDrafts.upsertDraft({
+      recordType: 'SC4',
+      year,
+      month,
+      day,
+      employeeId: employee.id,
+      employeeName: employee.name,
+      payload: newEntry,
+    });
 
     res.json({ success: true, message: saveMode === 'draft' ? 'SC4 draft saved successfully' : 'SC4 form submitted successfully' });
   } catch (err) {
@@ -117,76 +113,61 @@ exports.submitForm = async (req, res) => {
 exports.exportPdf = async (req, res) => {
   try {
     const { rows } = req.body;
-    const { employeeId, employeeName } = req.cookies;
-    const employee_id = parseInt(employeeId);
+    const employee = await resolveEmployee(req);
 
-    if (!employee_id || !employeeName) {
+    if (!employee) {
       return res.json({ success: false, message: 'Employee not authenticated' });
     }
 
     const today = new Date();
-    const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = today.getDate();
+    const month = today.getMonth() + 1;
     const year = today.getFullYear();
-    const date = `${year}-${month}-${day}`;
-    const pdfFileName = `SC4-${date}-${employeeName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
-    const pdfPath = path.join(__dirname, '../../records', pdfFileName);
+    const date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    // Trailing timestamp keeps this unique per submission - without it, two exports the same
+    // day for the same employee collide on file_name (no UNIQUE constraint), and a delete
+    // only removes the newest row, orphaning the other's R2 object.
+    const pdfFileName = `SC4-${date}-${String(employee.name || 'Employee').replace(/[^a-zA-Z0-9]/g, '_')}-${Date.now()}.pdf`;
 
-    const pdfBytes = await fillSc4Pdf(rows, employeeName, employee_id, date);
-    fs.writeFileSync(pdfPath, pdfBytes);
+    const pdfBytes = await fillSc4Pdf(rows, employee.name, employee.id, date);
 
-    const jsonFileName = `SC4-${year}-${month}.json`;
-    const jsonPath = path.join(__dirname, '../../records', jsonFileName);
-    if (fs.existsSync(jsonPath)) {
-      try {
-        const monthData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-        monthData.entries = (monthData.entries || []).filter(entry => !(entry.employee_id === employee_id && entry.day === today.getDate()));
-        if (monthData.entries.length > 0) {
-          fs.writeFileSync(jsonPath, JSON.stringify(monthData, null, 2));
-        } else {
-          fs.unlinkSync(jsonPath);
-        }
-      } catch (err) {
-        console.warn('Could not clear SC4 draft after export:', err);
-      }
-    }
+    const { syncStatus, syncMessage } = await saveGeneratedRecord({
+      fileName: pdfFileName,
+      recordType: 'SC4',
+      recordDate: date,
+      employeeId: employee.id,
+      employeeName: employee.name,
+      payload: { rows },
+      pdfBuffer: pdfBytes,
+    });
 
-    res.json({ success: true, pdfUrl: `/records/${pdfFileName}` });
+    await checklistDrafts.deleteDraft('SC4', year, month, day, employee.id);
+
+    res.json({
+      success: true,
+      pdfUrl: `/records/${encodeURIComponent(pdfFileName)}`,
+      // Non-blocking: the record above already saved successfully. This just tells the
+      // manager the record hasn't synced to SafeCater yet (e.g. inactive subscription).
+      sync_warning: syncStatus === 'subscription_inactive' ? syncMessage : null,
+    });
   } catch (err) {
     console.error('Error exporting SC4 PDF:', err);
     res.json({ success: false, message: 'Error exporting PDF: ' + err.message });
   }
 };
 
-exports.getTodayData = (req, res) => {
+exports.getTodayData = async (req, res) => {
   try {
-    const { employeeId } = req.cookies;
-    const employee_id = parseInt(employeeId);
+    const employee = await resolveEmployee(req);
 
-    if (!employee_id) {
+    if (!employee) {
       return res.json({ success: false, message: 'Employee not authenticated' });
     }
 
     const today = new Date();
-    const day = today.getDate();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const year = today.getFullYear();
-    const jsonPath = path.join(__dirname, '../../records', `SC4-${year}-${month}.json`);
+    const draft = await checklistDrafts.getDraft('SC4', today.getFullYear(), today.getMonth() + 1, today.getDate(), employee.id);
 
-    let data = null;
-    if (fs.existsSync(jsonPath)) {
-      try {
-        const monthData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-        const entry = monthData.entries.find(e => e.employee_id === employee_id && e.day === day);
-        if (entry) {
-          data = { rows: entry.rows || [] };
-        }
-      } catch (err) {
-        console.warn('Could not read SC4 data:', err);
-      }
-    }
-
-    res.json({ success: true, data });
+    res.json({ success: true, data: draft ? { rows: draft.payload?.rows || [] } : null });
   } catch (err) {
     console.error('Error getting SC4 data:', err);
     res.json({ success: false, message: 'Error getting data: ' + err.message });

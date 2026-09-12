@@ -1,0 +1,12 @@
+{
+  "pkg": "checklist-kitchen-ds",
+  "globalName": "KitchenDS",
+  "projectId": "800e9453-55f3-4fb6-830f-a2ab20169820",
+  "shape": "package",
+  "cssEntry": "dist/index.esm.css",
+  "readmeHeader": ".design-sync/conventions.md",
+  "overrides": {
+    "Modal": { "cardMode": "single", "viewport": "420x300" },
+    "PinInput": { "cardMode": "column" }
+  }
+}

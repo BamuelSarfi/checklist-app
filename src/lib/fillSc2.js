@@ -119,14 +119,14 @@ async function fillSc2(data) {
     ).padStart(2, '0');
 
     const sanitizedName = (data.employee_name || 'Employee').replace(/[^a-zA-Z0-9]/g, '_');
-      const fileName = `SC2-${yearValue}-${safeMonth}-${sanitizedName}.pdf`;
-      const outPath = path.join(__dirname, '../../records', fileName);
+      // Trailing timestamp keeps this unique per export - without it, exporting the same
+      // month twice collides on file_name (no UNIQUE constraint), and a delete only removes
+      // the newest row, orphaning the other's R2 object.
+      const fileName = `SC2-${yearValue}-${safeMonth}-${sanitizedName}-${Date.now()}.pdf`;
 
-    
     form.flatten();
     const output = await pdfDoc.save();
-    fs.writeFileSync(outPath, output);
-    return fileName;
+    return { fileName, pdfBuffer: output };
   } catch (err) {
     console.error('Error generating SC2 PDF:', err);
     return null;

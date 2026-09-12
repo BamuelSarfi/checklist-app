@@ -1,0 +1,96 @@
+/* Design tokens for checklist-kitchen-ds.
+ *
+ * Source of truth: checklist-app/src/views/style.css's :root block. These
+ * values are kept in sync BY HAND (there's no build-time link between the
+ * two packages) - if the app's palette changes, update both places.
+ *
+ * A few tokens below (the warning banner and sync-status-badge colors) don't
+ * appear in style.css's :root because those specific UI pieces are built
+ * with JS-authored inline styles in script.js / status-badge.js rather than
+ * CSS classes. They're included here anyway because they're part of the
+ * canonical palette decided for this design system (see the plan's
+ * "Canonical palette decisions" section) - this package documents the
+ * intended design language, not just what's literally in style.css today.
+ */
+:root {
+    /* Neutrals */
+    --color-white: #fff;
+    --color-black: #000;
+    --color-bg-phone: #dbdbdb;
+    --color-bg-hover: #f0f0f0;
+    --color-bg-active: #e0e0e0;
+    --color-bg-subtle: #f5f5f5;
+    --color-bg-subtle-hover: #e8e8e8;
+    --color-bg-panel-muted: #f2f2f2;
+    --color-bg-skeleton: #d9d9d9;
+    --color-bg-faint: #fafafa;
+    --color-border-soft: #ddd;
+    --color-border-input-inactive: #ccc;
+    --color-text-heading: #111;
+    --color-text-secondary: #333;
+    --color-text-muted: #555;
+    --color-text-faint: #666;
+    --color-text-caption: #444;
+    --color-text-disabled: #999;
+    --color-text-missed: #777;
+
+    /* Semantic - success (canonical: #4CAF50) */
+    --color-success: #4CAF50;
+    --color-success-tint-bg: #e8f5e9;
+    --color-success-soft-bg: #8ccc9f;
+    --color-success-soft-bg-hover: #c3daca;
+    --color-success-soft-border: #5a9e6e;
+    --color-success-modal-border: rgba(121, 252, 164, 0.822);
+    --color-success-cell-bg: #c8f7d0;
+
+    /* Semantic - error/danger (canonical: #f44336) */
+    --color-error: #f44336;
+    --color-error-soft-bg: #ffe6e6;
+    --color-error-soft-bg-hover: #ffbaba;
+    --color-error-badge-bg: #ff6b6b;
+    --color-error-modal-border: #f7818b;
+
+    /* Semantic - warning */
+    --color-warning-note-bg: hsl(46, 100%, 91%);
+    --color-warning-note-border: #ffeb3b;
+    --color-warning-overlay-bg: rgba(255, 215, 0, 0.4);
+    --color-warning-overlay-border: #FFD700;
+    --color-warning-cell-bg: #fff1a8;
+    /* Sync-warning-banner treatment (script.js's showSyncWarning, currently
+       JS-authored inline styles, not a CSS class) - canonical per the plan. */
+    --color-warning-bg: #fff3cd;
+    --color-warning-text: #856404;
+    --color-warning-border: #ffeeba;
+
+    /* Semantic - info/accent (canonical: #0066cc) */
+    --color-info: #0066cc;
+    --color-info-modal-border: #79fca4;
+    --color-focus-bg: #fffacd;
+
+    /* Sync-status badge states (status-badge.js, currently JS-authored) */
+    --color-status-synced-bg: #d4edda;
+    --color-status-synced-text: #155724;
+    --color-status-pending-bg: #fff3cd;
+    --color-status-pending-text: #856404;
+    --color-status-syncing-bg: #cfe2ff;
+    --color-status-syncing-text: #084298;
+    --color-status-error-bg: #f8d7da;
+    --color-status-error-text: #842029;
+
+    /* Overlays / shadows */
+    --overlay-scrim: rgba(0, 0, 0, 0.5);
+    --overlay-scrim-heavy: rgba(0, 0, 0, 0.6);
+    --shadow-color: rgba(0, 0, 0, 0.25);
+    --shadow-color-soft: rgba(0, 0, 0, 0.3);
+
+    /* Radius */
+    --radius-xs: 3px;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-tour-card: 6px;
+    --radius-circle: 50%;
+
+    /* Typography */
+    --font-family-base: Myriad Pro, sans-serif;
+}

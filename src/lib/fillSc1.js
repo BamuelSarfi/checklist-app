@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { PDFDocument } = require('pdf-lib');
+const { saveGeneratedRecord } = require('../services/generatedRecords');
 
 async function fillSc1(data) {
   const pdfPath = path.join(__dirname, '../../templates/SC1_template.pdf');
@@ -117,12 +118,23 @@ async function fillSc1(data) {
   // Create filename with date and employee name
   const today = new Date().toLocaleDateString('en-GB').replace(/\//g, '-'); //DD-MM-YYYY format
   const sanitizedName = (data.employee_name || 'Employee').replace(/[^a-zA-Z0-9]/g, '_');
-  const fileName = `SC1-${today}-${sanitizedName}.pdf`;
-  const outPath = path.join(__dirname, '../../records', fileName);
+  // Trailing timestamp keeps this unique per submission - without it, two submissions the
+  // same day by the same named employee collide on file_name (there's no UNIQUE constraint
+  // on it), and deleting one of the resulting duplicate rows silently deletes only the
+  // newest, leaving the other's R2 object orphaned. Same fix already applied to SC5/SC7.
+  const fileName = `SC1-${today}-${sanitizedName}-${Date.now()}.pdf`;
 
-  fs.writeFileSync(outPath, output);
+  const { syncStatus, syncMessage, id: recordId } = await saveGeneratedRecord({
+    fileName,
+    recordType: 'SC1',
+    recordDate: new Date().toISOString().slice(0, 10),
+    employeeId: data.employee_id || null,
+    employeeName: data.employee_name || 'Employee',
+    payload: data,
+    pdfBuffer: output,
+  });
 
-  return fileName;
+  return { fileName, syncStatus, syncMessage, recordId };
 }
 
 module.exports = fillSc1;

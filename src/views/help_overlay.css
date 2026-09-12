@@ -1,8 +1,10 @@
-/* Help overlay styles — mobile-first and matching site UI */
+/* Help overlay styles — mobile-first and matching site UI.
+   Colors/radius here reference the design tokens defined in style.css's :root
+   block, which is always loaded on every page that also loads this file. */
 #help_overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: var(--overlay-scrim-heavy);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -21,12 +23,12 @@
   width: calc(100% - 32px);
   max-width: 520px;
   height: calc(100% - 72px);
-  background: #fff;
-  border: 1pt solid #000;
+  background: var(--color-white);
+  border: 1pt solid var(--color-black);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 #help_header {
@@ -34,18 +36,30 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 12px;
-  border-bottom: 1pt solid #e0e0e0;
+  border-bottom: 1pt solid var(--color-bg-active);
+}
+
+#help_header_actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#language-select {
+  background: var(--color-white);
+  padding: 6px 8px;
+  font-size: 12px;
 }
 
 #help_title {
   font-weight: 700;
   font-size: 14px;
-  color: #111;
+  color: var(--color-text-heading);
 }
 
 #help_close {
-  background: #fff;
-  border: 1pt solid #000;
+  background: var(--color-white);
+  border: 1pt solid var(--color-black);
   padding: 6px 8px;
   cursor: pointer;
 }
@@ -62,16 +76,127 @@
 #help_image {
   max-width: 100%;
   height: auto;
-  border: 1pt solid #ddd;
-  background: #fafafa;
+  border: 1pt solid var(--color-border-soft);
+  background: var(--color-bg-faint);
 }
 
 #help_caption {
   font-size: 12px;
-  color: #444;
+  color: var(--color-text-caption);
   text-align: center;
 }
 
 @media (min-width: 600px) {
   #help_inner { width: 540px; }
+}
+
+/* Mobile one-time welcome tour: pulsing FAB + card modal */
+#mobile-help-fab {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-circle);
+  background: var(--color-black);
+  color: var(--color-white);
+  border: none;
+  font-size: 22px;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 999;
+  box-shadow: 0 4px 12px var(--shadow-color-soft);
+  animation: fab-pulse 2.2s ease-in-out infinite;
+  display:none;
+}
+
+@keyframes fab-pulse {
+  0%, 100% { box-shadow: 0 4px 12px var(--shadow-color-soft), 0 0 0 0 var(--shadow-color); }
+  50% { box-shadow: 0 4px 12px var(--shadow-color-soft), 0 0 0 10px rgba(0, 0, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #mobile-help-fab {
+    animation: none;
+  }
+}
+
+#mobile-tour-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-scrim-heavy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease-in-out;
+  padding: 16px;
+}
+
+#mobile-tour-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#mobile-tour-modal {
+  width: 100%;
+  max-width: 400px;
+  max-height: calc(100% - 40px);
+  background: var(--color-white);
+  border: 1pt solid var(--color-black);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#mobile-tour-close {
+  align-self: flex-end;
+  background: var(--color-white);
+  border: 1pt solid var(--color-black);
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+#mobile-tour-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mobile-tour-card {
+  border: 1pt solid var(--color-bg-active);
+  border-radius: var(--radius-tour-card);
+  padding: 14px;
+  text-align: center;
+}
+
+.mobile-tour-card-icon {
+  font-size: 32px;
+  margin-bottom: 6px;
+}
+
+.mobile-tour-card h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.mobile-tour-card p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-caption);
+}
+
+#mobile-tour-done {
+  background: var(--color-black);
+  color: var(--color-white);
+  border: none;
+  padding: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
 }

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Uncle's Market Checklist</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/help_overlay.css">
+    <link rel="stylesheet" href="/design-system/index.global.css">
+    <style>
+        body {
+            margin: 0 auto;
+        }
+
+        .um_task_row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--color-border-soft);
+        }
+
+        .um_task_row:last-child {
+            border-bottom: none;
+        }
+
+        .um_task_label {
+            flex: 1;
+            font-size: 14px;
+            line-height: 1.4;
+            color: var(--color-text-heading);
+        }
+
+        .um_task_time {
+            width: 92px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+
+<body class="kiosk-body">
+    <div class="kiosk-frame">
+
+        <div class="kiosk-header">
+            <div style="display: flex; align-items: center; gap: 12px">
+                <a href="/unclesmarket" title="Back to sections" aria-label="Back to sections" class="kiosk-icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M19 12H5"></path>
+                        <path d="M12 19l-7-7 7-7"></path>
+                    </svg>
+                </a>
+                <div class="kiosk-logo-slot" id="brand-logo-slot">UM</div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                    <span id="brand-site-name"
+                        style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Uncle's
+                        Market</span>
+                    <span id="section-title"
+                        style="font-size: 15px; font-weight: 700; line-height: 1.2; color: var(--color-text-heading)">Section</span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px">
+                <span style="flex: 1; font-size: 14px; color: var(--color-text-secondary)">Date: <span
+                        id="current_date"></span></span>
+                <label class="kiosk-lang-select" title="Change language">
+                    <span aria-hidden="true" style="font-size: 15px">&#127760;</span>
+                    <select id="language-select" aria-label="Change language"></select>
+                </label>
+            </div>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 16px">
+            <div id="um_submitted_banner"
+                style="display: none; background: var(--color-success-cell-bg); border: 1px solid var(--color-border-soft); border-radius: var(--radius-sm); padding: 12px 14px; font-weight: 700; text-align: center;">
+                &check; This section has already been submitted today.
+            </div>
+
+            <div class="kiosk-card">
+                <span class="kiosk-field-label">Cleaning tasks</span>
+                <div id="task_container"></div>
+            </div>
+
+            <div class="kiosk-card">
+                <label style="display: flex; flex-direction: column; gap: 6px">
+                    <span class="kiosk-field-label">Comments</span>
+                    <textarea id="um_comment" rows="3" class="kiosk-textarea"
+                        placeholder="Record any issues found..."></textarea>
+                </label>
+                <div class="kiosk-summary-box">
+                    <div class="kiosk-summary-row"><span class="kiosk-summary-row-label">Employee name</span><span
+                            class="kiosk-summary-row-value" id="summary-name">-</span></div>
+                    <div class="kiosk-summary-row"><span class="kiosk-summary-row-label">Date</span><span
+                            class="kiosk-summary-row-value" id="summary-date">-</span></div>
+                    <div class="kiosk-summary-row"><span class="kiosk-summary-row-label">Signature/initial</span><span
+                            class="kiosk-summary-row-value" id="summary-sign">-</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="kiosk-bottom-bar">
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                <span
+                    style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Signed
+                    in</span>
+                <span id="employee_name_display"
+                    style="font-size: 14px; font-weight: 600; color: var(--color-text-heading); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">-</span>
+            </div>
+            <button type="button" id="save-draft-btn" class="kiosk-small-btn">Save</button>
+            <div id="export-button-mount"></div>
+        </div>
+    </div>
+
+    <script src="/translations.js"></script>
+    <script src="/design-system/index.global.js"></script>
+    <script>
+        const t = window.appI18n ? window.appI18n.t : (key) => key;
+        const params = new URLSearchParams(window.location.search);
+        const sectionId = params.get('section') || '';
+
+        const TASK_LABELS = ['Surface / Area', 'Sink', 'Floor', 'Table / Desk', 'Shelves', 'Under Shelves'];
+        let tasks = TASK_LABELS.map((label) => ({ label, cleaned: false, time: '' }));
+
+        const dateStr = new Date().toLocaleDateString('en-GB');
+        document.getElementById('current_date').textContent = dateStr;
+        document.getElementById('summary-date').textContent = dateStr;
+
+        function renderTasks() {
+            const container = document.getElementById('task_container');
+            container.innerHTML = '';
+            tasks.forEach((task, index) => {
+                const row = document.createElement('div');
+                row.className = 'um_task_row';
+                row.innerHTML = `
+                    <button type="button" class="kiosk-toggle-box${task.cleaned ? ' is-checked' : ''}" aria-pressed="${task.cleaned}" data-index="${index}">${task.cleaned ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>' : ''}</button>
+                    <span class="um_task_label">${task.label}</span>
+                    <input type="time" class="kiosk-text-input um_task_time" data-index="${index}" value="${task.time || ''}">
+                `;
+                container.appendChild(row);
+            });
+
+            container.querySelectorAll('.kiosk-toggle-box').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const index = Number(btn.dataset.index);
+                    tasks[index].cleaned = !tasks[index].cleaned;
+                    renderTasks();
+                });
+            });
+
+            container.querySelectorAll('.um_task_time').forEach((input) => {
+                input.addEventListener('change', () => {
+                    tasks[Number(input.dataset.index)].time = input.value;
+                });
+            });
+        }
+
+        renderTasks();
+
+        let employee_id = null;
+
+        async function initializeEmployee() {
+            try {
+                const response = await fetch('/api/employee');
+                const data = await response.json();
+                if (data.success) {
+                    employee_id = data.employee.id;
+                    const name = data.employee.name || 'Employee';
+                    document.getElementById('employee_name_display').textContent = name;
+                    document.getElementById('summary-name').textContent = name;
+                    document.getElementById('summary-sign').textContent = name;
+                }
+            } catch (error) {
+                console.error('Error fetching employee data:', error);
+            }
+        }
+
+        async function loadTodayData() {
+            try {
+                const response = await fetch(`/api/unclesmarket/today?section_id=${encodeURIComponent(sectionId)}`);
+                const data = await response.json();
+                if (!data.success) return;
+
+                document.getElementById('section-title').textContent = data.selected_section_name || 'Section';
+
+                if (data.record) {
+                    if (Array.isArray(data.record.tasks) && data.record.tasks.length === tasks.length) {
+                        tasks = data.record.tasks.map((task, index) => ({
+                            label: TASK_LABELS[index],
+                            cleaned: !!task.cleaned,
+                            time: task.time || '',
+                        }));
+                        renderTasks();
+                    }
+                    document.getElementById('um_comment').value = data.record.comment || '';
+
+                    if (data.record.status === 'submitted') {
+                        document.getElementById('um_submitted_banner').style.display = '';
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading Uncle's Market data:", error);
+            }
+        }
+
+        const { React, ReactDOM, Button } = window.KitchenDS;
+        const exportButtonRoot = ReactDOM.createRoot(document.getElementById('export-button-mount'));
+
+        function renderExportButton(isLoading) {
+            exportButtonRoot.render(React.createElement(Button, {
+                variant: 'primary',
+                loading: !!isLoading,
+                onClick: () => exportForm(),
+                style: { minHeight: 48, padding: '0 18px', fontSize: 14, fontWeight: 600, borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-success)', boxShadow: 'none' },
+            }, t('Export PDF')));
+        }
+        renderExportButton(false);
+
+        function collectPayload() {
+            return {
+                section_id: sectionId,
+                tasks: tasks.map(({ cleaned, time }) => ({ cleaned, time })),
+                comment: document.getElementById('um_comment').value || '',
+            };
+        }
+
+        async function saveDraft() {
+            const saveBtn = document.getElementById('save-draft-btn');
+            saveBtn.disabled = true;
+            try {
+                const response = await fetch('/api/unclesmarket/draft', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(collectPayload()),
+                });
+                const result = await response.json();
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || `Unable to save (${response.status})`);
+                }
+                await window.showAppModal(t('Draft saved'), { type: 'success' });
+            } catch (err) {
+                console.error('Error saving draft:', err);
+                await window.showAppModal(t('Error saving draft: {message}', { message: err.message }), { type: 'error' });
+            } finally {
+                saveBtn.disabled = false;
+            }
+        }
+
+        async function exportForm() {
+            renderExportButton(true);
+            try {
+                await fetch('/api/unclesmarket/draft', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(collectPayload()),
+                });
+
+                const response = await fetch('/api/unclesmarket/export', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ section_id: sectionId }),
+                });
+                const result = await response.json();
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || `Unable to export (${response.status})`);
+                }
+
+                window.notifySyncWarning?.(result.sync_warning);
+                await window.showAppModal(t('Section exported successfully'), { type: 'success' });
+                if (result.pdfUrl) {
+                    window.open(result.pdfUrl, '_blank', 'noopener,noreferrer');
+                }
+                window.location.href = '/unclesmarket';
+            } catch (err) {
+                console.error('Error exporting section:', err);
+                await window.showAppModal(t('Error exporting: {message}', { message: err.message }), { type: 'error' });
+            } finally {
+                renderExportButton(false);
+            }
+        }
+
+        document.getElementById('save-draft-btn').addEventListener('click', saveDraft);
+
+        initializeEmployee();
+        loadTodayData();
+
+        // ---- Brand lookup ----
+        (async () => {
+            try {
+                const response = await fetch('/api/brand');
+                if (!response.ok) return;
+                const data = await response.json();
+                const kitchenName = data?.kitchen?.name || data?.brand_name || data?.business?.display_name || "Uncle's Market";
+                const logoSrc = data?.kitchen?.logo_src || data?.logo_src || data?.business?.logo_src || '';
+                document.getElementById('brand-site-name').textContent = kitchenName;
+                if (logoSrc) {
+                    const slot = document.getElementById('brand-logo-slot');
+                    slot.textContent = '';
+                    const img = document.createElement('img');
+                    img.src = logoSrc;
+                    img.alt = kitchenName;
+                    slot.appendChild(img);
+                }
+            } catch (_error) { /* optional */ }
+        })();
+
+        // ---- Language switcher ----
+        const langSelect = document.getElementById('language-select');
+        if (window.appI18n) {
+            window.appI18n.getLanguageOptions().forEach(({ value, label }) => {
+                const opt = document.createElement('option');
+                opt.value = value;
+                opt.textContent = label;
+                langSelect.appendChild(opt);
+            });
+            langSelect.value = window.appI18n.getAppLanguage();
+            langSelect.addEventListener('change', () => {
+                window.appI18n.setAppLanguage(langSelect.value);
+                window.location.reload();
+            });
+        }
+    </script>
+
+    <script src="/script.js"></script>
+</body>
+
+</html>

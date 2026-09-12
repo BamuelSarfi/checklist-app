@@ -1,0 +1,39 @@
+@import "../../tokens/tokens.css";
+
+.ds-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    border: 1px solid transparent;
+}
+
+.ds-banner--warning {
+    background: var(--color-warning-bg);
+    color: var(--color-warning-text);
+    border-color: var(--color-warning-border);
+}
+
+.ds-banner--error {
+    background: var(--color-status-error-bg);
+    color: var(--color-status-error-text);
+}
+
+.ds-banner--info {
+    background: var(--color-warning-note-bg);
+    color: var(--color-text-secondary);
+    border-left: 4px solid var(--color-warning-note-border);
+    border-radius: 0;
+}
+
+.ds-banner-dismiss {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    color: inherit;
+}

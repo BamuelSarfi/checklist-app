@@ -4,7 +4,7 @@ const router = express.Router();
 const controller = require('../controllers/sc3.controller');
 const auth = require('../middleware/auth.middleware');
 
-router.get('/', (req, res) => {
+router.get('/', auth, (req, res) => {
   res.sendFile(path.join(__dirname, '../views/sc3.html'));
 });
 
