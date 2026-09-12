@@ -692,4 +692,3 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT,  () => {
   console.log(`Running on http://localhost:${PORT}`);
 });
-// CI/CD deploy pipeline test - 2026-09-12T15:13:27+01:00 - safe to remove, no functional change
