@@ -42,7 +42,12 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
+          # set -e is load-bearing, not decoration: appleboy/ssh-action runs each line
+          # regardless of whether an earlier one failed unless the script itself aborts on
+          # error, which is exactly what let a git-fetch failure on the sibling repo go
+          # unnoticed once (fell through to rebuilding stale code and still reported green).
           script: |
+            set -e
             cd ~/checklist-app/checklist-app && git fetch origin prod && git reset --hard origin/prod
             cd ~/checklist-app/deploy && docker compose up -d --build kiosk-unclesmarket
             docker compose run --rm kiosk-unclesmarket npm run migrate
