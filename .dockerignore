@@ -5,6 +5,10 @@ npm-debug.log
 !.env.production.example
 .git
 .gitignore
+# The top-level node_modules rule above doesn't match this nested one. dist/ isn't excluded -
+# stage 2 of the Dockerfile copies a freshly-built one over whatever's here anyway, so
+# excluding it would only save a little build-context transfer, not worth the extra rule.
+design-system/node_modules
 # Legacy local datastore - server.js now hard-requires Postgres + R2 at boot (see
 # REQUIRED_ENV_VARS) and no longer reads/writes here, but old PDFs/JSON side-cars from
 # before that migration are still sitting on disk. Real runtime data lives in Postgres/R2,

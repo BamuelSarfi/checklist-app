@@ -64,6 +64,12 @@ if (missingEnvVars.length > 0) {
 const app = express();
 const path = require('path');
 
+// Required behind Caddy/any reverse proxy in production - without this, req.protocol reports
+// the internal http:// hop instead of the real https:// the customer used, which would bake a
+// wrong http:// URL into the Tester Promotion till-QR code (testerPromotion.controller.js's
+// getTillQr).
+app.set('trust proxy', 1);
+
 // Meta signs the raw webhook body (X-Hub-Signature-256, verified in whatsappService.js) -
 // must be registered before the global express.json() below, matching checklist-app-fend's
 // Stripe webhook pattern, since JSON-parsing the body first would consume the stream and
@@ -221,6 +227,13 @@ async function resolveKitchenIdFromSlug(slug) {
   const payload = await response.json().catch(() => null);
   return payload?.kitchen?.id || null;
 }
+
+// Pure liveness check (no DB/R2 dependency ping) - for Docker Compose healthchecks and Uptime
+// Kuma. checklist-app-fend has had one at /healthz all along (safecater-backend/app.js); this
+// app never did, confirmed absent by a full grep before adding it.
+app.get('/healthz', (req, res) => {
+  res.json({ ok: true });
+});
 
 app.get('/api/brand', async (req, res) => {
   let kitchenId = null;
