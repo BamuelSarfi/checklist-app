@@ -23,6 +23,7 @@ process.on('unhandledRejection', (reason) => {
 
 const express = require('express');
 const crypto = require('crypto');
+const helmet = require('helmet');
 const sc5Routes = require('./src/routes/sc5.routes');
 const sc7Routes = require('./src/routes/sc7.routes');
 const sc3Routes = require('./src/routes/sc3.routes');
@@ -70,6 +71,30 @@ const path = require('path');
 // wrong http:// URL into the Tester Promotion till-QR code (testerPromotion.controller.js's
 // getTillQr).
 app.set('trust proxy', 1);
+
+// This app shipped with no security headers at all (only Express's default X-Powered-By,
+// which helmet also strips) - confirmed live. The views render staff names and compliance
+// data and use many innerHTML sinks, so a missing CSP and clickjacking guard matter here.
+// Mirrors checklist-app-fend's relaxedHelmetConfig: 'unsafe-inline' is kept for script/style
+// because these pages rely on inline scripts and inline event handlers; HSTS is left to the
+// fronting proxy (this app runs plain HTTP behind one, per its own docs).
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrcAttr: ["'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+            fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+            imgSrc: ["'self'", 'data:', 'https:'],
+            connectSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            baseUri: ["'self'"],
+            formAction: ["'self'"],
+            frameAncestors: ["'self'"],
+        },
+    },
+}));
 
 // Meta signs the raw webhook body (X-Hub-Signature-256, verified in whatsappService.js) -
 // must be registered before the global express.json() below, matching checklist-app-fend's
