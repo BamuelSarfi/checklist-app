@@ -25,7 +25,6 @@ router.get('/progress', ensureAuthenticated, safeHandler(sc2.getProgress, 'SC2 g
 router.get('/day', ensureAuthenticated, safeHandler(sc2.getDay, 'SC2 getDay is missing'));
 router.post('/draft', ensureAuthenticated, express.json(), safeHandler(sc2.saveDraft, 'SC2 saveDraft is missing'));
 router.post('/export', ensureAuthenticated, express.json(), safeHandler(sc2.exportPdf, 'SC2 exportPdf is missing'));
-router.post('/reopen', ensureAuthenticated, express.json(), safeHandler(sc2.reopenForEditing, 'SC2 reopenForEditing is missing'));
 
 module.exports = router;
 

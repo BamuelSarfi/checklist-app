@@ -1,4 +1,5 @@
-const { createHash, timingSafeEqual } = require('crypto');
+const { createHash, randomBytes, scrypt, timingSafeEqual } = require('crypto');
+const { promisify } = require('util');
 const { query } = require('../config/db');
 
 function hasRemoteDirectory() {
@@ -41,26 +42,40 @@ function normalizeEmployee(employee) {
   };
 }
 
-// PINs are 6-digit codes, not user passwords - sha256 is here to avoid storing them in
-// cleartext in the database (the old records/employees.json file did, and CLAUDE.md
-// flagged it as sensitive enough to need walling off from static serving). It isn't a
-// substitute for rate-limiting PIN attempts, which the login route already does.
-function hashPin(pin) {
-  return createHash('sha256').update(String(pin)).digest('hex');
+const scryptAsync = promisify(scrypt);
+const LEGACY_SHA256_RE = /^[0-9a-f]{64}$/i;
+
+// The portal said no more attempts for now. Kept distinct from "wrong PIN" so staff are told to
+// wait, not sent off to get a PIN reset that wouldn't help.
+class PinVerificationThrottledError extends Error {}
+
+// Salted and deliberately slow, because there are only a million possible PINs: plain sha256 of one
+// can be reversed instantly by anyone who reads this table.
+async function hashPin(pin) {
+  const salt = randomBytes(16);
+  const derived = await scryptAsync(String(pin), salt, 32);
+  return `scrypt$${salt.toString('hex')}$${derived.toString('hex')}`;
 }
 
-function pinMatchesHash(pin, hash) {
-  if (!hash) {
-    return false;
+function bytesEqual(a, b) {
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+async function pinMatchesHash(pin, hash) {
+  const stored = String(hash || '');
+
+  if (stored.startsWith('scrypt$')) {
+    const [, saltHex, derivedHex] = stored.split('$');
+    const derived = await scryptAsync(String(pin), Buffer.from(saltHex, 'hex'), 32);
+    return bytesEqual(derived, Buffer.from(derivedHex, 'hex'));
   }
 
-  const a = Buffer.from(hashPin(pin), 'hex');
-  const b = Buffer.from(String(hash), 'hex');
-  if (a.length !== b.length) {
-    return false;
+  // Rows from before scrypt. Upgraded on their next successful login (findCachedEmployeeByPin).
+  if (LEGACY_SHA256_RE.test(stored)) {
+    return bytesEqual(createHash('sha256').update(String(pin)).digest(), Buffer.from(stored, 'hex'));
   }
 
-  return timingSafeEqual(a, b);
+  return false;
 }
 
 function rowToEmployee(row) {
@@ -107,8 +122,18 @@ async function findCachedEmployeeByPin(pin) {
     [getKitchenId()]
   );
 
-  const match = result.rows.find((row) => pinMatchesHash(pin, row.pin_hash));
-  return rowToEmployee(match);
+  for (const row of result.rows) {
+    // eslint-disable-next-line no-await-in-loop
+    if (await pinMatchesHash(pin, row.pin_hash)) {
+      if (LEGACY_SHA256_RE.test(row.pin_hash)) {
+        // eslint-disable-next-line no-await-in-loop
+        await query('UPDATE employees_cache SET pin_hash = $1 WHERE id = $2', [await hashPin(pin), row.id]);
+      }
+      return rowToEmployee(row);
+    }
+  }
+
+  return null;
 }
 
 async function cacheRemoteEmployees(employees) {
@@ -197,7 +222,9 @@ async function fetchJson(url, options = {}) {
 
     if (!response.ok) {
       const body = await response.text().catch(() => '');
-      throw new Error(`Remote employee directory returned ${response.status}: ${body}`);
+      const error = new Error(`Remote employee directory returned ${response.status}: ${body}`);
+      error.status = response.status;
+      throw error;
     }
 
     return response.json();
@@ -254,8 +281,15 @@ async function authenticateEmployeePin(pin) {
         body: JSON.stringify({ pin: cleanPin }),
       });
 
-      return normalizeEmployee(payload.employee);
+      // The PIN check confirms who it is, but the directory has the full details, including the
+      // role that decides what they can do. A wrong PIN never gets this far (it's a 401 above).
+      const verified = normalizeEmployee(payload.employee);
+      const details = await getEmployeeById(verified.id).catch(() => null);
+      return details || verified;
     } catch (error) {
+      if (error.status === 429) {
+        throw new PinVerificationThrottledError('PIN verification is rate limited');
+      }
       console.warn('Remote PIN verification unavailable, falling back to cache:', error.message);
     }
   }
@@ -269,4 +303,5 @@ module.exports = {
   authenticateEmployeePin,
   normalizeEmployee,
   hashPin,
+  PinVerificationThrottledError,
 };

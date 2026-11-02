@@ -409,7 +409,9 @@
                 run.recent_claims.forEach((claim) => {
                     const row = document.createElement('div');
                     row.className = 'tp_claim_row';
-                    row.innerHTML = `<span>${claim.time} · ${claim.note}</span>`;
+                    const span = document.createElement('span');
+                    span.textContent = `${claim.time} · ${claim.note}`;
+                    row.appendChild(span);
                     log.appendChild(row);
                 });
             }

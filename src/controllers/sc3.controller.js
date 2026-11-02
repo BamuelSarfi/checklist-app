@@ -58,7 +58,7 @@ exports.getTodayData = async (req, res) => {
     console.error('Error getting today data:', err);
     res.json({
       success: false,
-      message: 'Error getting data: ' + err.message
+      message: 'Something went wrong. Please try again.'
     });
   }
 };
@@ -207,6 +207,7 @@ exports.submitAndExport = async (req, res) => {
             sync_warning: syncStatus === 'subscription_inactive' ? syncMessage : null,
         });
     } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
+        console.error('[sc3]', err);
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
     }
 };

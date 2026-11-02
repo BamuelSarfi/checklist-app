@@ -71,15 +71,39 @@
         }
     }
 
+    // Who's signed in right now, or null if nobody is. Null while the network is unreachable too,
+    // which also means there's no point replaying yet.
+    async function currentEmployeeId() {
+        window.__kioskQueueReplay = true;
+        try {
+            const response = await fetch('/api/employee');
+            if (!response.ok) return null;
+            const data = await response.json();
+            return data?.employee?.id ? String(data.employee.id) : null;
+        } catch (_err) {
+            return null;
+        } finally {
+            window.__kioskQueueReplay = false;
+        }
+    }
+
     async function replayRecord(record) {
         await window.offlineStore.updatePendingRecord(record.clientRecordId, { status: 'syncing' });
 
+        window.__kioskQueueReplay = true;
         try {
             const response = await fetch(record.endpoint, {
                 method: record.method || 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: record.body !== null ? JSON.stringify(record.body) : undefined,
             });
+
+            // Signed out while it was queued: not a failed record, so it keeps its retries and waits
+            // for them to sign in again.
+            if (response.status === 401) {
+                await window.offlineStore.updatePendingRecord(record.clientRecordId, { status: 'pending' });
+                return { ok: false, status: 'pending' };
+            }
 
             if (!response.ok) {
                 throw new Error(`Sync failed with status ${response.status}`);
@@ -96,6 +120,8 @@
                 lastError: err.message,
             });
             return { ok: false, status };
+        } finally {
+            window.__kioskQueueReplay = false;
         }
     }
 
@@ -108,8 +134,15 @@
         try {
             const pending = await window.offlineStore.listPendingRecords();
             const toReplay = pending.filter((record) => record.status === 'pending');
+            const signedIn = toReplay.length ? await currentEmployeeId() : null;
 
             for (const record of toReplay) {
+                // The server signs a form as whoever is signed in, so a form queued by one person
+                // waits for them. Replaying it under the next person's session would forge their name.
+                if (!signedIn || (record.employeeId && String(record.employeeId) !== signedIn)) {
+                    continue;
+                }
+
                 await replayRecord(record);
             }
         } finally {

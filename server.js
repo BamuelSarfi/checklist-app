@@ -37,10 +37,11 @@ const naaTesterClaimRoutes = require('./src/routes/naaTesterClaim.routes');
 const naaTesterClaimController = require('./src/controllers/naaTesterClaim.controller');
 const cookieParser = require('cookie-parser');
 const authenticateEmployee = require('./src/middleware/auth.middleware');
+const { requireManager, isManager } = authenticateEmployee;
+const sessions = require('./src/services/sessions');
 const rateLimit = require('express-rate-limit');
-const { authenticateEmployeePin } = require('./src/services/employeeDirectory');
+const { authenticateEmployeePin, PinVerificationThrottledError } = require('./src/services/employeeDirectory');
 const generatedRecords = require('./src/services/generatedRecords');
-const storage = require('./src/config/storage');
 const checklistDrafts = require('./src/services/checklistDrafts');
 //use .env file for environment variables
 require('dotenv').config();
@@ -107,31 +108,32 @@ if (process.env.ENABLE_TESTER_PROMOTION === 'true') {
 
 //
 // Middleware
-// 15mb accommodates a base64-encoded photo from the document-capture feature (default
-// 100kb is far too small for that; existing JSON payloads are all well under this).
-app.use(express.json({ limit: '15mb' }));
-app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 // Signed so the auth middleware can tell a genuinely-issued cookie from one an attacker
 // just wrote via devtools/a MITM on plain HTTP - previously employeeId/sessionToken were
 // checked only for "does this employee exist", so setting employeeId to any other real
 // employee's id was enough to fully impersonate them (see auth.middleware.js).
 app.use(cookieParser(process.env.COOKIE_SECRET));
 
-// This kiosk is scoped to a single kitchen (SAFECATER_KITCHEN_ID is fixed per deployment),
-// so this limiter is effectively already a per-device lockout across every employee's PIN,
-// not just a generic anti-abuse cap - 30/15min is far below what's needed for real staff
-// login traffic but makes brute-forcing the 1,000,000 possible 6-digit PINs impractical
-// (a real per-account lockout isn't meaningful here since PIN-only login has no separate
-// identity to lock until after a PIN already matches).
+// Size limits are set by who can reach a route. A large body takes memory just to parse, so routes
+// open to anyone get a tiny limit, and the 15mb photo upload is only parsed once the caller has
+// proved they're signed in. A body parsed here is skipped by the general parser below.
+app.use(['/login', '/naa-tester-claim'], express.json({ limit: '10kb' }), express.urlencoded({ extended: true, limit: '10kb' }));
+app.post('/api/documents/upload', authenticateEmployee, express.json({ limit: '15mb' }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// Per address, counting failed PIN attempts only, so viewing the login page or signing in normally
+// never uses it up. The portal also caps failures across the whole kitchen (pinVerifyLimiter), which
+// is what stops someone rotating addresses to work through the 1,000,000 possible PINs.
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 30,
+    max: 15,
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    skipSuccessfulRequests: true,
+    message: { success: false, message: 'Too many attempts. Please wait a few minutes and try again.' },
 });
 
-app.use('/login', loginLimiter);
-app.use('/api/auth', loginLimiter);
 
 // LOGIN ROUTE (unprotected)
 app.get('/login', (req, res) => {
@@ -146,8 +148,8 @@ app.get('/:kitchenSlug/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'src/views/login.html'));
 });
 
-app.post('/login', async (req, res) => {
-  const { pin } = req.body;
+app.post('/login', loginLimiter, async (req, res) => {
+  const pin = req.body?.pin;
   const cleanPin = String(pin || '').trim();
 
   if (!/^\d{6}$/.test(cleanPin)) {
@@ -161,13 +163,11 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid PIN' });
     }
 
-    // Cryptographically random - Math.random() + Date.now() was predictable enough that an
-    // attacker could guess active session tokens outright.
-    const sessionToken = crypto.randomBytes(32).toString('hex');
+    const sessionToken = await sessions.createSession(employee.id);
 
     const cookieOptions = {
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: sessions.ABSOLUTE_HOURS * 60 * 60 * 1000,
       // Enforced only in production so local HTTP dev (this app has no HTTPS/proxy setup
       // in dev, per its own docs) keeps working; a real deployment behind HTTPS gets the
       // full protection.
@@ -176,7 +176,6 @@ app.post('/login', async (req, res) => {
       signed: true,
     };
 
-    // Set cookies (expires in 24 hours)
     res.cookie('employeeId', employee.id, cookieOptions);
     res.cookie('sessionToken', sessionToken, cookieOptions);
     res.cookie('employeeName', employee.name, cookieOptions);
@@ -190,17 +189,28 @@ app.post('/login', async (req, res) => {
         role: employee.role,
         preferred_language: employee.preferred_language,
         email: employee.email,
-        location: employee.location
+        location: employee.location,
+        can_delete_records: isManager(employee),
       }
     });
   } catch (err) {
+    // The portal's kitchen-wide limit: say so, because "Invalid PIN" would send staff with the
+    // right PIN off to get it reset.
+    if (err instanceof PinVerificationThrottledError) {
+      return res.status(429).json({ success: false, message: 'Too many attempts. Please wait a few minutes and try again.' });
+    }
     console.error('Login error:', err);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
 // LOGOUT ROUTE
-app.get('/logout', (req, res) => {
+app.get('/logout', async (req, res) => {
+  try {
+    await sessions.revokeSession(req.signedCookies.sessionToken);
+  } catch (err) {
+    console.error('Error revoking session:', err);
+  }
   res.clearCookie('employeeId');
   res.clearCookie('sessionToken');
   res.clearCookie('employeeName');
@@ -218,7 +228,8 @@ app.get('/api/employee', authenticateEmployee, (req, res) => {
         role: req.employee.role,
         preferred_language: req.employee.preferred_language,
         email: req.employee.email,
-        location: req.employee.location
+        location: req.employee.location,
+        can_delete_records: isManager(req.employee),
       }
     });
   } catch (err) {
@@ -227,33 +238,6 @@ app.get('/api/employee', authenticateEmployee, (req, res) => {
   }
 });
 
-async function resolveKitchenIdFromSlug(slug) {
-  const cleanSlug = String(slug || '').trim().toLowerCase();
-
-  if (
-    !cleanSlug ||
-    !process.env.SAFECATER_BASE_API_URL ||
-    !process.env.SAFECATER_SERVICE_API_KEY ||
-    typeof fetch !== 'function'
-  ) {
-    return null;
-  }
-
-  const url = `${String(process.env.SAFECATER_BASE_API_URL).replace(/\/$/, '')}/api/v1/tenant/resolve?subdomain=${encodeURIComponent(cleanSlug)}`;
-  const response = await fetch(url, {
-    headers: {
-      'x-safecater-service-key': process.env.SAFECATER_SERVICE_API_KEY,
-    },
-  });
-
-  if (!response.ok) {
-    return null;
-  }
-
-  const payload = await response.json().catch(() => null);
-  return payload?.kitchen?.id || null;
-}
-
 // Pure liveness check (no DB/R2 dependency ping) - for Docker Compose healthchecks and Uptime
 // Kuma. checklist-app-fend has had one at /healthz all along (safecater-backend/app.js); this
 // app never did, confirmed absent by a full grep before adding it.
@@ -261,79 +245,58 @@ app.get('/healthz', (req, res) => {
   res.json({ ok: true });
 });
 
+// Open to anyone, because the login page needs it before a session exists. So it only ever describes
+// this kiosk's own kitchen, and only what that page shows. It used to take a kitchen id or subdomain
+// from the query string and look it up with the service key, which let anyone read other businesses.
 app.get('/api/brand', async (req, res) => {
-  let kitchenId = null;
-  // Reflects THIS deployment's own flag (whether the /unclesmarket routes exist on this
-  // exact kiosk process), not whatever kitchen the brand data below happens to be about -
-  // the home screen (index.html) uses this to decide whether to show the Uncle's Market
-  // tile at all, since it's a business-specific bolt-on, not a module_type.
-  const unclesMarketEnabled = process.env.ENABLE_UNCLES_MARKET === 'true';
-  const testerPromotionEnabled = process.env.ENABLE_TESTER_PROMOTION === 'true';
+  const kitchenId = String(process.env.SAFECATER_KITCHEN_ID || '').trim();
+  const flags = {
+    // Reflects THIS deployment's own flags: the home screen uses them to decide whether to show the
+    // Uncle's Market and promotion tiles, since they're business-specific bolt-ons, not a module_type.
+    uncles_market_enabled: process.env.ENABLE_UNCLES_MARKET === 'true',
+    tester_promotion_enabled: process.env.ENABLE_TESTER_PROMOTION === 'true',
+  };
+  const fallback = {
+    brand_name: 'Safe Catering',
+    logo_src: '/asset2.png',
+    kitchen_name: null,
+    kitchen_id: kitchenId || null,
+    business: { display_name: 'Safe Catering', logo_src: '/asset2.png' },
+    kitchen: null,
+    ...flags,
+  };
 
   try {
-    const requestedKitchenId = String(req.query.kitchen_id || req.query.kitchenId || '').trim();
-    const requestedSlug = String(req.query.slug || req.query.subdomain || '').trim();
-    kitchenId = requestedKitchenId;
-
-    if (!kitchenId && requestedSlug) {
-      kitchenId = await resolveKitchenIdFromSlug(requestedSlug);
-    }
-
-    if (!kitchenId) {
-      kitchenId = String(process.env.SAFECATER_KITCHEN_ID || '').trim();
-    }
-
-    if (
-      process.env.SAFECATER_BASE_API_URL &&
-      kitchenId &&
-      process.env.SAFECATER_SERVICE_API_KEY &&
-      typeof fetch === 'function'
-    ) {
+    if (process.env.SAFECATER_BASE_API_URL && kitchenId && process.env.SAFECATER_SERVICE_API_KEY) {
       const url = `${String(process.env.SAFECATER_BASE_API_URL).replace(/\/$/, '')}/api/v1/tenant/${encodeURIComponent(kitchenId)}/brand`;
       const response = await fetch(url, {
-        headers: {
-          'x-safecater-service-key': process.env.SAFECATER_SERVICE_API_KEY,
-        },
+        headers: { 'x-safecater-service-key': process.env.SAFECATER_SERVICE_API_KEY },
       });
 
       if (response.ok) {
-        const brandData = await response.json();
-        return res.json({ ...brandData, uncles_market_enabled: unclesMarketEnabled, tester_promotion_enabled: testerPromotionEnabled });
+        const brand = await response.json();
+        return res.json({
+          brand_name: brand.brand_name,
+          logo_src: brand.logo_src,
+          kitchen_id: kitchenId,
+          business: brand.business ? { display_name: brand.business.display_name, logo_src: brand.business.logo_src } : null,
+          kitchen: brand.kitchen ? {
+            name: brand.kitchen.name,
+            subdomain_slug: brand.kitchen.subdomain_slug,
+            logo_src: brand.kitchen.logo_src,
+            module_type: brand.kitchen.module_type,
+          } : null,
+          ...flags,
+        });
       }
 
-      const body = await response.text().catch(() => '');
-      console.warn('Brand lookup failed:', response.status, body);
+      console.warn('Brand lookup failed:', response.status);
     }
-
-    return res.json({
-      brand_name: 'Safe Catering',
-      logo_src: '/asset2.png',
-      kitchen_name: null,
-      kitchen_id: kitchenId || null,
-      business: {
-        display_name: 'Safe Catering',
-        logo_src: '/asset2.png',
-      },
-      kitchen: null,
-      uncles_market_enabled: unclesMarketEnabled,
-      tester_promotion_enabled: testerPromotionEnabled,
-    });
   } catch (err) {
     console.error('Error fetching brand info:', err);
-    return res.json({
-      brand_name: 'Safe Catering',
-      logo_src: '/asset2.png',
-      kitchen_name: null,
-      kitchen_id: kitchenId || null,
-      business: {
-        display_name: 'Safe Catering',
-        logo_src: '/asset2.png',
-      },
-      kitchen: null,
-      uncles_market_enabled: unclesMarketEnabled,
-      tester_promotion_enabled: testerPromotionEnabled,
-    });
   }
+
+  return res.json(fallback);
 });
 
 // GET COMPLETED CHECKLISTS FOR TODAY (protected route)
@@ -511,9 +474,9 @@ app.post('/api/documents/upload', authenticateEmployee, async (req, res) => {
   }
 });
 
-app.delete('/api/records/:fileName', authenticateEmployee, async (req, res) => {
+app.delete('/api/records/:fileName', authenticateEmployee, requireManager, async (req, res) => {
   try {
-    const deleted = await generatedRecords.deleteGeneratedRecordByFileName(req.params.fileName);
+    const deleted = await generatedRecords.deleteGeneratedRecordByFileName(req.params.fileName, req.employee);
 
     if (!deleted) {
       return res.status(404).json({ success: false, message: 'File not found' });
@@ -588,7 +551,7 @@ if (process.env.ENABLE_UNCLES_MARKET === 'true') {
       return res.json({ success: true, exported: exportedFiles });
     } catch (err) {
       console.error("Error running Uncle's Market monthly export:", err);
-      return res.status(500).json({ success: false, message: err.message });
+      return res.status(500).json({ success: false, message: 'Export failed' });
     }
   });
 }
@@ -604,13 +567,9 @@ if (process.env.ENABLE_TESTER_PROMOTION === 'true') {
   app.use('/naa-tester-claim', naaTesterClaimRoutes);
 }
 
-// Library page - deliberately public (no authenticateEmployee): EHO inspectors/customers
-// need to view compliance records without staff PIN credentials. The page itself detects
-// login state client-side (fetch('/api/employee'), already tolerant of failing when logged
-// out) and switches between the full staff view (/api/records + /records/:fileName, still
-// authenticateEmployee-gated below, unchanged) and the redacted public view
-// (/api/public/records + /public/records/:id, added below) accordingly.
-app.get('/library', (req, res) => {
+// Staff only. This used to be public so inspectors could browse records, but the files themselves
+// name staff, so anyone could download them. Inspectors get records through the portal's EHO export.
+app.get('/library', authenticateEmployee, (req, res) => {
   res.sendFile(path.join(__dirname, 'src/views/library.html'));
 });
 
@@ -638,72 +597,25 @@ app.get('/records/:fileName', authenticateEmployee, async (req, res) => {
   }
 });
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-// Public/unauthenticated equivalent of GET /api/records - see the /library comment above for
-// why this exists. Returns only id/record_type/record_date, never file_name or
-// employee_name, so a scraper hitting this directly (not just the page's own UI) still can't
-// learn who was on shift for any given record.
-app.get('/api/public/records', async (req, res) => {
-  try {
-    const records = await generatedRecords.listPublicRecordSummaries();
-    res.json({ success: true, records });
-  } catch (err) {
-    console.error('Error fetching public records:', err);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-});
-
-// Public/unauthenticated equivalent of GET /records/:fileName. Streams the object through
-// this server instead of redirecting to a presigned R2 URL (getDownloadByFileName's
-// approach) - the R2 key embeds the employee name (storage.js's buildFileKey), so a redirect
-// would leak that name via the browser's address bar/network tab even with a redacted
-// Content-Disposition header set on the final response.
-app.get('/public/records/:id', async (req, res) => {
-  try {
-    if (!UUID_RE.test(req.params.id)) {
-      return res.status(404).send('Not found');
-    }
-
-    const record = await generatedRecords.getPublicRecordById(req.params.id);
-    if (!record) {
-      return res.status(404).send('Not found');
-    }
-
-    const extension = String(record.r2_key || '').split('.').pop().toLowerCase();
-    const contentType = extension === 'pdf' ? 'application/pdf' : 'application/octet-stream';
-    const disposition = req.query.download ? 'attachment' : 'inline';
-    const redactedName = `${record.record_type}-${record.record_date}.${extension || 'pdf'}`;
-
-    const { body, contentLength } = await storage.getObjectStream(record.r2_key);
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Content-Disposition', `${disposition}; filename="${redactedName.replace(/"/g, '')}"`);
-    if (contentLength) {
-      res.setHeader('Content-Length', String(contentLength));
-    }
-
-    body.pipe(res);
-    body.on('error', (err) => {
-      console.error('Error streaming public record:', err);
-      res.destroy();
-    });
-  } catch (err) {
-    console.error('Error resolving public record download:', err);
-    return res.status(500).send('Server error');
-  }
-});
-
 // The static mount below serves every file in src/views by its literal filename, including
 // index.html/sc1.html.../sc7.html - since express.static and the route handlers above match
 // on distinct exact paths (e.g. app.get('/') never matches a request for "/index.html"),
 // nothing above actually stops a page's auth gate from being bypassed by requesting its raw
 // filename directly. Nothing in this app ever links to a literal .html URL (every internal
 // navigation uses the clean paths above), so blocking the extension outright is safe.
+// Checked on the decoded path, which is what express.static serves: "/index.htm%6c" got past a check
+// on the raw one.
 app.use((req, res, next) => {
-  if (/\.html?$/i.test(req.path)) {
+  let decodedPath;
+  try {
+    decodedPath = decodeURIComponent(req.path);
+  } catch (_err) {
+    return res.status(400).send('Bad request');
+  }
+  if (/\.html?$/i.test(decodedPath)) {
     return res.redirect('/login');
   }
-  next();
+  return next();
 });
 
 // Static files (CSS, JS, images, etc.) - AFTER auth routes

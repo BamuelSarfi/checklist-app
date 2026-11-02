@@ -47,7 +47,7 @@ exports.submitForm = async (req, res) => {
     console.error('Error saving SC1 form:', err);
     res.json({
       success: false,
-      message: 'Error saving form: ' + err.message
+      message: 'Something went wrong. Please try again.'
     });
   }
 };

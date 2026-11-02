@@ -117,6 +117,8 @@
                             class="privacy-bullet-text">Submission timestamps and audit information</span></div>
                     <div class="privacy-bullet-row"><span class="privacy-bullet-dot" aria-hidden="true"></span><span
                             class="privacy-bullet-text">Generated PDF records and related metadata</span></div>
+                    <div class="privacy-bullet-row"><span class="privacy-bullet-dot" aria-hidden="true"></span><span
+                            class="privacy-bullet-text">Who deleted a record or changed who signed a day's fridge log, and when</span></div>
                 </div>
             </div>
 
@@ -142,8 +144,8 @@
                     <span class="privacy-section-num">3</span>
                     <span class="privacy-section-title">Storage and Security</span>
                 </div>
-                <p class="privacy-body-text">Records are stored on the application server and protected through access
-                    controls. Sensitive files, including employee data, should not be publicly accessible.</p>
+                <p class="privacy-body-text">Records are stored on cloud servers and can only be viewed by signed-in staff
+                    and through the manager portal. They are not publicly available. Only a manager can delete a record.</p>
             </div>
 
             <div class="kiosk-card">
@@ -161,7 +163,7 @@
                     <span class="privacy-section-title">Retention</span>
                 </div>
                 <p class="privacy-body-text">Records are retained for operational and compliance purposes. Retention
-                    periods may vary based on business requirements and applicable policy.</p>
+                    periods may vary based on business requirements and applicable policy. If a manager deletes a record, it is hidden from staff, but the file and a note of who deleted it and when are kept.</p>
             </div>
 
             <div class="kiosk-card">
@@ -230,8 +232,8 @@
                     <span class="privacy-section-num">11</span>
                     <span class="privacy-section-title">Cookies</span>
                 </div>
-                <p class="privacy-body-text">This application uses cookies to store user preferences and session
-                    information. By logging in, you agree to the use of cookies.</p>
+                <p class="privacy-body-text">This application uses essential cookies to keep you signed in. You are signed
+                    out after 15 minutes without activity.</p>
             </div>
         </div>
 
@@ -246,7 +248,7 @@
     <script>
         const t = window.appI18n ? window.appI18n.t : (key) => key;
 
-        document.getElementById('updated-label').textContent = t('Last updated: {date}', { date: new Date().toLocaleDateString('en-GB') });
+        document.getElementById('updated-label').textContent = t('Last updated: {date}', { date: '02/11/2026' });
 
         // ---- Brand lookup ----
         (async () => {

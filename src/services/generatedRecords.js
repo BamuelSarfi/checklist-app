@@ -1,6 +1,7 @@
 const { query } = require('../config/db');
 const storage = require('../config/storage');
 const { uploadGeneratedPdf, uploadCapturedDocument, deleteSyncedPdf } = require('./recordSync');
+const { recordAudit } = require('./auditLog');
 
 function getKitchenId() {
   return String(process.env.SAFECATER_KITCHEN_ID || '');
@@ -140,36 +141,6 @@ async function listRecordFileNames() {
   return result.rows.map((row) => row.file_name);
 }
 
-// Public/unauthenticated equivalent of listRecordFileNames - deliberately excludes
-// file_name and employee_name (a real food-safety record's file_name embeds the employee's
-// name, e.g. "SC1-12-09-2026-John_Doe.pdf") so the Library page can be viewed without staff
-// login without exposing who was on shift. `id` (a random UUID, not a database identity an
-// attacker could enumerate sequentially) is the only public handle - getPublicRecordById
-// below resolves it back to a real file server-side.
-async function listPublicRecordSummaries() {
-  const result = await query(
-    `SELECT id, record_type, record_date FROM generated_records
-     WHERE kitchen_id = $1 AND deleted_at IS NULL AND record_type != ALL($2)
-     ORDER BY created_at DESC`,
-    [getKitchenId(), EXCLUDED_FROM_LIBRARY_TYPES]
-  );
-
-  return result.rows;
-}
-
-// Kitchen-scoped by design, same as every other lookup here - a record id from one kitchen's
-// container can never resolve to another kitchen's file, even though the id itself carries
-// no kitchen information (it's a random UUID).
-async function getPublicRecordById(id) {
-  const result = await query(
-    `SELECT id, r2_key, record_type, record_date FROM generated_records
-     WHERE id = $1 AND kitchen_id = $2 AND deleted_at IS NULL`,
-    [id, getKitchenId()]
-  );
-
-  return result.rows[0] || null;
-}
-
 // Replaces the old /api/completed-checklists' fs.readdirSync + DD-MM-YYYY filename-prefix
 // guessing (which CLAUDE.md flagged as never actually matching SC2/SC4's different naming
 // scheme). record_date is a real column here, so this checks all five form types uniformly.
@@ -200,9 +171,12 @@ async function getDownloadByFileName(fileName, { disposition = 'inline' } = {}) 
   return { url, fileName: row.file_name };
 }
 
-async function deleteGeneratedRecordByFileName(fileName) {
+// Hides a record from the library and marks the portal copy as deleted, but keeps the file and writes
+// who did it to record_audit_log. These are compliance records, so a mistake or a deliberate removal
+// has to stay recoverable and visible.
+async function deleteGeneratedRecordByFileName(fileName, actor) {
   const result = await query(
-    `SELECT id, r2_key, fend_storage_key, kitchen_id FROM generated_records
+    `SELECT id, record_type, record_date, fend_storage_key, kitchen_id FROM generated_records
      WHERE file_name = $1 AND kitchen_id = $2 AND deleted_at IS NULL
      ORDER BY created_at DESC LIMIT 1`,
     [fileName, getKitchenId()]
@@ -213,11 +187,19 @@ async function deleteGeneratedRecordByFileName(fileName) {
     return false;
   }
 
-  await storage.deleteObject(row.r2_key);
+  await recordAudit({
+    action: 'record_deleted',
+    recordType: row.record_type,
+    recordDate: row.record_date,
+    fileName,
+    actor,
+    details: { record_id: row.id },
+  });
+
+  await query('UPDATE generated_records SET deleted_at = now() WHERE id = $1', [row.id]);
   if (row.fend_storage_key) {
     await deleteSyncedPdf({ fendStorageKey: row.fend_storage_key, kitchenId: row.kitchen_id });
   }
-  await query('UPDATE generated_records SET deleted_at = now() WHERE id = $1', [row.id]);
 
   return true;
 }
@@ -226,8 +208,6 @@ module.exports = {
   saveGeneratedRecord,
   saveCapturedDocument,
   listRecordFileNames,
-  listPublicRecordSummaries,
-  getPublicRecordById,
   listRecordTypesForDate,
   getDownloadByFileName,
   deleteGeneratedRecordByFileName,

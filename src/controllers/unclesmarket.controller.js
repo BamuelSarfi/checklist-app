@@ -162,7 +162,8 @@ exports.getTodayData = async (req, res) => {
             section_options: SECTION_OPTIONS,
         });
     } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
+        console.error('[unclesmarket]', err);
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
     }
 };
 
@@ -191,7 +192,8 @@ exports.getProgress = async (req, res) => {
 
         return res.json({ success: true, section_id: sectionId, daysInMonth, boxes });
     } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
+        console.error('[unclesmarket]', err);
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
     }
 };
 
@@ -241,7 +243,8 @@ exports.getOverview = async (req, res) => {
 
         return res.json({ success: true, daysInMonth, sections, boxes });
     } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
+        console.error('[unclesmarket]', err);
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
     }
 };
 
@@ -263,7 +266,8 @@ exports.saveDraft = async (req, res) => {
 
         return res.json({ success: true, message: 'Draft saved', record: nextRecord });
     } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
+        console.error('[unclesmarket]', err);
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
     }
 };
 
@@ -316,7 +320,8 @@ exports.exportPdf = async (req, res) => {
             sync_warning: syncStatus === 'subscription_inactive' ? syncMessage : null,
         });
     } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
+        console.error('[unclesmarket]', err);
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
     }
 };
 

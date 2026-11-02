@@ -198,7 +198,7 @@
 
             recordCount++;
             const currentDate = new Date().toLocaleDateString('en-GB');
-            const employeeName = employeeData?.name || 'Employee';
+            const employeeName = String(employeeData?.name || 'Employee').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
             const n = recordCount;
 
             const card = document.createElement('div');
@@ -437,6 +437,7 @@
     <script src="js/status-badge.js"></script>
     <script src="script.js"></script>
 
+    <script src="/js/session-idle.js"></script>
 </body>
 
 </html>

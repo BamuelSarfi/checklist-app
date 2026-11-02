@@ -8,6 +8,8 @@ const whatsappService = require('../services/whatsappService');
 // usable-forever in limbo; claimTester() only ever accepts status === 'verified' anyway, so
 // this just turns an indefinite hang into a bounded, honest answer for the customer.
 const VERIFICATION_TIMEOUT_MS = 25000;
+const MAX_FIRST_NAME_LENGTH = 50;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 exports.showApp = (req, res) => {
     res.sendFile(path.join(__dirname, '../views/naa_tester_claim.html'));
@@ -20,17 +22,23 @@ exports.register = async (req, res) => {
         const optedIn = Boolean(req.body.opted_in);
         const digits = testerPromotion.normalizePhone(phone);
 
-        if (!firstName) {
+        if (!firstName || firstName.length > MAX_FIRST_NAME_LENGTH) {
             return res.status(400).json({ success: false, message: 'Enter your first name' });
         }
-        if (digits.length < 10) {
+        if (digits.length < 10 || digits.length > 15) {
             return res.status(400).json({ success: false, message: 'Enter a full mobile number that uses WhatsApp' });
+        }
+
+        // Without WhatsApp nothing can check the number, so the promotion stays closed in production:
+        // any made-up number would otherwise count as verified and could empty the stock.
+        if (!whatsappService.isConfigured() && process.env.NODE_ENV === 'production') {
+            return res.status(503).json({ success: false, message: 'This promotion is not available right now.' });
         }
 
         const verification = await testerPromotion.createVerification({ firstName, phone, optedIn });
 
         if (!whatsappService.isConfigured()) {
-            // Simulated mode - no real Meta credentials yet. Resolve as verified after a
+            // Simulated mode, for local development only - no real Meta credentials yet. Resolve as verified after a
             // short delay so the rest of the flow can be built and tested end-to-end before
             // real credentials arrive; this path stops running the moment WHATSAPP_* env
             // vars are set (isConfigured() flips to true and the real send path below runs).
@@ -53,12 +61,17 @@ exports.register = async (req, res) => {
         await testerPromotion.attachWamid(verification.id, sendResult.wamid);
         return res.json({ success: true, verification_id: verification.id });
     } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
+        console.error('[naaTesterClaim]', err);
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
     }
 };
 
 exports.getVerifyStatus = async (req, res) => {
     try {
+        if (!UUID_RE.test(req.params.id)) {
+            return res.status(404).json({ success: false, message: 'Not found' });
+        }
+
         const verification = await testerPromotion.getVerification(req.params.id);
         if (!verification) {
             return res.status(404).json({ success: false, message: 'Not found' });
@@ -71,16 +84,18 @@ exports.getVerifyStatus = async (req, res) => {
 
         return res.json({ success: true, status: verification.status });
     } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
+        console.error('[naaTesterClaim]', err);
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
     }
 };
 
 exports.claim = async (req, res) => {
     try {
         const verificationId = String(req.body.verification_id || '').trim();
-        const tillId = String(req.body.till_id || testerPromotion.DEFAULT_TILL_ID).trim();
+        // One till today, and this route is open to anyone, so what's sent isn't used.
+        const tillId = testerPromotion.DEFAULT_TILL_ID;
 
-        if (!verificationId) {
+        if (!UUID_RE.test(verificationId)) {
             return res.status(400).json({ success: false, message: 'Missing verification' });
         }
 
@@ -115,7 +130,8 @@ exports.claim = async (req, res) => {
 
         return res.json({ success: true, outcome: result.outcome, message: messages[result.outcome] || 'Unable to claim right now.' });
     } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
+        console.error('[naaTesterClaim]', err);
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
     }
 };
 
@@ -126,8 +142,11 @@ exports.webhookVerify = (req, res) => {
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
 
-    if (mode === 'subscribe' && token === process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN) {
-        return res.status(200).send(challenge);
+    // Both unset would compare equal, and the challenge is attacker-chosen, so it's refused when no
+    // token is configured and only ever sent back as plain text.
+    const expected = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN;
+    if (expected && mode === 'subscribe' && token === expected) {
+        return res.status(200).type('text/plain').send(String(challenge ?? ''));
     }
 
     return res.sendStatus(403);

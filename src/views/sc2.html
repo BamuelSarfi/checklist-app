@@ -318,6 +318,8 @@
         let employee_id = null;
         let employeeData = null;
         let unitCount = 1;
+        // Stored text is typed by other staff, so it's escaped before reaching innerHTML.
+        const escapeForHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
         const maxUnits = 6;
         let unitNames = {};
         let temperatureData = {};
@@ -397,7 +399,7 @@
                 const name = unitNames[i] || t('Unit {n}', { n: i });
                 const tag = document.createElement('span');
                 tag.className = 'sc2_unit_pill';
-                tag.innerHTML = `<span aria-hidden="true" style="color: var(--color-info)">&#10052;</span>${name}`;
+                tag.innerHTML = `<span aria-hidden="true" style="color: var(--color-info)">&#10052;</span>${escapeForHtml(name)}`;
                 display.appendChild(tag);
             }
 
@@ -458,7 +460,7 @@
 
                 content.innerHTML = '';
                 const record = result.record;
-                const dayUnitCount = record.unit_count || Object.keys(record.unit_names || {}).length || 1;
+                const dayUnitCount = Math.min(Math.max(parseInt(record.unit_count, 10) || Object.keys(record.unit_names || {}).length || 1, 1), maxUnits);
                 const dayUnitNames = record.unit_names || {};
                 const temps = record.temperatures || {};
                 const corrective = record.corrective_actions || {};
@@ -477,7 +479,7 @@
                     tempsDiv.className = 'sc2_day_view_temps';
                     const am = temps[`unit${u}_am`];
                     const pm = temps[`unit${u}_pm`];
-                    tempsDiv.innerHTML = `<span>${t('AM:')} ${am !== null && am !== undefined && am !== '' ? am + '°C' : '—'}</span><span>${t('PM:')} ${pm !== null && pm !== undefined && pm !== '' ? pm + '°C' : '—'}</span>`;
+                    tempsDiv.innerHTML = `<span>${t('AM:')} ${am !== null && am !== undefined && am !== '' ? escapeForHtml(am) + '°C' : '—'}</span><span>${t('PM:')} ${pm !== null && pm !== undefined && pm !== '' ? escapeForHtml(pm) + '°C' : '—'}</span>`;
                     unitDiv.appendChild(tempsDiv);
 
                     [`temp_unit${u}_am`, `temp_unit${u}_pm`].forEach((fieldKey) => {
@@ -495,12 +497,12 @@
 
                 const commentsField = document.createElement('div');
                 commentsField.className = 'sc2_day_view_field';
-                commentsField.innerHTML = `<span class="sc2_day_view_field_label">${t('Comments/Action:')}</span><span class="sc2_day_view_field_value">${record.comments || '—'}</span>`;
+                commentsField.innerHTML = `<span class="sc2_day_view_field_label">${t('Comments/Action:')}</span><span class="sc2_day_view_field_value">${escapeForHtml(record.comments || '—')}</span>`;
                 content.appendChild(commentsField);
 
                 const signedField = document.createElement('div');
                 signedField.className = 'sc2_day_view_field sc2_day_view_signed';
-                signedField.innerHTML = `<span class="sc2_day_view_field_label">${t('Signed:')}</span><span class="sc2_day_view_field_value">${record.signed || '—'}</span>`;
+                signedField.innerHTML = `<span class="sc2_day_view_field_label">${t('Signed:')}</span><span class="sc2_day_view_field_value">${escapeForHtml(record.signed || '—')}</span>`;
                 content.appendChild(signedField);
             } catch (err) {
                 console.error('Error loading day record:', err);
@@ -642,7 +644,7 @@
                     return;
                 }
 
-                unitCount = record.unit_count || 1;
+                unitCount = Math.min(Math.max(parseInt(record.unit_count, 10) || 1, 1), maxUnits);
                 if (record.unit_names && typeof record.unit_names === 'object') unitNames = { ...unitNames, ...record.unit_names };
                 if (record.temperatures && typeof record.temperatures === 'object') temperatureData = { ...record.temperatures };
                 if (record.corrective_actions && typeof record.corrective_actions === 'object') correctiveActions = { ...record.corrective_actions };
@@ -872,6 +874,7 @@
     <script src="js/sync-engine.js"></script>
     <script src="js/status-badge.js"></script>
     <script src="script.js"></script>
+    <script src="/js/session-idle.js"></script>
 </body>
 
 </html>

@@ -84,7 +84,6 @@
 
             <div style="display: flex; flex-direction: column; gap: 12px">
                 <div id="login-button-mount"></div>
-                <div id="library-button-mount"></div>
                 <button type="button" id="forgot-pin-btn"
                     style="align-self: center; margin-top: 4px; padding: 10px 8px; border: 0; background: none; font-family: inherit; font-size: 14px; color: var(--color-info); cursor: pointer">Forgot
                     your PIN?</button>
@@ -120,7 +119,6 @@
 
         const pinRoot = ReactDOM.createRoot(document.getElementById('pin-mount'));
         const loginButtonRoot = ReactDOM.createRoot(document.getElementById('login-button-mount'));
-        const libraryButtonRoot = ReactDOM.createRoot(document.getElementById('library-button-mount'));
         const forgotModalRoot = ReactDOM.createRoot(document.getElementById('forgot-modal-mount'));
 
         function focusFirstDigit() {
@@ -195,13 +193,6 @@
                 style: { minHeight: 56, fontSize: 16, fontWeight: 600, borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-success)', boxShadow: 'none' },
             }, 'Login'));
 
-            libraryButtonRoot.render(React.createElement(Button, {
-                variant: 'secondary',
-                fullWidth: true,
-                onClick: () => { window.location.href = '/library'; },
-                style: { minHeight: 56, fontSize: 16, fontWeight: 600, borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border-soft)', background: 'var(--color-white)', color: 'var(--color-text-heading)', boxShadow: 'none' },
-            }, 'View library'));
-
             forgotModalRoot.render(React.createElement(Modal, {
                 open: state.forgotOpen,
                 type: 'info',
@@ -219,27 +210,9 @@
         render();
 
         // --- Brand lookup (kitchen name/logo for multi-tenant kiosks) ---
-        function getBrandQuery() {
-            const params = new URLSearchParams(window.location.search);
-            const querySlug = String(params.get('slug') || params.get('subdomain') || '').trim();
-            const queryKitchenId = String(params.get('kitchen_id') || params.get('kitchenId') || '').trim();
-
-            if (queryKitchenId) return `kitchen_id=${encodeURIComponent(queryKitchenId)}`;
-            if (querySlug) return `slug=${encodeURIComponent(querySlug)}`;
-
-            const pathSegments = window.location.pathname.split('/').filter(Boolean);
-            if (pathSegments.length >= 2 && pathSegments[pathSegments.length - 1] === 'login') {
-                const maybeSlug = pathSegments[pathSegments.length - 2];
-                if (maybeSlug && maybeSlug !== 'login') return `slug=${encodeURIComponent(maybeSlug)}`;
-            }
-
-            return '';
-        }
-
         async function initializeBranding() {
             try {
-                const query = getBrandQuery();
-                const response = await fetch(`/api/brand${query ? `?${query}` : ''}`);
+                const response = await fetch('/api/brand');
                 if (!response.ok) return;
 
                 const data = await response.json();

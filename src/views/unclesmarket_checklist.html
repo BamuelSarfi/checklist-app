@@ -135,7 +135,7 @@
                 row.innerHTML = `
                     <button type="button" class="kiosk-toggle-box${task.cleaned ? ' is-checked' : ''}" aria-pressed="${task.cleaned}" data-index="${index}">${task.cleaned ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>' : ''}</button>
                     <span class="um_task_label">${task.label}</span>
-                    <input type="time" class="kiosk-text-input um_task_time" data-index="${index}" value="${task.time || ''}">
+                    <input type="time" class="kiosk-text-input um_task_time" data-index="${index}" value="${String(task.time || '').replace(/[^0-9:]/g, '')}">
                 `;
                 container.appendChild(row);
             });
@@ -322,6 +322,7 @@
     </script>
 
     <script src="/script.js"></script>
+    <script src="/js/session-idle.js"></script>
 </body>
 
 </html>

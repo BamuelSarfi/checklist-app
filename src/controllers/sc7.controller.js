@@ -29,7 +29,7 @@ exports.processForm = async (req, res) => {
     console.error(err);
     res.status(500).json({
       success: false,
-      error: JSON.stringify(err),
+      message: 'Something went wrong. Please try again.',
     });
   }
 };

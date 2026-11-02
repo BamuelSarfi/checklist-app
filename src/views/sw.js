@@ -15,8 +15,8 @@
 //    to any open page so sync-engine.js can replay the queue from there, since that's where
 //    offlineStore/IndexedDB access already lives.
 
-const STATIC_CACHE = 'safecater-kiosk-static-v1';
-const RUNTIME_CACHE = 'safecater-kiosk-runtime-v1';
+const STATIC_CACHE = 'safecater-kiosk-static-v2';
+const RUNTIME_CACHE = 'safecater-kiosk-runtime-v2';
 const CURRENT_CACHES = [STATIC_CACHE, RUNTIME_CACHE];
 
 const PRECACHE_ASSETS = [
@@ -28,6 +28,7 @@ const PRECACHE_ASSETS = [
   '/js/offline-store.js',
   '/js/sync-engine.js',
   '/js/status-badge.js',
+  '/js/session-idle.js',
   '/asset1.png',
   '/asset2.png',
   '/asset3.png',

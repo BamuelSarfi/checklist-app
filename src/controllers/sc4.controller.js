@@ -106,7 +106,7 @@ exports.submitForm = async (req, res) => {
     res.json({ success: true, message: saveMode === 'draft' ? 'SC4 draft saved successfully' : 'SC4 form submitted successfully' });
   } catch (err) {
     console.error('Error submitting SC4 form:', err);
-    res.json({ success: false, message: 'Error submitting form: ' + err.message });
+    res.json({ success: false, message: 'Something went wrong. Please try again.' });
   }
 };
 
@@ -152,7 +152,7 @@ exports.exportPdf = async (req, res) => {
     });
   } catch (err) {
     console.error('Error exporting SC4 PDF:', err);
-    res.json({ success: false, message: 'Error exporting PDF: ' + err.message });
+    res.json({ success: false, message: 'Something went wrong. Please try again.' });
   }
 };
 
@@ -170,6 +170,6 @@ exports.getTodayData = async (req, res) => {
     res.json({ success: true, data: draft ? { rows: draft.payload?.rows || [] } : null });
   } catch (err) {
     console.error('Error getting SC4 data:', err);
-    res.json({ success: false, message: 'Error getting data: ' + err.message });
+    res.json({ success: false, message: 'Something went wrong. Please try again.' });
   }
 };

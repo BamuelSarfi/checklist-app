@@ -142,7 +142,7 @@
             if (employeeData) {
                 employee_id = employeeData.id;
                 const fullName = employeeData.name || 'Employee';
-                employeeFirstName = fullName.trim().split(/\s+/)[0] || 'Employee';
+                employeeFirstName = (fullName.trim().split(/\s+/)[0] || 'Employee').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
                 document.getElementById('employee_name_display').textContent = fullName;
                 document.getElementById('autofill_name').textContent = fullName;
                 document.getElementById('autofill_signature').textContent = employeeFirstName;
@@ -453,6 +453,7 @@
     <script src="js/sync-engine.js"></script>
     <script src="js/status-badge.js"></script>
     <script src="script.js"></script>
+    <script src="/js/session-idle.js"></script>
 </body>
 
 </html>

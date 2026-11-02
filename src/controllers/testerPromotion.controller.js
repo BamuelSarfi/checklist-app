@@ -54,7 +54,8 @@ exports.getStatus = async (req, res) => {
 
         return res.json({ success: true, run: await buildRunPayload(run) });
     } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
+        console.error('[testerPromotion]', err);
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
     }
 };
 
@@ -97,7 +98,8 @@ exports.startRun = async (req, res) => {
 
         return res.json({ success: true, run: await buildRunPayload(run) });
     } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
+        console.error('[testerPromotion]', err);
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
     }
 };
 
@@ -140,7 +142,8 @@ exports.endRun = async (req, res) => {
             pdfUrl: fileName ? `/records/${encodeURIComponent(fileName.fileName)}` : null,
         });
     } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
+        console.error('[testerPromotion]', err);
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
     }
 };
 
@@ -221,6 +224,7 @@ exports.getTillQr = async (req, res) => {
 
         return res.json({ success: true, till_id: tillId, qr_data_url: dataUrl, payload: claimUrl });
     } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
+        console.error('[testerPromotion]', err);
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
     }
 };

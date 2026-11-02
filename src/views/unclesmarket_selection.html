@@ -162,7 +162,7 @@
                 card.className = `um_section_card${section.done_today ? ' is-done' : ''}`;
                 card.innerHTML = `
                     <span class="um_section_card_title">${section.title}</span>
-                    <span class="um_section_card_status">${section.done_today ? `&check; Done today${section.employee_name ? ' by ' + section.employee_name : ''}` : 'Not done today'}</span>
+                    <span class="um_section_card_status">${section.done_today ? `&check; Done today${section.employee_name ? ' by ' + String(section.employee_name).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])) : ''}` : 'Not done today'}</span>
                 `;
                 card.addEventListener('click', () => {
                     window.location.href = `/unclesmarket/checklist?section=${encodeURIComponent(section.id)}`;
@@ -237,6 +237,7 @@
     </script>
 
     <script src="/script.js"></script>
+    <script src="/js/session-idle.js"></script>
 </body>
 
 </html>

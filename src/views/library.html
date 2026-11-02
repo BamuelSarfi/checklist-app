@@ -323,18 +323,9 @@
             }
         }
 
-        const name = employeeData?.name || 'Public view';
+        const name = employeeData?.name || '';
         document.getElementById('employee_name_display').textContent = name;
 
-        // No session at all - logging out means nothing here, and the Employee search mode
-        // has nothing to search (the public record list never carries a name). Point at
-        // staff login instead of leaving a dead-end Logout button.
-        if (!employeeData) {
-            document.getElementById('logout_button').style.display = 'none';
-            document.getElementById('staff_login_link').style.display = '';
-            const employeeSearchBtn = document.querySelector('.search-mode-btn[data-target="employee"]');
-            if (employeeSearchBtn) employeeSearchBtn.style.display = 'none';
-        }
     };
 
     // ---- Brand lookup ----
@@ -434,28 +425,13 @@
         ))));
     };
 
-    // A pseudo-filename for public records - "<TYPE>-<ISO date>-<id>.pdf" - carries no
-    // employee name (unlike a real file_name) but still matches recordMeta()'s existing
-    // SC-code/date regexes below unchanged, so the rest of this file's rendering/search/
-    // sort logic doesn't need a parallel code path for the two record shapes. Extension is
-    // always assumed .pdf here since the public listing deliberately doesn't expose r2_key
-    // (the one place the real extension is known) - cosmetic only, the actual
-    // /public/records/:id route determines the real content-type server-side regardless.
-    const PUBLIC_RECORD_ID_RE = /-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.[a-z0-9]+$/i;
-
-    function toPublicPseudoFileName(record) {
-        return `${record.record_type}-${record.record_date}-${record.id}.pdf`;
-    }
-
     const fetchRecords = async () => {
         renderRecordsSkeleton();
         try {
-            const response = await fetch(employeeData ? '/api/records' : '/api/public/records');
+            const response = await fetch('/api/records');
             const data = await response.json();
             if (data.success) {
-                allRecords = employeeData
-                    ? (data.records || [])
-                    : (data.records || []).map(toPublicPseudoFileName);
+                allRecords = data.records || [];
                 renderRecords(allRecords);
             }
         } catch (err) {
@@ -491,9 +467,9 @@
                     ),
                     React.createElement('span', { style: { display: 'inline-flex', alignItems: 'center', height: 22, padding: '0 8px', border: '1px solid var(--color-border-soft)', borderRadius: 'var(--radius-xs)', background: 'var(--color-bg-subtle)', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--color-text-muted)' } }, meta.ext),
                 ),
-                React.createElement('div', { style: { display: 'grid', gridTemplateColumns: employeeData ? '1fr 1fr' : '1fr', gap: 10, marginTop: 12 } },
+                React.createElement('div', { style: { display: 'grid', gridTemplateColumns: employeeData?.can_delete_records ? '1fr 1fr' : '1fr', gap: 10, marginTop: 12 } },
                     React.createElement(Button, { variant: 'secondary', fullWidth: true, style: outline('var(--color-border-soft)'), onClick: () => downloadRecord(record) }, t('View')),
-                    employeeData ? React.createElement(Button, { variant: 'secondary', fullWidth: true, style: outline('var(--color-error)'), onClick: () => deleteRecord(record) }, t('Delete')) : null,
+                    employeeData?.can_delete_records ? React.createElement(Button, { variant: 'secondary', fullWidth: true, style: outline('var(--color-error)'), onClick: () => deleteRecord(record) }, t('Delete')) : null,
                 ),
             );
         })));
@@ -551,15 +527,7 @@
     };
 
     const downloadRecord = (fileName) => {
-        if (employeeData) {
-            window.open(`/records/${fileName}`, '_blank');
-            return;
-        }
-
-        const match = PUBLIC_RECORD_ID_RE.exec(fileName);
-        if (match) {
-            window.open(`/public/records/${match[1]}`, '_blank');
-        }
+        window.open(`/records/${encodeURIComponent(fileName)}`, '_blank');
     };
 
     const deleteRecord = async (fileName) => {
@@ -611,5 +579,6 @@
     }
 </script>
 
+    <script src="/js/session-idle.js"></script>
 </body>
 </html>

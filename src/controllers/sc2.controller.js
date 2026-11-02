@@ -3,6 +3,7 @@ const fillSc2 = require('../lib/fillSc2');
 const { saveGeneratedRecord } = require('../services/generatedRecords');
 const checklistDrafts = require('../services/checklistDrafts');
 const temperatureAlerts = require('../services/temperatureAlerts');
+const { recordAudit } = require('../services/auditLog');
 
 // SC2 keeps one shared draft per day (not per employee - any employee on shift can fill
 // it), so every checklist_drafts row for this form uses this fixed employee slot.
@@ -39,6 +40,67 @@ async function saveDayRecord(date, dayRecord) {
         employeeName: dayRecord.employee_name || null,
         payload: dayRecord,
         status: dayRecord.status || 'draft',
+    });
+}
+
+const MAX_UNITS = 6;
+const MAX_NAME_LENGTH = 60;
+const MAX_NOTE_LENGTH = 2000;
+
+function cleanText(value, maxLength) {
+    return typeof value === 'string' || typeof value === 'number' ? String(value).slice(0, maxLength) : '';
+}
+
+// The shared day log is read by every employee, so what one person saves is checked here rather than
+// trusted. An unchecked unit_count froze the page for the next person, who'd loop up to whatever
+// number was sent.
+function cleanDayInput(body = {}) {
+    const unitCount = Math.min(Math.max(parseInt(body.unit_count, 10) || 1, 1), MAX_UNITS);
+    const unitNames = {};
+    const temperatures = {};
+    const correctiveActions = {};
+
+    for (let unit = 1; unit <= MAX_UNITS; unit++) {
+        const name = cleanText(body.unit_names?.[unit], MAX_NAME_LENGTH);
+        if (name) unitNames[unit] = name;
+
+        for (const slot of ['am', 'pm']) {
+            const key = `unit${unit}_${slot}`;
+            const reading = body.temperatures?.[key];
+            if (reading !== undefined) {
+                const parsed = parseFloat(reading);
+                temperatures[key] = Number.isFinite(parsed) ? parsed : null;
+            }
+
+            const fieldKey = `temp_${key}`;
+            const action = body.corrective_actions?.[fieldKey];
+            if (action && typeof action === 'object') {
+                correctiveActions[fieldKey] = { ...action, note: cleanText(action.note, MAX_NOTE_LENGTH) };
+            }
+        }
+    }
+
+    return {
+        unit_count: unitCount,
+        unit_names: unitNames,
+        temperatures,
+        corrective_actions: correctiveActions,
+        comments: cleanText(body.comments, MAX_NOTE_LENGTH),
+    };
+}
+
+// The day's log is shared and signed by whoever saves last, so keep who it was signed by before.
+async function auditResign(previous, employee, date) {
+    if (!previous?.employee_id || String(previous.employee_id) === String(employee.id)) {
+        return;
+    }
+
+    await recordAudit({
+        action: 'sc2_day_resigned',
+        recordType: 'SC2',
+        recordDate: date,
+        actor: employee,
+        details: { previous_employee_id: previous.employee_id, previous_signed: previous.signed || null },
     });
 }
 
@@ -121,11 +183,7 @@ exports.saveDraft = async (req, res) => {
             day: now.getDate(),
             month: now.getMonth() + 1,
             year: now.getFullYear(),
-            unit_count: req.body.unit_count || 1,
-            unit_names: req.body.unit_names || {},
-            temperatures: req.body.temperatures || {},
-            corrective_actions: req.body.corrective_actions || {},
-            comments: req.body.comments || '',
+            ...cleanDayInput(req.body),
             signed: employee.name,
             status: 'draft',
             updated_at: new Date().toISOString()
@@ -146,6 +204,7 @@ exports.saveDraft = async (req, res) => {
             dayRecord.temp_alert_sent_at = new Date().toISOString();
         }
 
+        await auditResign(monthData.days[dayKey], employee, dayRecord.date);
         await saveDayRecord(now, dayRecord);
 
         return res.json({
@@ -154,7 +213,8 @@ exports.saveDraft = async (req, res) => {
             record: dayRecord
         });
     } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
+        console.error('[sc2]', err);
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
     }
 };
 
@@ -173,7 +233,8 @@ exports.getTodayData = async (req, res) => {
             record: draft?.payload || null
         });
     } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
+        console.error('[sc2]', err);
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
     }
 };
 
@@ -210,7 +271,8 @@ exports.getProgress = async (req, res) => {
             boxes
         });
     } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
+        console.error('[sc2]', err);
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
     }
 };
 
@@ -238,7 +300,8 @@ exports.getDay = async (req, res) => {
             record: draft?.payload || null
         });
     } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
+        console.error('[sc2]', err);
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
     }
 };
 
@@ -278,6 +341,8 @@ exports.exportPdf = async (req, res) => {
             }));
         }
 
+        await auditResign(record, employee, now.toISOString().slice(0, 10));
+
         record.status = 'submitted';
         record.employee_id = employee.id;
         record.employee_name = employee.name;
@@ -295,46 +360,8 @@ exports.exportPdf = async (req, res) => {
             sync_warning: syncStatus === 'subscription_inactive' ? syncMessage : null,
         });
     } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
-    }
-};
-
-exports.reopenForEditing = async (req, res) => {
-    try {
-        const employee = getEmployee(req);
-        if (!employee) {
-            return res.status(401).json({ success: false, message: 'Unauthorized' });
-        }
-
-        const dateStr = req.body?.date || new Date().toISOString().slice(0, 10);
-        // new Date("YYYY-MM-DD") parses as UTC midnight, but getDraft/saveDayRecord below
-        // read it back with local getters (getFullYear/getMonth/getDate) - in any timezone
-        // west of UTC that round-trip lands on the previous day. Building the Date directly
-        // from the local Y/M/D components avoids the UTC parse entirely.
-        const [year, month, day] = dateStr.split('-').map(Number);
-        const date = new Date(year, (month || 1) - 1, day);
-        if (Number.isNaN(date.getTime())) {
-            return res.status(400).json({ success: false, message: 'Invalid date' });
-        }
-
-        const draft = await checklistDrafts.getDraft('SC2', date.getFullYear(), date.getMonth() + 1, date.getDate(), SHARED_EMPLOYEE_SLOT);
-        const record = draft?.payload;
-
-        if (!record) {
-            return res.status(404).json({ success: false, message: 'No SC2 record found to reopen' });
-        }
-
-        record.status = 'reopened';
-        record.employee_id = employee.id;
-        record.employee_name = employee.name;
-        record.signed = employee.name;
-        record.updated_at = new Date().toISOString();
-
-        await saveDayRecord(date, record);
-
-        return res.json({ success: true, record });
-    } catch (err) {
-        return res.status(500).json({ success: false, message: err.message });
+        console.error('[sc2]', err);
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
     }
 };
 
