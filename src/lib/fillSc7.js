@@ -1,3 +1,4 @@
+const { localDateIso } = require('../utils/kitchenTime');
 const fs = require('fs');
 const path = require('path');
 const { PDFDocument } = require('pdf-lib');
@@ -74,7 +75,7 @@ async function fillSc7(data) {
   const { syncStatus, syncMessage, id: recordId } = await saveGeneratedRecord({
     fileName,
     recordType: 'SC7',
-    recordDate: new Date().toISOString().slice(0, 10),
+    recordDate: localDateIso(),
     employeeId: data.employee_id || null,
     employeeName: data.name || 'Employee',
     payload: data,

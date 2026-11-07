@@ -39,6 +39,7 @@ function normalizeEmployee(employee) {
     email: employee.email || null,
     location: employee.location || null,
     is_active: employee.is_active !== false,
+    can_sign_diary: employee.can_sign_diary === true,
   };
 }
 
@@ -48,6 +49,10 @@ const LEGACY_SHA256_RE = /^[0-9a-f]{64}$/i;
 // The portal said no more attempts for now. Kept distinct from "wrong PIN" so staff are told to
 // wait, not sent off to get a PIN reset that wouldn't help.
 class PinVerificationThrottledError extends Error {}
+
+// The portal couldn't be reached, so a PIN can't be judged either way. Only raised for callers that
+// ask, because telling someone a right PIN is wrong would be misleading when they're signing a record.
+class PinVerificationUnavailableError extends Error {}
 
 // Salted and deliberately slow, because there are only a million possible PINs: plain sha256 of one
 // can be reversed instantly by anyone who reads this table.
@@ -95,6 +100,7 @@ function rowToEmployee(row) {
     email: row.email,
     location: row.location,
     is_active: row.is_active,
+    can_sign_diary: row.can_sign_diary,
   });
 }
 
@@ -104,7 +110,7 @@ function rowToEmployee(row) {
 // database rather than by hand-editing a JSON file).
 async function loadCachedEmployees() {
   const result = await query(
-    `SELECT id, name, full_name, first_name, last_name, role, preferred_language, pin_last4, email, location, is_active
+    `SELECT id, name, full_name, first_name, last_name, role, preferred_language, pin_last4, email, location, is_active, can_sign_diary
      FROM employees_cache
      WHERE kitchen_id = $1 AND is_active = true
      ORDER BY name ASC`,
@@ -116,7 +122,7 @@ async function loadCachedEmployees() {
 
 async function findCachedEmployeeByPin(pin) {
   const result = await query(
-    `SELECT id, name, full_name, first_name, last_name, role, preferred_language, pin_last4, pin_hash, email, location, is_active
+    `SELECT id, name, full_name, first_name, last_name, role, preferred_language, pin_last4, pin_hash, email, location, is_active, can_sign_diary
      FROM employees_cache
      WHERE kitchen_id = $1 AND is_active = true AND pin_hash IS NOT NULL`,
     [getKitchenId()]
@@ -144,9 +150,9 @@ async function cacheRemoteEmployees(employees) {
       await query(
         `INSERT INTO employees_cache (
             id, kitchen_id, name, full_name, first_name, last_name, role,
-            preferred_language, pin_last4, email, location, is_active, source, updated_at
+            preferred_language, pin_last4, email, location, is_active, can_sign_diary, source, updated_at
          )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'remote', now())
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'remote', now())
          ON CONFLICT (id) DO UPDATE SET
             kitchen_id = EXCLUDED.kitchen_id,
             name = EXCLUDED.name,
@@ -159,6 +165,7 @@ async function cacheRemoteEmployees(employees) {
             email = EXCLUDED.email,
             location = EXCLUDED.location,
             is_active = EXCLUDED.is_active,
+            can_sign_diary = EXCLUDED.can_sign_diary,
             source = 'remote',
             updated_at = now()`,
         [
@@ -174,6 +181,7 @@ async function cacheRemoteEmployees(employees) {
           employee.email,
           employee.location,
           employee.is_active,
+          employee.can_sign_diary === true,
         ]
       );
     } catch (error) {
@@ -263,7 +271,7 @@ async function getEmployeeById(employeeId) {
   return employees.find((employee) => String(employee.id) === String(employeeId)) || null;
 }
 
-async function authenticateEmployeePin(pin) {
+async function authenticateEmployeePin(pin, { reportOutage = false } = {}) {
   const cleanPin = String(pin || '').trim();
 
   if (!/^\d{6}$/.test(cleanPin)) {
@@ -291,6 +299,11 @@ async function authenticateEmployeePin(pin) {
         throw new PinVerificationThrottledError('PIN verification is rate limited');
       }
       console.warn('Remote PIN verification unavailable, falling back to cache:', error.message);
+      const cached = await findCachedEmployeeByPin(cleanPin);
+      if (!cached && reportOutage && error.status !== 401) {
+        throw new PinVerificationUnavailableError('The portal could not check this PIN');
+      }
+      return cached;
     }
   }
 
@@ -304,4 +317,5 @@ module.exports = {
   normalizeEmployee,
   hashPin,
   PinVerificationThrottledError,
+  PinVerificationUnavailableError,
 };

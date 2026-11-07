@@ -353,7 +353,7 @@
                     <span id="brand-site-name"
                         style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Safe
                         Catering</span>
-                    <span
+                    <span id="home-title"
                         style="font-size: 16px; font-weight: 700; line-height: 1.2; color: var(--color-text-heading)">Safe
                         Catering Virtual Checklist</span>
                 </div>
@@ -606,7 +606,8 @@
             const defaultTitle = file.name.replace(/\.[^./\\]+$/, '');
             document.getElementById('upload_modal_title_input').value = defaultTitle;
             document.getElementById('upload_modal_category_select').value = 'custom_document';
-            const todayIso = new Date().toISOString().slice(0, 10);
+            const uploadNow = new Date();
+            const todayIso = new Date(uploadNow.getTime() - uploadNow.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
             const dateInput = document.getElementById('upload_modal_date_input');
             dateInput.value = todayIso;
             dateInput.max = todayIso;
@@ -652,7 +653,8 @@
             if (!pendingUpload) return;
 
             const rawDate = document.getElementById('upload_modal_date_input').value;
-            const todayIso = new Date().toISOString().slice(0, 10);
+            const uploadNow = new Date();
+            const todayIso = new Date(uploadNow.getTime() - uploadNow.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
             if (!/^\d{4}-\d{2}-\d{2}$/.test(rawDate) || rawDate > todayIso) {
                 showUploadModalError(t('Please pick a valid date that is not in the future.'));
                 return;
@@ -705,6 +707,16 @@
             { id: 'sc1', code: 'SC1', title: 'SC1 - Food Delivery Records', description: 'Food delivery conditions and organization check', url: '/sc1', required: false, completed: false },
         ];
 
+        // The closing checks and sign-off aren't due until the end of the day, so they don't set off
+        // the afternoon reminder.
+        const SFBB_CHECKLISTS = [
+            { id: 'sfbb_opening', code: 'SFBB', title: 'Opening checks', description: 'Do these when you open', url: '/sfbb/diary#opening', required: true, completed: false },
+            { id: 'sfbb_closing', code: 'SFBB', title: 'Closing checks', description: 'Do these when you close', url: '/sfbb/diary#closing', required: true, dueLater: true, completed: false },
+            { id: 'sfbb_diary', code: 'SFBB', title: 'Prove it, extra checks and problems', description: 'Record readings and anything that went wrong', url: '/sfbb/diary#prove-it', required: false, completed: false },
+            { id: 'sfbb_signoff', code: 'SFBB', title: 'Sign the diary', description: 'Manager or delegate, at the end of the day', url: '/sfbb/diary#signoff', required: true, dueLater: true, completed: false },
+        ];
+        const SFBB_REVIEW_CHECKLIST = { id: 'sfbb_review', code: 'SFBB', title: '4-weekly review', description: 'Due now. Manager or delegate', url: '/sfbb/review', required: false, completed: false };
+
         // Uncle's Market is a business-specific bolt-on (not a module_type - only this one
         // kitchen's deployment sets ENABLE_UNCLES_MARKET, surfaced to the frontend via
         // /api/brand's uncles_market_enabled flag) - not tracked in the required-checklists
@@ -720,6 +732,7 @@
         const TESTER_PROMOTION_CHECKLIST = { id: 'testerpromotion', code: 'TP', title: 'Tester Promotion', description: 'Run the till tester giveaway and log claims', url: '/tester-promotion', required: false, completed: false };
 
         let kitchenModuleType = 'safecatering';
+        let kitchenAddonForms = [];
         let unclesMarketEnabled = false;
         let testerPromotionEnabled = false;
         let checklists = SAFECATERING_CHECKLISTS;
@@ -729,14 +742,23 @@
                 const response = await fetch('/api/brand');
                 if (response.ok) {
                     const data = await response.json();
-                    kitchenModuleType = data?.kitchen?.module_type || 'safecatering';
+                    kitchenModuleType = data?.pack?.module_type || data?.kitchen?.module_type || 'safecatering';
+                    kitchenAddonForms = Array.isArray(data?.pack?.addon_forms) ? data.pack.addon_forms : [];
                     unclesMarketEnabled = !!data?.uncles_market_enabled;
                     testerPromotionEnabled = !!data?.tester_promotion_enabled;
                 }
             } catch (err) {
                 console.error('Error fetching kitchen module type:', err);
             } finally {
-                checklists = kitchenModuleType === 'safecatering' ? SAFECATERING_CHECKLISTS : [];
+                // Forms added from another pack are optional here, whatever they are in their own pack.
+                const addons = SAFECATERING_CHECKLISTS
+                    .filter((checklist) => kitchenAddonForms.includes(checklist.code))
+                    .map((checklist) => ({ ...checklist, required: false }));
+                checklists = kitchenModuleType === 'safecatering' ? SAFECATERING_CHECKLISTS : addons;
+                if (kitchenModuleType === 'sfbb') {
+                    checklists = [...SFBB_CHECKLISTS, ...addons];
+                    document.getElementById('home-title').textContent = t('Kitchen checklist');
+                }
                 if (unclesMarketEnabled) {
                     checklists = [...checklists, UNCLES_MARKET_CHECKLIST];
                 }
@@ -751,6 +773,9 @@
                 const response = await fetch('/api/completed-checklists');
                 const data = await response.json();
                 if (data.success && data.completed) {
+                    if (data.completed.sfbb_review_due && !checklists.includes(SFBB_REVIEW_CHECKLIST)) {
+                        checklists = [SFBB_REVIEW_CHECKLIST, ...checklists];
+                    }
                     checklists.forEach((checklist) => {
                         if (data.completed[checklist.id]) {
                             checklist.completed = true;
@@ -901,7 +926,7 @@
 
         function evaluateTaskReminder() {
             const requiredChecklists = checklists.filter((c) => c.required);
-            const missing = requiredChecklists.filter((c) => !c.completed);
+            const missing = requiredChecklists.filter((c) => !c.completed && !c.dueLater);
 
             const now = new Date();
             const nowMinutes = now.getHours() * 60 + now.getMinutes();
@@ -956,6 +981,7 @@
     <script src="js/status-badge.js"></script>
     <script src="script.js"></script>
     <script src="help_overlay.js"></script>
+    <script src="/js/tutorials.js"></script>
 
     <!-- Help overlay -->
     <div id="help_overlay" aria-hidden="true">

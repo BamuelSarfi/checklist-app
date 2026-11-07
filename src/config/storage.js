@@ -77,6 +77,11 @@ async function uploadPdf(key, buffer) {
     return uploadFile(key, buffer, 'application/pdf');
 }
 
+async function readObject(key) {
+    const response = await getR2Client().send(new GetObjectCommand({ Bucket: getBucketName(), Key: key }));
+    return Buffer.from(await response.Body.transformToByteArray());
+}
+
 async function deleteObject(key) {
     if (!key) {
         return false;
@@ -102,6 +107,7 @@ async function getDownloadUrl(key, { downloadName, expiresIn = DEFAULT_SIGNED_UR
 }
 
 module.exports = {
+    readObject,
     hasR2Config,
     buildFileKey,
     buildPdfKey,

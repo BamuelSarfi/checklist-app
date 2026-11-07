@@ -1,3 +1,4 @@
+const { localDateIso } = require('../utils/kitchenTime');
 const fillSc3Entry = require('../lib/fillSc3');
 const { getEmployeeById } = require('../services/employeeDirectory');
 const { saveGeneratedRecord } = require('../services/generatedRecords');
@@ -146,7 +147,7 @@ exports.submitAndExport = async (req, res) => {
 
         const body = req.body || {};
         const now = new Date();
-        const recordDate = now.toISOString().slice(0, 10);
+        const recordDate = localDateIso(now);
 
         // Persist a per-employee daily draft so /api/sc3/today can actually restore it on
         // reload - previously nothing ever wrote to the store that route read from.

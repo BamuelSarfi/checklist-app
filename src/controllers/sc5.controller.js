@@ -1,3 +1,4 @@
+const { localDateIso } = require('../utils/kitchenTime');
 const e = require('express');
 const fillSc5 = require('../lib/fillSc5');
 const path = require('path');
@@ -10,7 +11,7 @@ exports.showForm = (req, res) => {
 
 exports.getTodayStatus = async (req, res) => {
   try {
-    const todayIso = new Date().toISOString().slice(0, 10);
+    const todayIso = localDateIso();
     const typesToday = await generatedRecords.listRecordTypesForDate(todayIso);
 
     res.json({
@@ -29,7 +30,7 @@ exports.processForm = async (req, res) => {
 
     // SC5 is a once-per-day checklist - reject a second submission rather than silently
     // generating a duplicate PDF/record for the same day.
-    const todayIso = new Date().toISOString().slice(0, 10);
+    const todayIso = localDateIso();
     const typesToday = await generatedRecords.listRecordTypesForDate(todayIso);
     if (typesToday.includes('SC5')) {
       return res.status(409).json({

@@ -1,3 +1,4 @@
+const { localDateIso } = require('../utils/kitchenTime');
 const fs = require('fs');
 const path = require('path');
 const { PDFDocument } = require('pdf-lib');
@@ -204,7 +205,7 @@ async function fillSc5(data) {
     // record_date is compared against ISO "today" elsewhere (listRecordTypesForDate, used by
     // /api/completed-checklists and the daily-completion check), and a DD/MM/YYYY value there
     // would never match, silently breaking "already completed today" detection.
-    recordDate: new Date().toISOString().slice(0, 10),
+    recordDate: localDateIso(),
     employeeId: data.employee_id || null,
     employeeName: data.name || 'Employee',
     payload: data,

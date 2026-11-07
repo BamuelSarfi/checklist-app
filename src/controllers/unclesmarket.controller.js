@@ -1,3 +1,4 @@
+const { localDateIso } = require('../utils/kitchenTime');
 const path = require('path');
 const fillUnclesMarket = require('../lib/fillUnclesMarket');
 const { saveGeneratedRecord } = require('../services/generatedRecords');
@@ -91,7 +92,7 @@ function buildRecord(date, employee, body, existingRecord, sectionId) {
         ...(existingRecord || {}),
         employee_id: employee.id,
         employee_name: employee.name,
-        date: date.toISOString().slice(0, 10),
+        date: localDateIso(date),
         day,
         month: date.getMonth() + 1,
         year: date.getFullYear(),
@@ -297,7 +298,7 @@ exports.exportPdf = async (req, res) => {
             ({ syncStatus, syncMessage } = await saveGeneratedRecord({
                 fileName: generated.fileName,
                 recordType: recordTypeForSection(sectionId),
-                recordDate: now.toISOString().slice(0, 10),
+                recordDate: localDateIso(now),
                 employeeId: employee.id,
                 employeeName: employee.name,
                 payload: pdfData,
@@ -356,7 +357,7 @@ exports.autoExportPreviousMonth = async () => {
             await saveGeneratedRecord({
                 fileName: generated.fileName,
                 recordType: recordTypeForSection(section.id),
-                recordDate: previousMonthDate.toISOString().slice(0, 10),
+                recordDate: localDateIso(previousMonthDate),
                 employeeId: lastRecord?.employee_id || null,
                 employeeName: lastRecord?.employee_name || 'Employee',
                 payload: pdfData,

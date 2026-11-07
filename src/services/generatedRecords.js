@@ -204,7 +204,51 @@ async function deleteGeneratedRecordByFileName(fileName, actor) {
   return true;
 }
 
+// Signed records that never reached the portal would look missing to the manager. Most forms accept
+// that risk, but these are retried for a week, using the copy already held in storage.
+async function retryUnsyncedRecords(recordTypes) {
+  const result = await query(
+    `SELECT id, record_type, record_date, employee_id, employee_name, file_name, r2_key
+     FROM generated_records
+     WHERE kitchen_id = $1 AND record_type = ANY($2) AND fend_record_id IS NULL AND deleted_at IS NULL
+       AND created_at > now() - interval '7 days'`,
+    [getKitchenId(), recordTypes]
+  );
+
+  for (const row of result.rows) {
+    // eslint-disable-next-line no-await-in-loop
+    const pdfBuffer = await storage.readObject(row.r2_key);
+    // eslint-disable-next-line no-await-in-loop
+    const { record } = await uploadGeneratedPdf({
+      fileName: row.file_name,
+      recordType: row.record_type,
+      recordDate: row.record_date,
+      employeeId: row.employee_id,
+      employeeName: row.employee_name,
+      pdfBuffer,
+    });
+    if (record?.id) {
+      // eslint-disable-next-line no-await-in-loop
+      await query('UPDATE generated_records SET fend_storage_key = $1, fend_record_id = $2 WHERE id = $3', [record.storage_key || null, record.id, row.id]);
+    }
+  }
+}
+
+// Newest first, for "when was this last done?" questions.
+async function listRecordsByTypeSince(recordType) {
+  const result = await query(
+    `SELECT record_date, file_name
+     FROM generated_records
+     WHERE kitchen_id = $1 AND record_type = $2 AND deleted_at IS NULL
+     ORDER BY record_date DESC, created_at DESC`,
+    [getKitchenId(), recordType]
+  );
+  return result.rows;
+}
+
 module.exports = {
+  retryUnsyncedRecords,
+  listRecordsByTypeSince,
   saveGeneratedRecord,
   saveCapturedDocument,
   listRecordFileNames,

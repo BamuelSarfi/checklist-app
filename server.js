@@ -21,9 +21,12 @@ process.on('unhandledRejection', (reason) => {
     process.exit(1);
 });
 
+const { localDateIso } = require('./src/utils/kitchenTime');
+
 const express = require('express');
 const crypto = require('crypto');
 const helmet = require('helmet');
+const kitchenConfig = require('./src/services/kitchenConfig');
 const sc5Routes = require('./src/routes/sc5.routes');
 const sc7Routes = require('./src/routes/sc7.routes');
 const sc3Routes = require('./src/routes/sc3.routes');
@@ -250,18 +253,21 @@ app.get('/healthz', (req, res) => {
 // from the query string and look it up with the service key, which let anyone read other businesses.
 app.get('/api/brand', async (req, res) => {
   const kitchenId = String(process.env.SAFECATER_KITCHEN_ID || '').trim();
+  const { module_type: moduleType, addon_forms: addonForms } = await kitchenConfig.getKitchenConfig();
+  const fallbackName = moduleType === 'sfbb' ? 'SafeCater' : 'Safe Catering';
   const flags = {
+    pack: { module_type: moduleType, addon_forms: addonForms },
     // Reflects THIS deployment's own flags: the home screen uses them to decide whether to show the
     // Uncle's Market and promotion tiles, since they're business-specific bolt-ons, not a module_type.
     uncles_market_enabled: process.env.ENABLE_UNCLES_MARKET === 'true',
     tester_promotion_enabled: process.env.ENABLE_TESTER_PROMOTION === 'true',
   };
   const fallback = {
-    brand_name: 'Safe Catering',
+    brand_name: fallbackName,
     logo_src: '/asset2.png',
     kitchen_name: null,
     kitchen_id: kitchenId || null,
-    business: { display_name: 'Safe Catering', logo_src: '/asset2.png' },
+    business: { display_name: fallbackName, logo_src: '/asset2.png' },
     kitchen: null,
     ...flags,
   };
@@ -303,7 +309,7 @@ app.get('/api/brand', async (req, res) => {
 app.get('/api/completed-checklists', authenticateEmployee, async (req, res) => {
   try {
     const now = new Date();
-    const todayIso = now.toISOString().slice(0, 10);
+    const todayIso = localDateIso(now);
     const typesToday = await generatedRecords.listRecordTypesForDate(todayIso);
 
     // Unlike SC1/SC3/SC4/SC5 (fill-once-and-submit forms with no draft concept, or where
@@ -314,7 +320,11 @@ app.get('/api/completed-checklists', authenticateEmployee, async (req, res) => {
     // separately clicked export. A saved draft for today is now enough.
     const sc2Draft = await checklistDrafts.getDraft('SC2', now.getFullYear(), now.getMonth() + 1, now.getDate(), '');
 
+    const pack = await kitchenConfig.getKitchenConfig();
+    const sfbbStatus = pack.module_type === 'sfbb' ? await require('./src/controllers/sfbb.controller').homeStatus() : {};
+
     const completed = {
+      ...sfbbStatus,
       sc5: typesToday.includes('SC5'),
       sc4: typesToday.includes('SC4'),
       sc3: typesToday.includes('SC3'),
@@ -407,7 +417,7 @@ function isValidIsoDateNotFuture(value) {
   const parsed = new Date(`${value}T00:00:00Z`);
   if (Number.isNaN(parsed.getTime())) return false;
   if (parsed.toISOString().slice(0, 10) !== value) return false;
-  return value <= new Date().toISOString().slice(0, 10);
+  return value <= localDateIso();
 }
 
 app.post('/api/documents/upload', authenticateEmployee, async (req, res) => {
@@ -426,7 +436,7 @@ app.post('/api/documents/upload', authenticateEmployee, async (req, res) => {
     }
 
     const rawRecordDate = req.body.record_date != null ? String(req.body.record_date).trim() : '';
-    const recordDate = rawRecordDate || new Date().toISOString().slice(0, 10);
+    const recordDate = rawRecordDate || localDateIso();
     if (!isValidIsoDateNotFuture(recordDate)) {
       return res.status(400).json({ success: false, message: 'record_date must be a valid date (YYYY-MM-DD) and cannot be in the future' });
     }
@@ -515,6 +525,21 @@ const sc4Controller = require('./src/controllers/sc4.controller');
 app.post('/api/sc4/submit', authenticateEmployee, sc4Controller.submitForm);
 app.post('/api/sc4/export', authenticateEmployee, sc4Controller.exportPdf);
 app.get('/api/sc4/today', authenticateEmployee, sc4Controller.getTodayData);
+
+// Safer Food, Better Business. Only a kitchen on that pack can reach these.
+const sfbbController = require('./src/controllers/sfbb.controller');
+const requireSfbbPack = async (req, res, next) => {
+  const { module_type: moduleType } = await kitchenConfig.getKitchenConfig();
+  if (moduleType !== 'sfbb') {
+    return res.status(404).send('Not found');
+  }
+  return next();
+};
+app.get('/sfbb/diary', authenticateEmployee, requireSfbbPack, sfbbController.page);
+app.get('/sfbb/review', authenticateEmployee, requireSfbbPack, sfbbController.reviewPage);
+app.post('/api/sfbb/day/sign', authenticateEmployee, requireSfbbPack, loginLimiter, sfbbController.signDay);
+app.post('/api/sfbb/review', authenticateEmployee, requireSfbbPack, loginLimiter, sfbbController.submitReview);
+app.use('/api/sfbb', authenticateEmployee, requireSfbbPack, require('./src/routes/sfbb.routes'));
 
 // Protected routes
 app.use('/sc5', authenticateEmployee, sc5Routes);

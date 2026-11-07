@@ -138,6 +138,34 @@ async function uploadCapturedDocument({ fileName, recordType, recordDate, employ
   }
 }
 
+// Tells the portal a check happened. There's no file: a status marker only feeds the manager's
+// Today tiles, reminders and score.
+async function syncStatusRecord({ recordType, recordDate, employeeId, employeeName, payload = {} }) {
+  if (!hasRemoteRecordSync()) {
+    return { synced: false };
+  }
+
+  try {
+    const kitchenId = String(process.env.SAFECATER_KITCHEN_ID || '').trim();
+    const url = `${getRemoteBaseUrl()}/api/v1/tenant/${encodeURIComponent(kitchenId)}/records`;
+    await fetchJson(url, {
+      method: 'POST',
+      headers: { 'x-safecater-service-key': process.env.SAFECATER_SERVICE_API_KEY },
+      body: JSON.stringify({
+        employee_id: employeeId || null,
+        employee_name: employeeName || 'Employee',
+        record_type: recordType,
+        record_date: recordDate,
+        payload_jsonb: payload,
+      }),
+    });
+    return { synced: true };
+  } catch (error) {
+    console.warn('Status sync with SafeCater backend failed:', error.message);
+    return { synced: false };
+  }
+}
+
 async function deleteSyncedPdf({ fendStorageKey, kitchenId } = {}) {
   if (!hasRemoteRecordSync() || !fendStorageKey) {
     return false;
@@ -171,5 +199,6 @@ async function deleteSyncedPdf({ fendStorageKey, kitchenId } = {}) {
 module.exports = {
   uploadGeneratedPdf,
   uploadCapturedDocument,
+  syncStatusRecord,
   deleteSyncedPdf,
 };

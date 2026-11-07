@@ -330,7 +330,7 @@
                 container.innerHTML += `
                 <div class="kiosk-card">
                     <div class="kiosk-card-head"><span style="flex: 1; font-size: 13px; font-weight: 700; color: var(--color-text-heading)">${t('Row {n}', { n: i + 1 })}</span><span style="font-size: 12px; color: var(--color-text-muted)">${today.toLocaleDateString('en-GB')}</span></div>
-                    <label style="display: flex; flex-direction: column; gap: 6px"><span class="kiosk-field-label">Date</span><input type="date" class="kiosk-text-input" id="cooking_date_${i}" value="${escapeAttr(row.date || today.toISOString().split('T')[0])}"></label>
+                    <label style="display: flex; flex-direction: column; gap: 6px"><span class="kiosk-field-label">Date</span><input type="date" class="kiosk-text-input" id="cooking_date_${i}" value="${escapeAttr(row.date || new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0])}"></label>
                     <label style="display: flex; flex-direction: column; gap: 6px"><span class="kiosk-field-label">Food</span><input type="text" class="kiosk-text-input" id="cooking_food_${i}" placeholder="Food item" value="${escapeAttr(row.food)}"></label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
                         <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-text-muted)">Started cooking**</span><input type="time" class="kiosk-text-input" style="min-height: 46px;" id="cooking_time_start_${i}" value="${escapeAttr(row.time_start)}"></label>
@@ -367,7 +367,7 @@
                 container.innerHTML += `
                 <div class="kiosk-card">
                     <div class="kiosk-card-head"><span style="flex: 1; font-size: 13px; font-weight: 700; color: var(--color-text-heading)">${t('Row {n}', { n: i + 1 })}</span><span style="font-size: 12px; color: var(--color-text-muted)">${today.toLocaleDateString('en-GB')}</span></div>
-                    <label style="display: flex; flex-direction: column; gap: 6px"><span class="kiosk-field-label">Date</span><input type="date" class="kiosk-text-input" id="cooling_date_${i}" value="${escapeAttr(row.date || today.toISOString().split('T')[0])}"></label>
+                    <label style="display: flex; flex-direction: column; gap: 6px"><span class="kiosk-field-label">Date</span><input type="date" class="kiosk-text-input" id="cooling_date_${i}" value="${escapeAttr(row.date || new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0])}"></label>
                     <label style="display: flex; flex-direction: column; gap: 6px"><span class="kiosk-field-label">Time into fridge/blast freezer</span><input type="time" class="kiosk-text-input" id="cooling_time_${i}" value="${escapeAttr(row.time)}"></label>
                     <label style="display: flex; flex-direction: column; gap: 6px"><span class="kiosk-field-label">Signature (initials)</span><input type="text" class="kiosk-text-input" id="cooling_sign_${i}" maxlength="3" style="background: var(--color-bg-subtle); font-weight: 600;" readonly></label>
                 </div>
@@ -390,7 +390,7 @@
                 container.innerHTML += `
                 <div class="kiosk-card">
                     <div class="kiosk-card-head"><span style="flex: 1; font-size: 13px; font-weight: 700; color: var(--color-text-heading)">${t('Row {n}', { n: i + 1 })}</span><span style="font-size: 12px; color: var(--color-text-muted)">${today.toLocaleDateString('en-GB')}</span></div>
-                    <label style="display: flex; flex-direction: column; gap: 6px"><span class="kiosk-field-label">Date</span><input type="date" class="kiosk-text-input" id="reheating_date_${i}" value="${escapeAttr(row.date || today.toISOString().split('T')[0])}"></label>
+                    <label style="display: flex; flex-direction: column; gap: 6px"><span class="kiosk-field-label">Date</span><input type="date" class="kiosk-text-input" id="reheating_date_${i}" value="${escapeAttr(row.date || new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0])}"></label>
                     <label style="display: flex; flex-direction: column; gap: 6px"><span class="kiosk-field-label">Core temp. (&deg;C)*</span><input type="number" inputmode="decimal" class="kiosk-text-input" id="reheating_temp_${i}" placeholder="Above 75&deg;C" step="0.1" min="0" value="${escapeAttr(row.temp ?? '')}"></label>
                     <label style="display: flex; flex-direction: column; gap: 6px"><span class="kiosk-field-label">Signature (initials)</span><input type="text" class="kiosk-text-input" id="reheating_sign_${i}" maxlength="3" style="background: var(--color-bg-subtle); font-weight: 600;" readonly></label>
                 </div>
@@ -578,6 +578,8 @@
     </script>
 
     <script src="help_overlay.js"></script>
+
+    <script src="/js/tutorials.js"></script>
 
     <div id="help_overlay" aria-hidden="true">
         <div id="help_inner">

@@ -1,6 +1,6 @@
 {
-  "name": "Safe Catering Checklist Kiosk",
-  "short_name": "Safe Catering",
+  "name": "SafeCater Kitchen Checklist",
+  "short_name": "SafeCater",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

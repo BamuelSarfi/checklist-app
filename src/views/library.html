@@ -261,6 +261,8 @@
             <option value="SC5">SC5</option>
             <option value="SC6">SC6</option>
             <option value="SC7">SC7</option>
+            <option value="SFBB_DIARY">Daily diary</option>
+            <option value="SFBB_REVIEW">4-weekly review</option>
         </select>
         <input type="text" id="search_employee" class="lib-query-input" placeholder="Employee name" style="display: none">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
@@ -393,11 +395,14 @@
         SC5: 'Hygiene checklist',
         SC6: 'Training records',
         SC7: 'Fitness to work assessment',
+        SFBB_DIARY: 'Daily diary',
+        SFBB_REVIEW: '4-weekly review',
     };
 
     function recordMeta(fileName) {
+        const sfbbMatch = fileName.match(/^SFBB_(DIARY|REVIEW)/);
         const scMatch = fileName.match(/^SC(\d)/i);
-        const code = scMatch ? `SC${scMatch[1]}` : null;
+        const code = sfbbMatch ? sfbbMatch[0] : (scMatch ? `SC${scMatch[1]}` : null);
         const kind = t(code ? (RECORD_KIND_LABELS[code] || 'SafeCatering record') : 'Uploaded document');
         // Lookaround boundaries stop this from sliding into an adjacent digit run (e.g. a
         // trailing millisecond timestamp in custom_document-*-<epoch-ms>.ext filenames),

@@ -578,7 +578,7 @@
             return {
                 employee_id,
                 employee_name: getCurrentEmployeeName(),
-                date: today.toISOString().split('T')[0],
+                date: new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0],
                 month: today.getMonth() + 1,
                 year: today.getFullYear(),
                 day: today.getDate(),
@@ -852,6 +852,8 @@
     </script>
 
     <script src="help_overlay.js"></script>
+
+    <script src="/js/tutorials.js"></script>
 
     <div id="help_overlay" aria-hidden="true">
         <div id="help_inner">

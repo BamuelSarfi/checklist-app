@@ -1,3 +1,4 @@
+const { localDateIso } = require('../utils/kitchenTime');
 const path = require('path');
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const QRCode = require('qrcode');
@@ -124,7 +125,7 @@ exports.endRun = async (req, res) => {
             await saveGeneratedRecord({
                 fileName: fileName.fileName,
                 recordType: 'TESTER_PROMOTION',
-                recordDate: new Date().toISOString().slice(0, 10),
+                recordDate: localDateIso(),
                 employeeId: employee.id,
                 employeeName: employee.name,
                 payload,
@@ -193,7 +194,7 @@ async function generateRunPdf(payload) {
 
         const pdfBytes = await doc.save();
         const sanitizedName = String(payload.staff_name || 'Employee').replace(/[^a-zA-Z0-9]/g, '_');
-        const dateStr = new Date().toISOString().slice(0, 10);
+        const dateStr = localDateIso();
         const fileName = `TESTER-PROMOTION-${dateStr}-${sanitizedName}-${Date.now()}.pdf`;
 
         return { fileName, pdfBuffer: Buffer.from(pdfBytes) };

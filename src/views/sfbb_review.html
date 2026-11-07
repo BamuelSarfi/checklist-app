@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>4-weekly review</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/help_overlay.css">
+    <link rel="stylesheet" href="/design-system/index.global.css">
+    <style>
+    body { margin: 0 auto; }
+    .sfbb-stack > section { scroll-margin-top: 136px; }
+    .sfbb-stack { flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+    .sfbb-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--color-border-soft); }
+    .sfbb-title { margin: 0; font-size: 17px; font-weight: 700; color: var(--color-text-heading); }
+    .sfbb-pill { font-size: 12px; font-weight: 700; padding: 3px 8px; background: var(--color-bg-active); color: var(--color-text-secondary); white-space: nowrap; }
+    .sfbb-pill.is-done { background: var(--color-success); color: var(--color-white); }
+    .sfbb-note { margin: 0; font-size: 13px; line-height: 1.4; color: var(--color-text-secondary); }
+    .sfbb-error { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--color-error); }
+    .sfbb-rows { display: flex; flex-direction: column; gap: 8px; }
+    .sfbb-row-text { flex: 1; font-size: 14px; line-height: 1.4; color: var(--color-text-heading); }
+    .sfbb-btn { min-height: 48px; padding: 0 18px; border: 1px solid var(--color-success); background: var(--color-success); color: var(--color-white); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; border-radius: var(--radius-sm); }
+    .sfbb-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .sfbb-btn--plain { background: var(--color-white); color: var(--color-text-heading); border-color: var(--color-border-input-inactive); }
+    .sfbb-field { display: flex; flex-direction: column; gap: 6px; }
+    .sfbb-field textarea { min-height: 76px; resize: vertical; }
+    .sfbb-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .sfbb-entry { padding: 10px 12px; background: var(--color-bg-subtle); font-size: 14px; line-height: 1.4; color: var(--color-text-heading); overflow-wrap: anywhere; }
+    .sfbb-entry small { display: block; margin-top: 2px; font-size: 12px; color: var(--color-text-muted); }
+    .sfbb-entry.is-warning { border-left: 3px solid var(--color-error); }
+    .sfbb-banner { padding: 12px 14px; background: var(--color-bg-subtle); border: 1px solid var(--color-border-soft); font-size: 14px; font-weight: 600; color: var(--color-text-heading); }
+    .sfbb-banner a { color: inherit; }
+    .sfbb-statement { margin: 0; font-size: 15px; font-weight: 700; line-height: 1.35; color: var(--color-text-heading); }
+    .sfbb-yesno { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--color-border-soft); }
+    .sfbb-yesno-buttons { display: flex; flex: none; gap: 6px; }
+    .sfbb-yesno-buttons button { min-width: 56px; min-height: 44px; border: 1px solid var(--color-border-input-inactive); background: var(--color-white); font: inherit; font-size: 14px; font-weight: 700; color: var(--color-text-heading); cursor: pointer; border-radius: var(--radius-sm); }
+    .sfbb-yesno-buttons button[aria-pressed="true"] { background: var(--color-text-heading); border-color: var(--color-text-heading); color: var(--color-white); }
+    [hidden] { display: none !important; }
+    </style>
+</head>
+
+<body class="kiosk-body">
+    <div class="kiosk-frame">
+        <div class="kiosk-header">
+            <div style="display: flex; align-items: center; gap: 12px">
+                <a href="/" title="Back to dashboard" aria-label="Back to dashboard" class="kiosk-icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M19 12H5"></path>
+                        <path d="M12 19l-7-7 7-7"></path>
+                    </svg>
+                </a>
+                <div class="kiosk-logo-slot" id="brand-logo-slot">SC</div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                    <span id="brand-site-name" style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)"></span>
+                    <span style="font-size: 15px; font-weight: 700; line-height: 1.2; color: var(--color-text-heading)">4-weekly review</span>
+                </div>
+                <span id="header" style="display: contents"></span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px">
+                <span id="current_date" style="flex: 1; font-size: 14px; color: var(--color-text-secondary)"></span>
+                <label class="kiosk-lang-select" title="Change language">
+                    <span aria-hidden="true" style="font-size: 15px">&#127760;</span>
+                    <select id="language-select" aria-label="Change language"></select>
+                </label>
+            </div>
+        </div>
+
+        <div class="sfbb-stack" id="review"></div>
+
+        <div class="kiosk-bottom-bar">
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                <span
+                    style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Signed
+                    in</span>
+                <span id="employee_name_display"
+                    style="font-size: 14px; font-weight: 600; color: var(--color-text-heading); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">-</span>
+            </div>
+            <a href="/library" class="kiosk-bottom-nav-btn" title="Library" aria-label="Library">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 4v16"></path>
+                    <path d="M9.5 4v16"></path>
+                    <path d="M15 4.5l4 15.5"></path>
+                </svg>
+            </a>
+            
+        </div>
+    </div>
+
+    <script src="/translations.js"></script>
+    <script src="/design-system/index.global.js"></script>
+    <script>
+        const t = window.appI18n ? window.appI18n.t : (key) => key;
+        const el = (tag, props = {}, ...children) => {
+            const node = document.createElement(tag);
+            Object.entries(props).forEach(([key, value]) => {
+                if (key === 'class') node.className = value;
+                else if (key === 'on') Object.entries(value).forEach(([name, fn]) => node.addEventListener(name, fn));
+                else if (value !== undefined && value !== null && value !== false) node[key] = value;
+            });
+            children.flat().forEach((child) => { if (child !== null && child !== undefined && child !== false) node.append(child); });
+            return node;
+        };
+        const ukDate = (iso) => { const [y, m, d] = String(iso).split('-'); return d + '/' + m + '/' + y; };
+        const timeOf = (iso) => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        const readJson = async (response) => {
+            const text = await response.text();
+            try { return text ? JSON.parse(text) : {}; } catch (_error) { return { error: text }; }
+        };
+        const post = (url, body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+
+        (async () => {
+            try {
+                const response = await fetch('/api/brand');
+                if (!response.ok) return;
+                const data = await response.json();
+                const kitchenName = data?.kitchen?.name || data?.brand_name || data?.business?.display_name || '';
+                const logoSrc = data?.kitchen?.logo_src || data?.logo_src || data?.business?.logo_src || '';
+                document.getElementById('brand-site-name').textContent = kitchenName;
+                if (logoSrc) {
+                    const slot = document.getElementById('brand-logo-slot');
+                    slot.textContent = '';
+                    const img = document.createElement('img');
+                    img.src = logoSrc;
+                    img.alt = kitchenName;
+                    slot.appendChild(img);
+                }
+            } catch (_error) { /* optional */ }
+        })();
+
+        const langSelect = document.getElementById('language-select');
+        if (window.appI18n) {
+            window.appI18n.getLanguageOptions().forEach(({ value, label }) => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = label;
+                langSelect.appendChild(option);
+            });
+            langSelect.value = window.appI18n.getAppLanguage();
+            langSelect.addEventListener('change', () => {
+                window.appI18n.setAppLanguage(langSelect.value);
+                window.location.reload();
+            });
+        }
+
+        let employee = null;
+        const loadEmployee = async () => {
+            try { employee = JSON.parse(sessionStorage.getItem('employeeData')); } catch (_error) { employee = null; }
+            if (!employee) {
+                try {
+                    const data = await (await fetch('/api/employee')).json();
+                    if (data.success) {
+                        employee = data.employee;
+                        sessionStorage.setItem('employeeData', JSON.stringify(employee));
+                    }
+                } catch (_error) { /* offline: the name stays blank */ }
+            }
+            document.getElementById('employee_name_display').textContent = employee?.name || '';
+        };
+
+        const mount = document.getElementById('review');
+        const answers = {};
+        const form = { problems_observed: null, problem_details: '', problem_action: '', additional_details: '' };
+        let status = null;
+        let errorText = '';
+
+        function yesNo(label, current, onPick, id) {
+            return el('div', { class: 'sfbb-yesno', id },
+                el('span', { class: 'sfbb-row-text', textContent: t(label) }),
+                el('div', { class: 'sfbb-yesno-buttons' }, [['Yes', true], ['No', false]].map(([text, value]) => {
+                    const button = el('button', { type: 'button', textContent: t(text), on: { click: () => { onPick(value); render(); } } });
+                    button.setAttribute('aria-pressed', String(current === value));
+                    return button;
+                })));
+        }
+
+        const textField = (label, key, id) => el('label', { class: 'sfbb-field' },
+            el('span', { class: 'kiosk-field-label', textContent: t(label) }),
+            el('textarea', { class: 'kiosk-text-input', id, value: form[key], maxLength: 1000, on: { input: (event) => { form[key] = event.target.value; } } }));
+
+        function render() {
+            const scrollY = window.scrollY;
+            mount.replaceChildren();
+            document.getElementById('current_date').textContent = ukDate(status.today);
+            const summary = status.last_date
+                ? t('Last done {date}. Next due {due}.', { date: ukDate(status.last_date), due: ukDate(status.due_date) })
+                : (status.due_date ? t('First review due {due}.', { due: ukDate(status.due_date) }) : t('You can do your first review at any time.'));
+            mount.append(el('div', { class: 'sfbb-banner', textContent: summary }));
+
+            const walk = el('section', { class: 'kiosk-card' },
+                el('div', { class: 'sfbb-head' }, el('h2', { class: 'sfbb-title', textContent: t('Walk round') })),
+                el('p', { class: 'sfbb-note', textContent: t('Walk round the kitchen and look at the last 4 weeks of the diary.') }));
+            if (status.recent_problems.length) {
+                walk.append(el('div', { class: 'sfbb-rows' }, status.recent_problems.map((item) => el('div', { class: 'sfbb-entry' }, item.text, el('small', { textContent: ukDate(item.date) })))));
+            }
+            walk.append(yesNo('Did you observe any problems, or did the same issue occur in the diary three times or more?', form.problems_observed, (value) => { form.problems_observed = value; }, 'q-problems'));
+            if (form.problems_observed) {
+                walk.append(textField('Details', 'problem_details', 'problem-details'), textField('What did you do about it?', 'problem_action', 'problem-action'));
+            }
+            mount.append(walk);
+
+            mount.append(el('section', { class: 'kiosk-card' },
+                el('div', { class: 'sfbb-head' }, el('h2', { class: 'sfbb-title', textContent: t('Review') })),
+                status.questions.map((question) => yesNo(question.label, answers[question.key], (value) => { answers[question.key] = value; }, 'q-' + question.key)),
+                textField('Additional details', 'additional_details', 'additional-details')));
+
+            const pin = el('input', { class: 'kiosk-text-input', id: 'review-pin', type: 'password', inputMode: 'numeric', maxLength: 6, autocomplete: 'off', pattern: '[0-9]*' });
+            mount.append(el('section', { class: 'kiosk-card' },
+                el('div', { class: 'sfbb-head' }, el('h2', { class: 'sfbb-title', textContent: t('Sign-off') })),
+                el('p', { class: 'sfbb-note', textContent: t('The manager or a named delegate signs with their own PIN.') }),
+                el('label', { class: 'sfbb-field' }, el('span', { class: 'kiosk-field-label', textContent: t('6-digit PIN') }), pin),
+                errorText ? el('p', { class: 'sfbb-error', role: 'alert', textContent: errorText }) : null,
+                el('button', { type: 'button', class: 'sfbb-btn', id: 'review-submit', textContent: t('Sign the review'), on: { click: async (event) => {
+                    event.target.disabled = true;
+                    errorText = '';
+                    try {
+                        const response = await post('/api/sfbb/review', { ...form, answers, pin: pin.value });
+                        const result = await readJson(response);
+                        if (!response.ok || !result.success) throw new Error(result.error || t('Could not save the review.'));
+                        await window.showAppModal(t('Review saved.'), { type: 'success' });
+                        window.location.href = '/';
+                        return;
+                    } catch (error) {
+                        errorText = error instanceof TypeError ? t('You need a connection to sign.') : error.message;
+                    }
+                    render();
+                } } })));
+            window.scrollTo(0, scrollY);
+        }
+
+        (async () => {
+            await loadEmployee();
+            try {
+                const response = await fetch('/api/sfbb/review');
+                const result = await readJson(response);
+                if (!response.ok || !result.success) throw new Error(result.error || t('Could not load the review.'));
+                status = result;
+                render();
+            } catch (error) {
+                mount.replaceChildren(el('p', { class: 'sfbb-error', textContent: error.message }));
+            }
+        })();
+
+    </script>
+
+    <script src="/help_overlay.js"></script>
+
+    <script src="/js/tutorials.js"></script>
+
+    <div id="help_overlay" aria-hidden="true">
+        <div id="help_inner">
+            <div id="help_header">
+                <div id="help_title">Help</div>
+                <button id="help_close" aria-label="Close">Close</button>
+            </div>
+            <footer class="site_footer">
+                <a href="/privacy-policy">Privacy Policy</a>
+                <span>&copy; 2026 Safecateruk</span>
+            </footer>
+            <div id="help_body">
+                <img id="help_image" src="" alt="Help image">
+                <div id="help_caption">Tap the image to view details. Tap outside to close.</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/offline-store.js"></script>
+    <script src="/js/sync-engine.js"></script>
+    <script src="/js/status-badge.js"></script>
+    <script src="/script.js"></script>
+
+    <script src="/js/session-idle.js"></script>
+</body>
+
+</html>

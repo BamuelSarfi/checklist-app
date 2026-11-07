@@ -1,3 +1,4 @@
+const { localDateIso } = require('../utils/kitchenTime');
 const path = require('path');
 const fillSc2 = require('../lib/fillSc2');
 const { saveGeneratedRecord } = require('../services/generatedRecords');
@@ -179,7 +180,7 @@ exports.saveDraft = async (req, res) => {
             ...(monthData.days[dayKey] || {}),
             employee_id: employee.id,
             employee_name: employee.name,
-            date: now.toISOString().slice(0, 10),
+            date: localDateIso(now),
             day: now.getDate(),
             month: now.getMonth() + 1,
             year: now.getFullYear(),
@@ -333,7 +334,7 @@ exports.exportPdf = async (req, res) => {
             ({ syncStatus, syncMessage } = await saveGeneratedRecord({
                 fileName: generated.fileName,
                 recordType: 'SC2',
-                recordDate: now.toISOString().slice(0, 10),
+                recordDate: localDateIso(now),
                 employeeId: employee.id,
                 employeeName: employee.name,
                 payload: pdfData,
@@ -341,7 +342,7 @@ exports.exportPdf = async (req, res) => {
             }));
         }
 
-        await auditResign(record, employee, now.toISOString().slice(0, 10));
+        await auditResign(record, employee, localDateIso(now));
 
         record.status = 'submitted';
         record.employee_id = employee.id;

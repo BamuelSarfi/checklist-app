@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Daily diary</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/help_overlay.css">
+    <link rel="stylesheet" href="/design-system/index.global.css">
+    <style>
+    body { margin: 0 auto; }
+    .sfbb-stack > section { scroll-margin-top: 136px; }
+    .sfbb-stack { flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+    .sfbb-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--color-border-soft); }
+    .sfbb-title { margin: 0; font-size: 17px; font-weight: 700; color: var(--color-text-heading); }
+    .sfbb-pill { font-size: 12px; font-weight: 700; padding: 3px 8px; background: var(--color-bg-active); color: var(--color-text-secondary); white-space: nowrap; }
+    .sfbb-pill.is-done { background: var(--color-success); color: var(--color-white); }
+    .sfbb-note { margin: 0; font-size: 13px; line-height: 1.4; color: var(--color-text-secondary); }
+    .sfbb-error { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--color-error); }
+    .sfbb-rows { display: flex; flex-direction: column; gap: 8px; }
+    .sfbb-row-text { flex: 1; font-size: 14px; line-height: 1.4; color: var(--color-text-heading); }
+    .sfbb-btn { min-height: 48px; padding: 0 18px; border: 1px solid var(--color-success); background: var(--color-success); color: var(--color-white); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; border-radius: var(--radius-sm); }
+    .sfbb-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .sfbb-btn--plain { background: var(--color-white); color: var(--color-text-heading); border-color: var(--color-border-input-inactive); }
+    .sfbb-field { display: flex; flex-direction: column; gap: 6px; }
+    .sfbb-field textarea { min-height: 76px; resize: vertical; }
+    .sfbb-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .sfbb-entry { padding: 10px 12px; background: var(--color-bg-subtle); font-size: 14px; line-height: 1.4; color: var(--color-text-heading); overflow-wrap: anywhere; }
+    .sfbb-entry small { display: block; margin-top: 2px; font-size: 12px; color: var(--color-text-muted); }
+    .sfbb-entry.is-warning { border-left: 3px solid var(--color-error); }
+    .sfbb-banner { padding: 12px 14px; background: var(--color-bg-subtle); border: 1px solid var(--color-border-soft); font-size: 14px; font-weight: 600; color: var(--color-text-heading); }
+    .sfbb-banner a { color: inherit; }
+    .sfbb-statement { margin: 0; font-size: 15px; font-weight: 700; line-height: 1.35; color: var(--color-text-heading); }
+    .sfbb-yesno { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--color-border-soft); }
+    .sfbb-yesno-buttons { display: flex; flex: none; gap: 6px; }
+    .sfbb-yesno-buttons button { min-width: 56px; min-height: 44px; border: 1px solid var(--color-border-input-inactive); background: var(--color-white); font: inherit; font-size: 14px; font-weight: 700; color: var(--color-text-heading); cursor: pointer; border-radius: var(--radius-sm); }
+    .sfbb-yesno-buttons button[aria-pressed="true"] { background: var(--color-text-heading); border-color: var(--color-text-heading); color: var(--color-white); }
+    [hidden] { display: none !important; }
+    </style>
+</head>
+
+<body class="kiosk-body">
+    <div class="kiosk-frame">
+        <div class="kiosk-header">
+            <div style="display: flex; align-items: center; gap: 12px">
+                <a href="/" title="Back to dashboard" aria-label="Back to dashboard" class="kiosk-icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M19 12H5"></path>
+                        <path d="M12 19l-7-7 7-7"></path>
+                    </svg>
+                </a>
+                <div class="kiosk-logo-slot" id="brand-logo-slot">SC</div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                    <span id="brand-site-name" style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)"></span>
+                    <span style="font-size: 15px; font-weight: 700; line-height: 1.2; color: var(--color-text-heading)">Daily diary</span>
+                </div>
+                <span id="header" style="display: contents"></span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px">
+                <span id="current_date" style="flex: 1; font-size: 14px; color: var(--color-text-secondary)"></span>
+                <label class="kiosk-lang-select" title="Change language">
+                    <span aria-hidden="true" style="font-size: 15px">&#127760;</span>
+                    <select id="language-select" aria-label="Change language"></select>
+                </label>
+            </div>
+        </div>
+
+        <div class="sfbb-stack" id="diary"></div>
+
+        <div class="kiosk-bottom-bar">
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                <span
+                    style="font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted)">Signed
+                    in</span>
+                <span id="employee_name_display"
+                    style="font-size: 14px; font-weight: 600; color: var(--color-text-heading); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">-</span>
+            </div>
+            <a href="/library" class="kiosk-bottom-nav-btn" title="Library" aria-label="Library">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 4v16"></path>
+                    <path d="M9.5 4v16"></path>
+                    <path d="M15 4.5l4 15.5"></path>
+                </svg>
+            </a>
+            
+        </div>
+    </div>
+
+    <script src="/translations.js"></script>
+    <script src="/design-system/index.global.js"></script>
+    <script>
+        const t = window.appI18n ? window.appI18n.t : (key) => key;
+        const el = (tag, props = {}, ...children) => {
+            const node = document.createElement(tag);
+            Object.entries(props).forEach(([key, value]) => {
+                if (key === 'class') node.className = value;
+                else if (key === 'on') Object.entries(value).forEach(([name, fn]) => node.addEventListener(name, fn));
+                else if (value !== undefined && value !== null && value !== false) node[key] = value;
+            });
+            children.flat().forEach((child) => { if (child !== null && child !== undefined && child !== false) node.append(child); });
+            return node;
+        };
+        const ukDate = (iso) => { const [y, m, d] = String(iso).split('-'); return d + '/' + m + '/' + y; };
+        const timeOf = (iso) => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        const readJson = async (response) => {
+            const text = await response.text();
+            try { return text ? JSON.parse(text) : {}; } catch (_error) { return { error: text }; }
+        };
+        const post = (url, body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+
+        (async () => {
+            try {
+                const response = await fetch('/api/brand');
+                if (!response.ok) return;
+                const data = await response.json();
+                const kitchenName = data?.kitchen?.name || data?.brand_name || data?.business?.display_name || '';
+                const logoSrc = data?.kitchen?.logo_src || data?.logo_src || data?.business?.logo_src || '';
+                document.getElementById('brand-site-name').textContent = kitchenName;
+                if (logoSrc) {
+                    const slot = document.getElementById('brand-logo-slot');
+                    slot.textContent = '';
+                    const img = document.createElement('img');
+                    img.src = logoSrc;
+                    img.alt = kitchenName;
+                    slot.appendChild(img);
+                }
+            } catch (_error) { /* optional */ }
+        })();
+
+        const langSelect = document.getElementById('language-select');
+        if (window.appI18n) {
+            window.appI18n.getLanguageOptions().forEach(({ value, label }) => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = label;
+                langSelect.appendChild(option);
+            });
+            langSelect.value = window.appI18n.getAppLanguage();
+            langSelect.addEventListener('change', () => {
+                window.appI18n.setAppLanguage(langSelect.value);
+                window.location.reload();
+            });
+        }
+
+        let employee = null;
+        const loadEmployee = async () => {
+            try { employee = JSON.parse(sessionStorage.getItem('employeeData')); } catch (_error) { employee = null; }
+            if (!employee) {
+                try {
+                    const data = await (await fetch('/api/employee')).json();
+                    if (data.success) {
+                        employee = data.employee;
+                        sessionStorage.setItem('employeeData', JSON.stringify(employee));
+                    }
+                } catch (_error) { /* offline: the name stays blank */ }
+            }
+            document.getElementById('employee_name_display').textContent = employee?.name || '';
+        };
+
+        const params = new URLSearchParams(window.location.search);
+        const mount = document.getElementById('diary');
+        let day = null;
+        const noteDrafts = { opening: '', closing: '' };
+        const noteOpen = { opening: false, closing: false };
+        const ticks = { opening: new Set(), closing: new Set() };
+        const errors = {};
+        let pinOpen = false;
+
+        const tickKey = (section) => 'sfbb_ticks_' + day.date + '_' + section;
+        const cacheKey = () => 'sfbb_day_' + (params.get('date') || 'today');
+        const storage = {
+            get(key) { try { return JSON.parse(localStorage.getItem(key)); } catch (_error) { return null; } },
+            set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (_error) { /* optional */ } },
+            remove(key) { try { localStorage.removeItem(key); } catch (_error) { /* optional */ } },
+        };
+
+        function setDay(next) {
+            day = next;
+            storage.set(cacheKey(), day);
+            ['opening', 'closing'].forEach((section) => {
+                ticks[section] = new Set(storage.get(tickKey(section)) || []);
+            });
+        }
+
+        // Saves online, or queues for when the connection returns. The entry time travels with it.
+        async function send(url, body, applyLocally) {
+            const payload = { ...body, date: day.date, client_at: new Date().toISOString() };
+            const options = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) };
+            const outcome = window.syncEngine
+                ? await window.syncEngine.submitOrQueue(url, options, { formType: 'SFBB_DIARY', employeeId: employee?.id })
+                : { response: await fetch(url, options) };
+            if (outcome.queued) {
+                applyLocally();
+                storage.set(cacheKey(), day);
+                return { queued: true };
+            }
+            const result = await readJson(outcome.response);
+            if (!outcome.response.ok || !result.success) {
+                const error = new Error(result.error || t('Could not save. Please try again.'));
+                error.result = result;
+                throw error;
+            }
+            setDay(result);
+            return result;
+        }
+
+        const signedBlock = () => Boolean(day.signoff);
+
+        function checksCard(section, title) {
+            const data = day[section];
+            const done = Boolean(data.completed_at);
+            const count = done ? data.items.filter((item) => item.done).length : ticks[section].size;
+            const card = el('section', { class: 'kiosk-card', id: section },
+                el('div', { class: 'sfbb-head' },
+                    el('h2', { class: 'sfbb-title', textContent: t(title) }),
+                    el('span', { class: 'sfbb-pill' + (done ? ' is-done' : ''), textContent: done ? t('Done') : t('{count} of {total}', { count, total: data.items.length }) })));
+
+            if (done) {
+                card.append(el('p', { class: 'sfbb-note', textContent: t('Done by {name} at {time}', { name: data.completed_by, time: timeOf(data.completed_at) }) + (data.late ? ' (' + t('late') + ')' : '') }));
+                const missed = data.items.filter((item) => !item.done);
+                if (missed.length) {
+                    card.append(el('p', { class: 'sfbb-note', textContent: t('Not ticked: {items}', { items: missed.map((item) => item.text).join(' ') }) }));
+                }
+                return card;
+            }
+
+            const toggleTick = (text) => {
+                if (ticks[section].has(text)) ticks[section].delete(text); else ticks[section].add(text);
+                storage.set(tickKey(section), [...ticks[section]]);
+                render();
+            };
+            card.append(el('button', { type: 'button', class: 'sfbb-btn sfbb-btn--plain', textContent: t('Tick all'), on: { click: () => {
+                data.items.forEach((item) => ticks[section].add(item.text));
+                storage.set(tickKey(section), [...ticks[section]]);
+                render();
+            } } }));
+            card.append(el('div', { class: 'sfbb-rows' }, data.items.map((item) => {
+                const checked = ticks[section].has(item.text);
+                const box = el('span', { class: 'kiosk-toggle-box' + (checked ? ' is-checked' : '') });
+                if (checked) box.textContent = '✓';
+                return el('button', { type: 'button', class: 'kiosk-toggle-row' + (checked ? ' is-checked' : ''), on: { click: () => toggleTick(item.text) } },
+                    box, el('span', { class: 'sfbb-row-text', textContent: t(item.text) }));
+            })));
+            card.lastChild.querySelectorAll('button').forEach((button, index) => button.setAttribute('aria-pressed', String(ticks[section].has(data.items[index].text))));
+
+            const allTicked = ticks[section].size >= data.items.length;
+            if (noteOpen[section] && !allTicked) {
+                const area = el('textarea', { class: 'kiosk-text-input', id: section + '-note', value: noteDrafts[section], maxLength: 1000, on: { input: (event) => { noteDrafts[section] = event.target.value; } } });
+                card.append(el('label', { class: 'sfbb-field' }, el('span', { class: 'kiosk-field-label', textContent: t('What was wrong, and what did you do?') }), area));
+            }
+            if (errors[section]) card.append(el('p', { class: 'sfbb-error', role: 'alert', textContent: errors[section] }));
+            card.append(el('button', { type: 'button', class: 'sfbb-btn', textContent: t(section === 'opening' ? 'Finish opening checks' : 'Finish closing checks'), on: { click: (event) => finishSection(section, event.target) } }));
+            return card;
+        }
+
+        async function finishSection(section, button) {
+            const data = day[section];
+            const allTicked = data.items.every((item) => ticks[section].has(item.text));
+            if (!allTicked && !noteDrafts[section].trim()) {
+                noteOpen[section] = true;
+                errors[section] = t('Something isn\'t ticked. Say what was wrong and what you did.');
+                render();
+                document.getElementById(section + '-note')?.focus();
+                return;
+            }
+            button.disabled = true;
+            errors[section] = '';
+            const ticked = [...ticks[section]];
+            const note = allTicked ? '' : noteDrafts[section];
+            try {
+                await send('/api/sfbb/day/complete', { section, ticked, note }, () => {
+                    data.items = data.items.map((item) => ({ ...item, done: ticks[section].has(item.text) }));
+                    data.completed_at = new Date().toISOString();
+                    data.completed_by = employee?.name || '';
+                    if (note) day.problems.push({ text: note, by: employee?.name || '', at: data.completed_at });
+                });
+                storage.remove(tickKey(section));
+                noteDrafts[section] = '';
+                noteOpen[section] = false;
+                ticks[section] = new Set();
+            } catch (error) {
+                errors[section] = error.message;
+            }
+            render();
+        }
+
+        function entry(textValue, item, warning) {
+            return el('div', { class: 'sfbb-entry' + (warning ? ' is-warning' : '') }, textValue,
+                warning ? el('small', { textContent: t(warning) }) : null,
+                el('small', { textContent: [item.by, item.at ? timeOf(item.at) : ''].filter(Boolean).join(', ') }));
+        }
+
+        const proveForm = { method: 'cooking', item: '', temperature: '', hold_minutes: '', hold_seconds: '', details: '' };
+
+        function proveItCard() {
+            const card = el('section', { class: 'kiosk-card', id: 'prove-it' },
+                el('div', { class: 'sfbb-head' }, el('h2', { class: 'sfbb-title', textContent: t('Prove it') }), el('span', { class: 'sfbb-pill', textContent: String(day.prove_it.length) })));
+            card.append(...day.prove_it.map((item) => entry(t(item.method) + ': ' + item.text, item, item.warning)));
+            if (signedBlock()) return card;
+
+            const bind = (key) => ({ input: (event) => { proveForm[key] = event.target.value; } });
+            const methods = el('select', { class: 'kiosk-text-input', on: { change: (event) => { proveForm.method = event.target.value; render(); } } },
+                Object.entries(day.options.prove_it_methods).map(([value, label]) => el('option', { value, textContent: t(label), selected: value === proveForm.method })));
+            const usesTemperature = !['cleaning', 'other'].includes(proveForm.method);
+            const usesHold = ['cooking', 'reheating'].includes(proveForm.method);
+            card.append(el('label', { class: 'sfbb-field' }, el('span', { class: 'kiosk-field-label', textContent: t('Safe method') }), methods));
+            card.append(el('label', { class: 'sfbb-field' }, el('span', { class: 'kiosk-field-label', textContent: usesTemperature ? t('Food or fridge') : t('How did you prove it?') }),
+                el('input', { class: 'kiosk-text-input', id: 'prove-item', value: proveForm.item, maxLength: 120, on: bind('item') })));
+            if (usesTemperature) {
+                card.append(el('label', { class: 'sfbb-field' }, el('span', { class: 'kiosk-field-label', textContent: t('Temperature (°C)') }),
+                    el('input', { class: 'kiosk-text-input', id: 'prove-temp', type: 'number', inputMode: 'decimal', step: '0.1', value: proveForm.temperature, on: bind('temperature') })));
+            }
+            if (usesHold) {
+                card.append(el('div', { class: 'sfbb-two' },
+                    el('label', { class: 'sfbb-field' }, el('span', { class: 'kiosk-field-label', textContent: t('Held for (min)') }), el('input', { class: 'kiosk-text-input', id: 'prove-min', type: 'number', inputMode: 'numeric', min: '0', value: proveForm.hold_minutes, on: bind('hold_minutes') })),
+                    el('label', { class: 'sfbb-field' }, el('span', { class: 'kiosk-field-label', textContent: t('Held for (sec)') }), el('input', { class: 'kiosk-text-input', id: 'prove-sec', type: 'number', inputMode: 'numeric', min: '0', value: proveForm.hold_seconds, on: bind('hold_seconds') }))));
+            }
+            if (errors.prove) card.append(el('p', { class: 'sfbb-error', role: 'alert', textContent: errors.prove }));
+            card.append(el('button', { type: 'button', class: 'sfbb-btn sfbb-btn--plain', textContent: t('Add record'), on: { click: addProve } }));
+            return card;
+        }
+
+        async function addProve() {
+            errors.prove = '';
+            try {
+                const label = day.options.prove_it_methods[proveForm.method];
+                const result = await send('/api/sfbb/day/prove-it', proveForm, () => {
+                    day.prove_it.push({ method: label, text: [proveForm.item, proveForm.temperature && proveForm.temperature + '°C'].filter(Boolean).join(', '), by: employee?.name || '', at: new Date().toISOString() });
+                });
+                Object.assign(proveForm, { item: '', temperature: '', hold_minutes: '', hold_seconds: '', details: '' });
+                if (result.warning) {
+                    problemFocus = true;
+                    errors.problem = t('That reading is outside the safe limit. Say what you did about it.');
+                }
+            } catch (error) {
+                errors.prove = error.message;
+            }
+            render();
+        }
+
+        const extraForm = { kind: 'Deep clean', details: '' };
+
+        function extraCard() {
+            const card = el('section', { class: 'kiosk-card', id: 'extra' },
+                el('div', { class: 'sfbb-head' }, el('h2', { class: 'sfbb-title', textContent: t('Extra checks') }), el('span', { class: 'sfbb-pill', textContent: String(day.extra_checks.length) })));
+            card.append(...day.extra_checks.map((item) => entry(t(item.kind) + (item.details ? ': ' + item.details : ''), item)));
+            if (signedBlock()) return card;
+            card.append(el('label', { class: 'sfbb-field' }, el('span', { class: 'kiosk-field-label', textContent: t('Check') }),
+                el('select', { class: 'kiosk-text-input', id: 'extra-kind', on: { change: (event) => { extraForm.kind = event.target.value; } } },
+                    day.options.extra_check_kinds.map((kind) => el('option', { value: kind, textContent: t(kind), selected: kind === extraForm.kind })))));
+            card.append(el('label', { class: 'sfbb-field' }, el('span', { class: 'kiosk-field-label', textContent: t('What did you do?') }),
+                el('input', { class: 'kiosk-text-input', id: 'extra-details', value: extraForm.details, maxLength: 1000, on: { input: (event) => { extraForm.details = event.target.value; } } })));
+            if (errors.extra) card.append(el('p', { class: 'sfbb-error', role: 'alert', textContent: errors.extra }));
+            card.append(el('button', { type: 'button', class: 'sfbb-btn sfbb-btn--plain', textContent: t('Add check'), on: { click: async () => {
+                errors.extra = '';
+                try {
+                    await send('/api/sfbb/day/extra-check', extraForm, () => {
+                        day.extra_checks.push({ ...extraForm, by: employee?.name || '', at: new Date().toISOString() });
+                    });
+                    extraForm.details = '';
+                } catch (error) {
+                    errors.extra = error.message;
+                }
+                render();
+            } } }));
+            return card;
+        }
+
+        let problemDraft = '';
+        let problemFocus = false;
+
+        function problemsCard() {
+            const card = el('section', { class: 'kiosk-card', id: 'problems' },
+                el('div', { class: 'sfbb-head' }, el('h2', { class: 'sfbb-title', textContent: t('Problems or changes') }), el('span', { class: 'sfbb-pill', textContent: String(day.problems.length) })));
+            card.append(...day.problems.map((item) => entry(item.text, item)));
+            if (signedBlock()) return card;
+            card.append(el('label', { class: 'sfbb-field' }, el('span', { class: 'kiosk-field-label', textContent: t('What happened, and what did you do?') }),
+                el('textarea', { class: 'kiosk-text-input', id: 'problem-text', value: problemDraft, maxLength: 1000, on: { input: (event) => { problemDraft = event.target.value; } } })));
+            if (errors.problem) card.append(el('p', { class: 'sfbb-error', role: 'alert', textContent: errors.problem }));
+            card.append(el('button', { type: 'button', class: 'sfbb-btn sfbb-btn--plain', textContent: t('Add note'), on: { click: async () => {
+                errors.problem = '';
+                try {
+                    await send('/api/sfbb/day/problem', { text: problemDraft }, () => {
+                        day.problems.push({ text: problemDraft, by: employee?.name || '', at: new Date().toISOString() });
+                    });
+                    problemDraft = '';
+                } catch (error) {
+                    errors.problem = error.message;
+                }
+                render();
+            } } }));
+            return card;
+        }
+
+        function signCard() {
+            const card = el('section', { class: 'kiosk-card', id: 'signoff' },
+                el('div', { class: 'sfbb-head' }, el('h2', { class: 'sfbb-title', textContent: t('Sign-off') }), el('span', { class: 'sfbb-pill' + (day.signoff ? ' is-done' : ''), textContent: day.signoff ? t('Signed') : t('Not signed') })),
+                el('p', { class: 'sfbb-statement', textContent: t('Our safe methods were followed and effectively supervised today.') }));
+            if (day.signoff) {
+                card.append(el('p', { class: 'sfbb-note', textContent: t('Signed by {name} at {time}', { name: day.signoff.by, time: timeOf(day.signoff.at) }) + (day.signoff.late ? ' (' + t('late') + ')' : '') }));
+                return card;
+            }
+            const ready = day.opening.completed_at && day.closing.completed_at;
+            if (!ready) {
+                card.append(el('p', { class: 'sfbb-note', textContent: t('Finish the opening and closing checks first.') }));
+                return card;
+            }
+            card.append(el('p', { class: 'sfbb-note', textContent: t('The manager or a named delegate signs with their own PIN.') }));
+            if (!pinOpen) {
+                card.append(el('button', { type: 'button', class: 'sfbb-btn', id: 'sign-open', textContent: t('Sign with PIN'), on: { click: () => { pinOpen = true; render(); document.getElementById('sign-pin')?.focus(); } } }));
+                return card;
+            }
+            const pin = el('input', { class: 'kiosk-text-input', id: 'sign-pin', type: 'password', inputMode: 'numeric', maxLength: 6, autocomplete: 'off', pattern: '[0-9]*' });
+            card.append(el('label', { class: 'sfbb-field' }, el('span', { class: 'kiosk-field-label', textContent: t('6-digit PIN') }), pin));
+            if (errors.sign) card.append(el('p', { class: 'sfbb-error', role: 'alert', textContent: errors.sign }));
+            card.append(el('button', { type: 'button', class: 'sfbb-btn', id: 'sign-confirm', textContent: t('Sign the diary'), on: { click: async (event) => {
+                event.target.disabled = true;
+                errors.sign = '';
+                try {
+                    const response = await post('/api/sfbb/day/sign', { date: day.date, pin: pin.value });
+                    const result = await readJson(response);
+                    if (!response.ok || !result.success) throw new Error(result.error || t('Could not sign. Please try again.'));
+                    setDay(result);
+                    pinOpen = false;
+                } catch (error) {
+                    errors.sign = error instanceof TypeError ? t('You need a connection to sign.') : error.message;
+                }
+                render();
+            } } }));
+            return card;
+        }
+
+        function render() {
+            const scrollY = window.scrollY;
+            const focusedId = document.activeElement?.id;
+            mount.replaceChildren();
+            document.getElementById('current_date').textContent = ukDate(day.date);
+            if (day.is_late) {
+                mount.append(el('div', { class: 'sfbb-banner', textContent: t('You are filling in {date}. It will be marked as late.', { date: ukDate(day.date) }) }));
+            }
+            if (day.yesterday_unfinished) {
+                mount.append(el('div', { class: 'sfbb-banner' }, el('a', { href: '/sfbb/diary?date=' + day.yesterday_unfinished, id: 'yesterday-link', textContent: t('Yesterday\'s diary isn\'t finished. Finish it now.') })));
+            }
+            if (day.signoff) {
+                mount.append(el('div', { class: 'sfbb-banner', textContent: t('This day has been signed and can no longer be changed.') }));
+            }
+            mount.append(checksCard('opening', 'Opening checks'), proveItCard(), extraCard(), problemsCard(), checksCard('closing', 'Closing checks'), signCard());
+            window.scrollTo(0, scrollY);
+            if (problemFocus) {
+                problemFocus = false;
+                const area = document.getElementById('problem-text');
+                area?.scrollIntoView({ block: 'center' });
+                area?.focus();
+            } else if (focusedId) {
+                document.getElementById(focusedId)?.focus();
+            }
+        }
+
+        (async () => {
+            await loadEmployee();
+            const date = params.get('date');
+            try {
+                const response = await fetch('/api/sfbb/day' + (date ? '?date=' + encodeURIComponent(date) : ''));
+                const result = await readJson(response);
+                if (!response.ok || !result.success) throw new Error(result.error || t('Could not load the diary.'));
+                setDay(result);
+            } catch (error) {
+                const cached = storage.get(cacheKey());
+                if (!cached) {
+                    mount.replaceChildren(el('p', { class: 'sfbb-error', textContent: error.message }));
+                    return;
+                }
+                setDay(cached);
+            }
+            render();
+            const target = window.location.hash && document.querySelector(window.location.hash);
+            target?.scrollIntoView({ block: 'start' });
+        })();
+
+    </script>
+
+    <script src="/help_overlay.js"></script>
+
+    <script src="/js/tutorials.js"></script>
+
+    <div id="help_overlay" aria-hidden="true">
+        <div id="help_inner">
+            <div id="help_header">
+                <div id="help_title">Help</div>
+                <button id="help_close" aria-label="Close">Close</button>
+            </div>
+            <footer class="site_footer">
+                <a href="/privacy-policy">Privacy Policy</a>
+                <span>&copy; 2026 Safecateruk</span>
+            </footer>
+            <div id="help_body">
+                <img id="help_image" src="" alt="Help image">
+                <div id="help_caption">Tap the image to view details. Tap outside to close.</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/offline-store.js"></script>
+    <script src="/js/sync-engine.js"></script>
+    <script src="/js/status-badge.js"></script>
+    <script src="/script.js"></script>
+
+    <script src="/js/session-idle.js"></script>
+</body>
+
+</html>

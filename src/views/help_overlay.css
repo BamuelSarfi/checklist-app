@@ -200,3 +200,153 @@
   cursor: pointer;
   border-radius: var(--radius-sm);
 }
+
+/* Video tutorials (js/tutorials.js) */
+.kiosk-watch-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-heading);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.kiosk-watch-btn svg {
+  color: var(--color-success);
+}
+
+#tutorial_overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-scrim-heavy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease-in-out;
+}
+
+#tutorial_overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#tutorial_inner {
+  width: calc(100% - 32px);
+  max-width: 880px;
+  max-height: calc(100% - 48px);
+  background: var(--color-white);
+  border: 1pt solid var(--color-black);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#tutorial_header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1pt solid var(--color-bg-active);
+}
+
+#tutorial_title {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-text-heading);
+}
+
+#tutorial_body {
+  padding: 12px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#tutorial_video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--color-black);
+  border-radius: var(--radius-sm);
+  display: block;
+}
+
+#tutorial_now {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+#tutorial_series_label {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+#tutorial_list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tutorial-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 6px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tutorial-row.is-current {
+  border-color: var(--color-success);
+  background: var(--color-success-tint-bg);
+}
+
+.tutorial-row img {
+  width: 96px;
+  aspect-ratio: 16 / 9;
+  flex: 0 0 96px;
+  object-fit: cover;
+  border-radius: var(--radius-xs);
+  background: var(--color-bg-subtle);
+}
+
+.tutorial-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tutorial-row-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-heading);
+}
+
+.tutorial-row-meta {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
